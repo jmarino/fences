@@ -1,0 +1,32 @@
+## Process this file with automake to produce Makefile.in
+
+## Created by Anjuta
+
+gladedir = $(datadir)/fences/glade
+glade_DATA = fences.glade
+
+INCLUDES = \
+	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
+	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
+	-DPACKAGE_DATA_DIR=\""$(datadir)"\" \
+	$(FENCES_CFLAGS)
+
+AM_CFLAGS =\
+	 -Wall\
+	 -g
+
+bin_PROGRAMS = fences
+
+fences_SOURCES = \
+	callbacks.c \
+	callbacks.h \
+	main.c \
+	draw.c \
+	gamedata.c \
+	gamedata.h
+
+fences_LDFLAGS = 
+
+fences_LDADD = $(FENCES_LIBS)
+
+EXTRA_DIST = $(glade_DATA)

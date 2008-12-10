@@ -1,0 +1,25 @@
+# Files to be ignored by git
+.anjuta/
+.tm_project2.cache
+ChangeLog
+Makefile
+Makefile.in
+aclocal.m4
+autogen.sh
+autom4te.cache/
+config.*
+configure
+depcomp
+fences.anjuta
+install-sh
+intltool-*
+libtool
+ltmain.sh
+missing
+mkinstalldirs
+po/
+src/.deps/
+src/Makefile
+src/Makefile.in
+src/*.o
+stamp-h1
