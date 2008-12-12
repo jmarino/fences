@@ -24,10 +24,6 @@
 
 struct game gamedata;	/* holds current game data */
 
-/* Line states */
-#define LINE_OFF		0
-#define LINE_ON			1
-#define LINE_CROSSED	2
 
 /* Game area size */
 #define FIELD_SIZE		10000
@@ -168,4 +164,7 @@ generate_example_game()
 	}
 
 	measure_square_size();
+	gamedata.lines[0].state= LINE_ON;
+	gamedata.lines[12].state= LINE_ON;
+	gamedata.lines[15].state= LINE_CROSSED;
 }

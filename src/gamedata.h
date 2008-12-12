@@ -1,5 +1,11 @@
 
 
+/* Line states */
+#define LINE_OFF		0
+#define LINE_ON			1
+#define LINE_CROSSED	2
+
+
 struct dot {
 	int x;				// x coordinate of dot
 	int y;				// y coordinate of dot

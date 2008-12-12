@@ -25,7 +25,7 @@
 static void
 draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 {
-	struct dot *dot;
+	struct dot *dot1, *dot2;
 	struct line *line;
 	struct square *sq;
 	int i,j;
@@ -52,37 +52,60 @@ draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 	cairo_set_dash(cr, dash, 1, 100);
 	line= gamedata->lines;
 	for(i=0; i<gamedata->nlines; ++i) {
-		dot= gamedata->dots + line->dots[0];
-		cairo_move_to(cr, dot->x, dot->y);
-		dot= gamedata->dots + line->dots[1];
-		cairo_line_to(cr, dot->x, dot->y);
+		dot1= gamedata->dots + line->dots[0];
+		dot2= gamedata->dots + line->dots[1];
+		if (line->state == LINE_OFF || line->state == LINE_CROSSED) {
+			cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
+			cairo_set_line_width (cr, 10);
+			cairo_set_dash(cr, dash, 1, 100);
+			cairo_move_to(cr, dot1->x, dot1->y);
+			cairo_line_to(cr, dot2->x, dot2->y);
+			cairo_stroke(cr);
+			if (line->state == LINE_CROSSED) { // draw cross
+				cairo_set_source_rgb(cr, 1., 0., 0.);
+				cairo_set_line_width (cr, 50);
+				cairo_set_dash(cr, dash, 0, 100);
+				x= (dot1->x + dot2->x)/2.;
+				y= (dot1->y + dot2->y)/2.;
+				cairo_move_to(cr, x-120, y-120);
+				cairo_line_to(cr, x+120, y+120);
+				cairo_move_to(cr, x-120, y+120);
+				cairo_line_to(cr, x+120, y-120);
+				cairo_stroke(cr);
+			}
+		} else if (line->state == LINE_ON) {
+			cairo_set_source_rgb(cr, 0., 0., 1.);
+			cairo_set_line_width (cr, 100);
+			cairo_set_dash(cr, dash, 0, 100);
+			cairo_move_to(cr, dot1->x, dot1->y);
+			cairo_line_to(cr, dot2->x, dot2->y);
+			cairo_stroke(cr);
+		} else {
+			printf("draw.c: line state invalid: %d\n", line->state);
+		}
 		++line;
 	}
-	cairo_stroke(cr);
+	//cairo_stroke(cr);
 	
 	/* Draw dots */
-	dot= gamedata->dots;
+	dot1= gamedata->dots;
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	for(i=0; i<gamedata->ndots; ++i) {
-		cairo_arc (cr, dot->x, dot->y, 75, 0, 2 * M_PI);
+		cairo_arc (cr, dot1->x, dot1->y, 75, 0, 2 * M_PI);
 		cairo_new_sub_path(cr);
-		++dot;
+		++dot1;
 	}
 	cairo_fill(cr);
 	
-	printf("%d,%d\n", gamedata->sq_width, gamedata->sq_height);
 	/* Text in squares */
-	
 	/* calibrate font */
 	cairo_set_font_size(cr, 100.);
 	cairo_text_extents(cr, nums[0], extent);
 	font_scale= 100./extent[0].height;
 	
 	cairo_set_font_size(cr, gamedata->sq_height*font_scale/2.);
-	for(i=0; i<4; ++i) {
+	for(i=0; i<4; ++i) 
 		cairo_text_extents(cr, nums[i], extent + i);
-		printf("ex: %lf,%lf\n", extent[i].width, extent[i].height);
-	}
 	sq= gamedata->squares;
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	
@@ -90,9 +113,9 @@ draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 		if (sq->number != -1) {		// square has a number
 			x= y= 0;
 			for(j=0; j<4; ++j) {
-				dot= gamedata->dots + sq->dots[j];
-				x+= dot->x;
-				y+= dot->y;
+				dot1= gamedata->dots + sq->dots[j];
+				x+= dot1->x;
+				y+= dot1->y;
 			}
 			x/= 4;
 			y/= 4;
