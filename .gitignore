@@ -22,4 +22,5 @@ src/.deps/
 src/Makefile
 src/Makefile.in
 src/*.o
+src/fences
 stamp-h1
