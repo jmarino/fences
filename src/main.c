@@ -26,7 +26,7 @@
 #include <config.h>
 
 #include <gtk/gtk.h>
-#include <glade/glade.h>
+//#include <glade/glade.h>
 
 
 
@@ -68,7 +68,8 @@ extern struct game gamedata;
 /* #define GLADE_FILE PACKAGE_DATA_DIR"/fences/glade/fences.glade" */
 #define GLADE_FILE "fences.glade"
 #define XML_FILE "fences.xml"
-	
+
+/*
 GtkWidget*
 create_window2 (void)
 {
@@ -77,12 +78,12 @@ create_window2 (void)
 	
 	gxml = glade_xml_new (GLADE_FILE, NULL, NULL);
 	
-	/* This is important */
+	// This is important 
 	glade_xml_signal_autoconnect (gxml);
 	window = glade_xml_get_widget (gxml, "window");
 	
 	return window;
-}
+}*/
 
 
 GtkWidget*
