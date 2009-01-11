@@ -100,7 +100,7 @@ create_window (void)
 	/* note: connect_signals doesn't work, it needs some gmodule stuff */
 	//gtk_builder_connect_signals (builder, NULL);
 	
-	drawarea= GTK_WIDGET(gtk_builder_get_object(builder, "drawingarea1"));
+	drawarea= GTK_WIDGET(gtk_builder_get_object(builder, "drawingarea"));
 	g_signal_connect(drawarea, "expose_event", G_CALLBACK(board_face_expose), 
 					 &gamedata);
 	g_signal_connect(window, "delete_event", gtk_main_quit, NULL);
