@@ -114,6 +114,7 @@ create_window (void)
 					G_CALLBACK (window_keypressed), NULL);
 	
 	/* catch mouse clicks on game board */
+	gtk_widget_add_events(drawarea, GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK);
 	g_signal_connect (G_OBJECT (drawarea), "button_press_event", 
 					G_CALLBACK (drawarea_mouseclicked), NULL);
 	
