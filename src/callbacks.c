@@ -24,3 +24,42 @@
 #include <gtk/gtk.h>
 
 #include "callbacks.h"
+
+
+
+/*
+ * Callback when mouse is clicked on the board
+ */
+gboolean 
+drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+	printf("mouse: %lf, %lf\n", event->x, event->y);
+	return FALSE;
+}
+
+
+/*
+ * Callback when key is pressed
+ */
+gboolean 
+window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+{
+	printf("key: %d\n", event->keyval);
+	return FALSE;
+}
+
+
+gboolean
+drawarea_configure(GtkWidget *widget, GdkEventConfigure *event, gpointer user_data)
+{
+	printf("configure: %d, %d\n", event->width, event->height);
+	return FALSE;
+}
+
+
+gboolean
+drawarea_resize(GtkWidget *widget, gpointer user_data)
+{
+	printf("resize: %d, %d\n", 0, 0);
+	return FALSE;
+}

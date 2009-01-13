@@ -101,9 +101,21 @@ create_window (void)
 	//gtk_builder_connect_signals (builder, NULL);
 	
 	drawarea= GTK_WIDGET(gtk_builder_get_object(builder, "drawingarea"));
+	g_signal_connect(drawarea, "configure-event", G_CALLBACK(drawarea_configure), 
+					 NULL);
+	g_signal_connect(drawarea, "check-resize", G_CALLBACK(drawarea_resize), 
+					 NULL);
 	g_signal_connect(drawarea, "expose_event", G_CALLBACK(board_face_expose), 
 					 &gamedata);
 	g_signal_connect(window, "delete_event", gtk_main_quit, NULL);
+
+	/* capture any key pressed in the window */
+  	g_signal_connect ((gpointer) window, "key-press-event",
+					G_CALLBACK (window_keypressed), NULL);
+	
+	/* catch mouse clicks on game board */
+	g_signal_connect (G_OBJECT (drawarea), "button_press_event", 
+					G_CALLBACK (drawarea_mouseclicked), NULL);
 	
 	g_object_unref (G_OBJECT (builder));
 	

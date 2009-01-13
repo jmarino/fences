@@ -18,3 +18,14 @@
  */
 
 #include <gtk/gtk.h>
+
+
+gboolean 
+drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+gboolean 
+window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
+
+gboolean
+drawarea_configure(GtkWidget *widget, GdkEventConfigure *event, gpointer user_data);
+gboolean
+drawarea_resize(GtkWidget *widget, gpointer user_data);
