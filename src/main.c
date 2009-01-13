@@ -118,6 +118,12 @@ create_window (void)
 					G_CALLBACK (drawarea_mouseclicked), NULL);
 	
 	g_object_unref (G_OBJECT (builder));
+
+	/* Ensure drawing area has aspect ratio of 1 */
+	GdkGeometry geo;
+	geo.min_aspect= geo.max_aspect= 1.0;
+	gtk_window_set_geometry_hints(GTK_WINDOW(window), drawarea, &geo, 
+								  GDK_HINT_ASPECT);
 	
 	/* store gamedata in window */
 	g_object_set_data(G_OBJECT(window), "window", &gamedata);
