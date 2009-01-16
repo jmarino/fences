@@ -100,8 +100,8 @@ create_window (void)
 	drawarea= GTK_WIDGET(gtk_builder_get_object(builder, "drawingarea"));
 	g_signal_connect(drawarea, "configure-event", G_CALLBACK(drawarea_configure), 
 					 NULL);
-	g_signal_connect(drawarea, "check-resize", G_CALLBACK(drawarea_resize), 
-					 NULL);
+	//g_signal_connect(drawarea, "check-resize", G_CALLBACK(drawarea_resize), 
+	//				 NULL);
 	g_signal_connect(drawarea, "expose_event", G_CALLBACK(board_face_expose), 
 					 &board);
 	g_signal_connect(window, "delete_event", gtk_main_quit, NULL);
@@ -118,10 +118,11 @@ create_window (void)
 	g_object_unref (G_OBJECT (builder));
 
 	/* Ensure drawing area has aspect ratio of 1 */
-	GdkGeometry geo;
+	/*GdkGeometry geo;
 	geo.min_aspect= geo.max_aspect= 1.0;
 	gtk_window_set_geometry_hints(GTK_WINDOW(window), drawarea, &geo, 
-								  GDK_HINT_ASPECT);
+								  GDK_HINT_ASPECT);*/
+	gtk_widget_set_size_request(drawarea, 500,500);
 	
 	/* store gamedata in window */
 	g_object_set_data(G_OBJECT(window), "window", &board);
