@@ -17,11 +17,32 @@
 #include <gtk/gtk.h>
 #include <math.h>
 #include <stdlib.h>
+
 #include "gamedata.h"
 
 
 extern struct board board;
 
+
+/*
+ * Hack to display tile cache as a green grid
+ */
+static void
+draw_tiles(cairo_t *cr)
+{
+	int i, j;
+	int width=board.tile_cache->tile_size;
+	
+	cairo_set_source_rgb(cr, 0., 150/256., 0.);
+	cairo_set_line_width (cr, 10);
+	for(i=0; i < 10; ++i) {
+		for(j=0; j < 10; ++j) {
+			cairo_rectangle (cr, i*width, j*width, width, width);
+			cairo_stroke(cr);
+		}
+	}
+}
+			 
 
 /*
  * Draw game on board
@@ -47,6 +68,8 @@ draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 	
 	//printf("%d, %d\n", w, h);
 	cairo_scale (cr, w/(double)board.board_size, h/(double)board.board_size);
+	//debug
+	//draw_tiles(cr);
 
 	/* Draw lines */
 	double dash[]={50};
