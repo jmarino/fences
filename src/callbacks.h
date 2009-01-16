@@ -14,6 +14,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+#ifndef __INCLUDED_CALLBACKS_H__
+#define __INCLUDED_CALLBACKS_H__
+
 #include <gtk/gtk.h>
 
 
@@ -26,3 +29,5 @@ gboolean
 drawarea_configure(GtkWidget *widget, GdkEventConfigure *event, gpointer user_data);
 gboolean
 drawarea_resize(GtkWidget *widget, gpointer user_data);
+
+#endif

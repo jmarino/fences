@@ -14,6 +14,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+#ifndef __INCLUDED_GAMEDATA_H__
+#define __INCLUDED_GAMEDATA_H__
+
 /* Line states */
 #define LINE_OFF		0
 #define LINE_ON			1
@@ -52,3 +55,5 @@ struct game {
 	int sq_width;
 	int sq_height;
 };
+
+#endif
