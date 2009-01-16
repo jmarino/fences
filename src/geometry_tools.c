@@ -132,7 +132,7 @@ is_point_inside_area(struct point *point, struct point *area)
 	center.x/= 4;
 	center.y/= 4;
 
-	/* calculate the intersection of line point-center with all sides
+	/* calculate the intersection of center point with all sides
 	 * of area. If intersection is between corners -> outside
 	 * 	L1: P0 + a (P1 - P0)		# P0,P1 are corners
 	 * 	L2: center + b (point - center)

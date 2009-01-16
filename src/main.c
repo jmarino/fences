@@ -57,7 +57,7 @@
 
 gboolean board_face_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer gamedata);
 
-/* extern global variables */
+/* defined in gamedata.c */
 extern struct board board;
 
 

@@ -21,6 +21,7 @@
 #include "gamedata.h"
 
 
+/* defined in gamedata.c */
 extern struct board board;
 
 

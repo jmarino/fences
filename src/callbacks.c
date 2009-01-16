@@ -24,7 +24,7 @@
 #include "gamedata.h"
 #include "geometry_tools.h"
 
-
+/* defined in gamedata.c */
 extern struct board board;
 
 

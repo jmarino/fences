@@ -23,6 +23,7 @@
 #define NUM_TILES_PER_SIDE	10
 #define NUM_TILES			NUM_TILES_PER_SIDE*NUM_TILES_PER_SIDE
 
+
 /* defined in gamedata.c */
 extern struct board board;
 
