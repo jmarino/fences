@@ -42,8 +42,7 @@ draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 	cairo_fill(cr);
 	
 	//printf("%d, %d\n", w, h);
-	cairo_scale (cr, w/11000., h/11000.);
-	cairo_translate(cr, 500., 500.);
+	cairo_scale (cr, w/(double)board.board_size, h/(double)board.board_size);
 
 	/* Draw lines */
 	double dash[]={50};
@@ -127,8 +126,9 @@ draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 	}
 }
 
+
 gboolean
-board_face_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer gamedata)
+board_face_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer board)
 {
 	cairo_t *cr;
 	
@@ -142,7 +142,7 @@ board_face_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer gamedata)
 					 event->area.width, event->area.height);
 	cairo_clip (cr);
 	
-	draw_board (drawarea, cr, (struct game*)gamedata);
+	draw_board (drawarea, cr, ((struct board*)board)->game);
 	
 	cairo_destroy (cr);
 	
