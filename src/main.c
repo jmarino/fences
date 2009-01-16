@@ -26,6 +26,9 @@
 //#include <glade/glade.h>
 
 
+#include "callbacks.h"
+#include "gamedata.h"
+
 
 /*
  * Standard gettext macros.
@@ -49,9 +52,6 @@
 #  define N_(String) (String)
 #endif
 
-
-
-#include "callbacks.h"
 
 
 

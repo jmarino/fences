@@ -20,6 +20,8 @@
 #include <glib.h>
 
 #include "gamedata.h"
+#include "tile_cache.h"
+
 
 /* holds info about board */
 struct board board;

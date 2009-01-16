@@ -21,6 +21,8 @@
 #include <gtk/gtk.h>
 
 #include "callbacks.h"
+#include "gamedata.h"
+#include "geometry_tools.h"
 
 
 extern struct board board;
