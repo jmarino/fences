@@ -28,6 +28,9 @@ struct board board;
 //#define FIELD_SIZE		10000
 
 
+/*
+ * Add two dots to end of line (and also add line to the dots)
+ */
 static void
 add_dot_connection(int ndot1, int ndot2, int nline, int nsq)
 {
@@ -58,6 +61,10 @@ add_dot_connection(int ndot1, int ndot2, int nline, int nsq)
 }
 
 
+/*
+ * Measure smallest width and height of a square with a number in it
+ * Used to decide what font size to use
+ */
 static void
 measure_square_size(struct game *game)
 {

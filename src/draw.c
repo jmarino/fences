@@ -22,6 +22,10 @@
 
 extern struct board board;
 
+
+/*
+ * Draw game on board
+ */
 static void
 draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 {
