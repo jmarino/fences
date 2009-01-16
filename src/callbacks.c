@@ -23,6 +23,8 @@
 #include "callbacks.h"
 
 
+extern struct board board;
+
 
 /*
  * Callback when mouse is clicked on the board

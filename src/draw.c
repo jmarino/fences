@@ -19,6 +19,9 @@
 #include <stdlib.h>
 #include "gamedata.h"
 
+
+extern struct board board;
+
 static void
 draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 {

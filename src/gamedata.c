@@ -20,23 +20,27 @@
 
 #include "gamedata.h"
 
-struct game gamedata;	/* holds current game data */
+/* holds info about board */
+struct board board;
 
 
 /* Game area size */
-#define FIELD_SIZE		10000
+//#define FIELD_SIZE		10000
 
 
 static void
 add_dot_connection(int ndot1, int ndot2, int nline, int nsq)
 {
 	struct dot *d;
+	struct line *lin;
 	int i;
 	
-	gamedata.lines[nline].dots[0]= ndot1;
-	gamedata.lines[nline].dots[1]= ndot2;
+	// add dots at ends of line (we may have harmless repeated assignations, oh well...)
+	lin= board.game->lines + nline;
+	lin->dots[0]= ndot1;
+	lin->dots[1]= ndot2;
 	
-	d= gamedata.dots + ndot1;
+	d= board.game->dots + ndot1;
 	for(i=0; i < d->ndots && d->dots[i] != ndot2; ++i);
 	if (i == d->ndots) d->dots[d->ndots++]= ndot2;
 	for(i=0; i < d->nsquares && d->sq[i] != nsq; ++i);
@@ -44,7 +48,7 @@ add_dot_connection(int ndot1, int ndot2, int nline, int nsq)
 	for(i=0; i < d->nlines && d->lin[i] != nline; ++i);
 	if (i == d->nlines) d->lin[d->nlines++]= nline;
 	
-	d= gamedata.dots + ndot2;
+	d= board.game->dots + ndot2;
 	for(i=0; i < d->ndots && d->dots[i] != ndot1; ++i);
 	if (i == d->ndots) d->dots[d->ndots++]= ndot1;
 	for(i=0; i < d->nsquares && d->sq[i] != nsq; ++i);
@@ -55,29 +59,29 @@ add_dot_connection(int ndot1, int ndot2, int nline, int nsq)
 
 
 static void
-measure_square_size(void)
+measure_square_size(struct game *game)
 {
 	struct square *sq;
 	int i, j;
 	int sqw, sqh, tmp;
 	
 	/* go around all squares to measure smallest w and h */
-	gamedata.sq_width= FIELD_SIZE;
-	gamedata.sq_height= FIELD_SIZE;
-	sq= gamedata.squares;
-	for(i=0; i<gamedata.nsquares; ++i) {
+	game->sq_width= board.board_size;
+	game->sq_height= board.board_size;
+	sq= game->squares;
+	for(i=0; i<game->nsquares; ++i) {
 		if (sq->number != -1) {		// square has a number
 			sqw= sqh= 0;
 			for(j=0; j<4; ++j) {
-				tmp= abs(gamedata.dots[sq->dots[j]].x 
-						 - gamedata.dots[sq->dots[(j+1)%4]].x);
+				tmp= abs(game->dots[sq->dots[j]].x 
+						 - game->dots[sq->dots[(j+1)%4]].x);
 				if (tmp > sqw) sqw= tmp;
-				tmp= abs(gamedata.dots[sq->dots[j]].y 
-						 - gamedata.dots[sq->dots[(j+1)%4]].y);
+				tmp= abs(game->dots[sq->dots[j]].y 
+						 - game->dots[sq->dots[(j+1)%4]].y);
 				if (tmp > sqh) sqh= tmp;
 			}
-			if (sqw < gamedata.sq_width) gamedata.sq_width= sqw;
-			if (sqh < gamedata.sq_height) gamedata.sq_height= sqh;
+			if (sqw < game->sq_width) game->sq_width= sqw;
+			if (sqh < game->sq_height) game->sq_height= sqh;
 		}
 		++sq;
 	}
@@ -87,7 +91,7 @@ measure_square_size(void)
  * generate a 7x7 example game by hand
  */
 void
-generate_example_game()
+generate_example_game(struct game *game)
 {
 	int i, j;
 	const int dim=7;		// num of squares per side
@@ -105,33 +109,33 @@ generate_example_game()
 		-1,-1,-1, 2, 2, 2,-1};
 	
 	/* generate a 7x7 squares in a grid */
-	gamedata.nsquares= dim*dim;
-	gamedata.squares= (struct square*)
-		malloc(gamedata.nsquares*sizeof(struct square));
-	if (gamedata.squares == NULL) printf("Mem error: squares\n");
-	gamedata.ndots= (dim + 1)*(dim + 1);
-	gamedata.dots= (struct dot*)
-		malloc(gamedata.ndots*sizeof(struct dot));
-	if (gamedata.dots == NULL) printf("Mem error: dots\n");
-	gamedata.nlines= 2*dim*(dim + 1);
-	gamedata.lines= (struct line*)
-		malloc(gamedata.nlines*sizeof(struct line));
-	if (gamedata.lines == NULL) printf("Mem error: lines\n");
+	game->nsquares= dim*dim;
+	game->squares= (struct square*)
+		malloc(game->nsquares*sizeof(struct square));
+	if (game->squares == NULL) printf("Mem error: squares\n");
+	game->ndots= (dim + 1)*(dim + 1);
+	game->dots= (struct dot*)
+		malloc(game->ndots*sizeof(struct dot));
+	if (game->dots == NULL) printf("Mem error: dots\n");
+	game->nlines= 2*dim*(dim + 1);
+	game->lines= (struct line*)
+		malloc(game->nlines*sizeof(struct line));
+	if (game->lines == NULL) printf("Mem error: lines\n");
 
 	/* initialize dots */
-	dot= gamedata.dots;
+	dot= game->dots;
 	for(j=0; j < dim + 1; ++j) {
-		ypos= ((float)FIELD_SIZE)/dim*j;
+		ypos= ((float)board.game_size)/dim*j + board.board_margin;
 		for(i=0; i < dim + 1; ++i) {
 			dot->ndots= dot->nsquares= dot->nlines= 0;
-			dot->x= ((float)FIELD_SIZE)/dim*i;
+			dot->x= ((float)board.game_size)/dim*i + board.board_margin;
 			dot->y= ypos;
 			++dot;
 		}
 	}
 	
 	/* initialize squares */
-	sq= gamedata.squares;
+	sq= game->squares;
 	nsq= 0;
 	for(j=0; j<dim; ++j) {
 		for(i=0; i<dim; ++i) {
@@ -161,8 +165,35 @@ generate_example_game()
 		}
 	}
 
-	measure_square_size();
-	gamedata.lines[0].state= LINE_ON;
-	gamedata.lines[12].state= LINE_ON;
-	gamedata.lines[15].state= LINE_CROSSED;
+
+	measure_square_size(game);
+	
+	// test line states
+	game->lines[0].state= LINE_ON;
+	game->lines[12].state= LINE_ON;
+	game->lines[15].state= LINE_CROSSED;
+}
+
+
+/*
+ * Initialize board
+ */
+void
+initialize_board(void)
+{
+	/* Setup coordinate size of board */
+	board.board_size= 11000;
+	board.board_margin= 500;
+	board.game_size= board.board_size - 2*board.board_margin; //10000
+	board.tile_cache= NULL;
+
+	/* generate game info */
+	board.game= (struct game*) g_malloc(sizeof(struct game));
+	/****TODO** check mem error */
+
+	/* make up example game */
+	generate_example_game(board.game);
+
+	/* generate tile cache for lines */
+	setup_tile_cache();
 }

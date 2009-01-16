@@ -58,7 +58,7 @@
 gboolean board_face_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer gamedata);
 
 /* extern global variables */
-extern struct game gamedata;
+extern struct board board;
 
 
 /* For testing propose use the local (not installed) glade file */
@@ -142,7 +142,8 @@ main (int argc, char *argv[])
 	textdomain (GETTEXT_PACKAGE);
 #endif
 
-	generate_example_game();
+	/* Init board */
+	initialize_board();
 	
 	gtk_set_locale ();
 	gtk_init (&argc, &argv);
