@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <glib.h>
 
 #include "gamedata.h"
 
@@ -42,6 +43,16 @@ add_dot_connection(int ndot1, int ndot2, int nline, int nsq)
 	lin= board.game->lines + nline;
 	lin->dots[0]= ndot1;
 	lin->dots[1]= ndot2;
+	
+	// Add square touching line (if needed)
+	if (lin->nsquares == 0) {			// no squares assigned yet
+		lin->sq[0]= nsq;
+		lin->nsquares= 1;
+	} else if (lin->nsquares == 1 && lin->sq[0] != nsq) {	
+		// one was already assigned -> add if different
+		lin->sq[1]= nsq;
+		lin->nsquares= 2;
+	}
 	
 	d= board.game->dots + ndot1;
 	for(i=0; i < d->ndots && d->dots[i] != ndot2; ++i);
@@ -94,6 +105,51 @@ measure_square_size(struct game *game)
 	}
 }
 
+
+/*
+ * Define area of influence for each line (4 points)
+ * and coords of center of line
+ */
+static void
+fill_line_data(struct game *game)
+{
+	int i;
+	struct line *lin;
+	struct dot *d1;
+	struct square *sq;
+	int v[2];
+	
+	lin= game->lines;
+	for(i=0; i<game->nlines; ++i) {
+		lin->id= i;
+		d1= game->dots + lin->dots[0];
+		lin->inf[0].x= d1->x;
+		lin->inf[0].y= d1->y;
+		sq= game->squares + lin->sq[0];
+		lin->inf[1].x= sq->center.x;
+		lin->inf[1].y= sq->center.y;
+		d1= game->dots + lin->dots[1];
+		lin->inf[2].x= d1->x;
+		lin->inf[2].y= d1->y;
+		lin->center.x= (lin->inf[0].x + lin->inf[2].x)/2;
+		lin->center.y= (lin->inf[0].y + lin->inf[2].y)/2;
+		if (lin->nsquares == 2) {
+			sq= game->squares + lin->sq[1];
+			lin->inf[3].x= sq->center.x;
+			lin->inf[3].y= sq->center.y;
+		} else {					// edge line, must manufacture 4th point
+			// get vector pointing from lin->inf[1] to center of line
+			v[0]= lin->center.x - lin->inf[1].x; // vector diff
+			v[1]= lin->center.y - lin->inf[1].y;
+			// add vector to center of line
+			lin->inf[3].x= lin->center.x + v[0];
+			lin->inf[3].y= lin->center.y + v[1];
+		}
+		++lin;
+	}
+}
+
+
 /*
  * generate a 7x7 example game by hand
  */
@@ -105,6 +161,7 @@ generate_example_game(struct game *game)
 	int ypos;
 	struct dot *dot;
 	struct square *sq;
+	struct line *lin;
 	int nsq;
 	int squaredata[dim*dim]={
 		-1,-1,-1,-1,-1,-1,-1,
@@ -141,6 +198,13 @@ generate_example_game(struct game *game)
 		}
 	}
 	
+	/* initialize lines */
+	lin= game->lines;
+	for(i=0; i < game->nlines; ++i) {
+		lin->nsquares= 0;
+		++lin;
+	}
+	
 	/* initialize squares */
 	sq= game->squares;
 	nsq= 0;
@@ -167,12 +231,30 @@ generate_example_game(struct game *game)
 			add_dot_connection(sq->dots[2], sq->dots[3], sq->lines[2], nsq);
 			add_dot_connection(sq->dots[3], sq->dots[0], sq->lines[3], nsq);
 			
+			// calculate position of center of square
+			int k;
+			sq->center.x= sq->center.y= 0;
+			for(k=0; k<4; ++k) {
+				dot= game->dots + sq->dots[k];
+				sq->center.x+= dot->x;
+				sq->center.y+= dot->y;
+			}
+			sq->center.x/= 4;
+			sq->center.y/= 4;
+			
 			++sq;
 			++nsq;
 		}
 	}
 
+	// debug: print dots asociated to lines
+	lin= game->lines;
+	for(i=0; i < game->nlines; ++i) {
+		//printf("lin %d:  %2d,%2d\n", i, lin->dots[0], lin->dots[1]);
+		++lin;
+	}
 
+	fill_line_data(game);
 	measure_square_size(game);
 	
 	// test line states
