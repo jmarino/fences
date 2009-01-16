@@ -40,6 +40,7 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_da
 	struct line *lin;
 	int line_num=-1;
 	gboolean inside;
+	int state;
 	
 	/* Translate pixel coords to board coords */
 	point.x= (int)(event->x/500.*board.board_size);
@@ -60,6 +61,12 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_da
 		inside= is_point_inside_area(&point, lin->inf);
 		if (inside) {
 			line_num= lin->id;
+			state= lin->state;
+			if (state == LINE_ON) state= LINE_OFF;
+			else if (state == LINE_OFF) state= LINE_ON;
+			else if (state == LINE_CROSSED) state= LINE_ON;
+			gtk_widget_queue_draw(GTK_WIDGET(user_data));
+			lin->state= state;
 			printf("mouse: ** inf: (%d,%d),(%d,%d),(%d,%d),(%d,%d)\n",
 				   lin->inf[0].x, lin->inf[0].y, lin->inf[1].x, lin->inf[1].y,
 				   lin->inf[2].x, lin->inf[2].y, lin->inf[3].x, lin->inf[3].y);
