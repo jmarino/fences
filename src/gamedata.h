@@ -51,6 +51,7 @@ struct line {
 	int nsquares;		// Number of squares touching this line (either 1 or 2)
 	int sq[2];			// Squares at each side of line
 	struct point inf[4]; // coords of 4 points defining area of influence
+	struct point inf_box[2]; // [x,y] & [w,h] of box that contains line
 };
 
 struct game {
@@ -78,6 +79,8 @@ struct board {
 	int board_size;		// Size of gameboard field (game + margin)
 	int board_margin;	// margin around actual game area
 	int game_size;		// Size of game area (board_size-2*board_margin)
+	double width_pxscale;	// Width board-to-pixel scale
+	double height_pxscale;	// Height board-to-pixel scale
 	struct tile_cache *tile_cache; // tile to line cache	
 };
 

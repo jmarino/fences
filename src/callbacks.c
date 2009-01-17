@@ -72,7 +72,12 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 			case 3: lin->state= (lin->state == LINE_CROSSED) ? LINE_OFF : LINE_CROSSED;
 				break;
 		}
-		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
+		/* schedule redraw of box containing line */
+		gtk_widget_queue_draw_area(GTK_WIDGET(drawarea), 
+								   (gint)(lin->inf_box[0].x*board.width_pxscale), 
+								   (gint)(lin->inf_box[0].y*board.height_pxscale),
+								   (gint)(lin->inf_box[1].x*board.width_pxscale), 
+								   (gint)(lin->inf_box[1].y*board.height_pxscale));
 	}
 
 	return FALSE;
@@ -90,10 +95,18 @@ window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 }
 
 
+/*
+ * Callback when drawing area is resized (also first time is drawn)
+ */
 gboolean
-drawarea_configure(GtkWidget *widget, GdkEventConfigure *event, gpointer user_data)
+drawarea_configure(GtkWidget *drawarea, GdkEventConfigure *event, gpointer user_data)
 {
 	printf("configure: %d, %d\n", event->width, event->height);
+		
+	/* setup pixel scales: to go from field coords to pixels on screen */
+	board.width_pxscale= drawarea->allocation.width/(double)board.board_size;
+	board.height_pxscale= drawarea->allocation.height/(double)board.board_size;
+	
 	return FALSE;
 }
 

@@ -118,7 +118,6 @@ fill_line_data(struct game *game)
 	struct line *lin;
 	struct dot *d1;
 	struct square *sq;
-	int v[2];
 	
 	lin= game->lines;
 	for(i=0; i<game->nlines; ++i) {
@@ -142,6 +141,21 @@ fill_line_data(struct game *game)
 			lin->inf[3].x= lin->inf[0].x + lin->inf[2].x - lin->inf[1].x;
 			lin->inf[3].y= lin->inf[0].y + lin->inf[2].y - lin->inf[1].y;
 		}
+		/* define box that contains line as [x,y];[w,h]
+		   inf[0].xy & inf[2].xy are both ends of the line */
+		lin->inf_box[0].x= 
+			(lin->inf[0].x < lin->inf[2].x) ? lin->inf[0].x : lin->inf[2].x;
+		lin->inf_box[1].x= lin->inf[2].x - lin->inf[0].x;
+		if (lin->inf_box[1].x < 0) lin->inf_box[1].x= -lin->inf_box[1].x;
+		lin->inf_box[0].y= 
+			(lin->inf[0].y < lin->inf[2].y) ? lin->inf[0].y : lin->inf[2].y;
+		lin->inf_box[1].y= lin->inf[2].y - lin->inf[0].y;
+		if (lin->inf_box[1].y < 0) lin->inf_box[1].y= -lin->inf_box[1].y;
+		/* pad inf_box a bit just in case */
+		lin->inf_box[0].x-= 200;
+		lin->inf_box[0].y-= 200;
+		lin->inf_box[1].x+= 400;
+		lin->inf_box[1].y+= 400;
 		++lin;
 	}
 }
