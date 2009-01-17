@@ -51,7 +51,6 @@ struct line {
 	int nsquares;		// Number of squares touching this line (either 1 or 2)
 	int sq[2];			// Squares at each side of line
 	struct point inf[4]; // coords of 4 points defining area of influence
-	struct point center;		// coords of center of line
 };
 
 struct game {

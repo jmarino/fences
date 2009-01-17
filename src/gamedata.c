@@ -110,7 +110,6 @@ measure_square_size(struct game *game)
 
 /*
  * Define area of influence for each line (4 points)
- * and coords of center of line
  */
 static void
 fill_line_data(struct game *game)
@@ -133,19 +132,15 @@ fill_line_data(struct game *game)
 		d1= game->dots + lin->dots[1];
 		lin->inf[2].x= d1->x;
 		lin->inf[2].y= d1->y;
-		lin->center.x= (lin->inf[0].x + lin->inf[2].x)/2;
-		lin->center.y= (lin->inf[0].y + lin->inf[2].y)/2;
 		if (lin->nsquares == 2) {
 			sq= game->squares + lin->sq[1];
 			lin->inf[3].x= sq->center.x;
 			lin->inf[3].y= sq->center.y;
 		} else {					// edge line, must manufacture 4th point
-			// get vector pointing from lin->inf[1] to center of line
-			v[0]= lin->center.x - lin->inf[1].x; // vector diff
-			v[1]= lin->center.y - lin->inf[1].y;
-			// add vector to center of line
-			lin->inf[3].x= lin->center.x + v[0];
-			lin->inf[3].y= lin->center.y + v[1];
+			/* make up point across line: along line joining center of square
+			  to center of line */
+			lin->inf[3].x= lin->inf[0].x + lin->inf[2].x - lin->inf[1].x;
+			lin->inf[3].y= lin->inf[0].y + lin->inf[2].y - lin->inf[1].y;
 		}
 		++lin;
 	}
