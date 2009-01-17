@@ -21,7 +21,7 @@
 
 
 gboolean 
-drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer drawarea);
 gboolean 
 window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
 

@@ -32,15 +32,13 @@ extern struct board board;
  * Callback when mouse is clicked on the board
  */
 gboolean 
-drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer drawarea)
 {
 	struct point point;
 	int tile;
 	GSList *list;
 	struct line *lin;
-	int line_num=-1;
 	gboolean inside;
-	int state;
 	
 	/* Translate pixel coords to board coords */
 	point.x= (int)(event->x/500.*board.board_size);
@@ -59,21 +57,22 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_da
 	while(list != NULL) {
 		lin= (struct line *)list->data;
 		inside= is_point_inside_area(&point, lin->inf);
-		if (inside) {
-			line_num= lin->id;
-			state= lin->state;
-			if (state == LINE_ON) state= LINE_OFF;
-			else if (state == LINE_OFF) state= LINE_ON;
-			else if (state == LINE_CROSSED) state= LINE_ON;
-			gtk_widget_queue_draw(GTK_WIDGET(user_data));
-			lin->state= state;
-			printf("mouse: ** inf: (%d,%d),(%d,%d),(%d,%d),(%d,%d)\n",
-				   lin->inf[0].x, lin->inf[0].y, lin->inf[1].x, lin->inf[1].y,
-				   lin->inf[2].x, lin->inf[2].y, lin->inf[3].x, lin->inf[3].y);
-			printf("Line at point: %d\n",  line_num);
+		if (inside)
 			break;
-		}
 		list= g_slist_next(list);
+	}
+	
+	/* check if a line was found */
+	if (list != NULL) {
+		switch(event->button) {
+			/* left button */
+			case 1: lin->state= (lin->state == LINE_ON) ? LINE_OFF : LINE_ON;
+				break;
+			/* right button */
+			case 3: lin->state= (lin->state == LINE_CROSSED) ? LINE_OFF : LINE_CROSSED;
+				break;
+		}
+		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
 	}
 
 	return FALSE;
