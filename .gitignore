@@ -1,7 +1,6 @@
 # Files to be ignored by git
 .anjuta/
 .tm_project2.cache
-ChangeLog
 Makefile
 Makefile.in
 aclocal.m4
