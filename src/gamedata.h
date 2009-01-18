@@ -20,44 +20,44 @@
 /* Line states */
 #define LINE_OFF		0
 #define LINE_ON			1
-#define LINE_CROSSED	2
+#define LINE_CROSSED		2
 
 struct point {
 	int x, y;
 };
 
 struct dot {
-	int x;				// x coordinate of dot
-	int y;				// y coordinate of dot
-	int ndots;			// Number of neighboring dots
+	int x;			// x coordinate of dot
+	int y;			// y coordinate of dot
+	int ndots;		// Number of neighboring dots
 	int dots[8];		// neighboring dots
 	int nsquares;		// number of squares touching this dot
-	int sq[8];			// squares touching dot
-	int nlines;			// number of lines touching dot
-	int lin[8];			// lines touching dot
+	int sq[8];		// squares touching dot
+	int nlines;		// number of lines touching dot
+	int lin[8];		// lines touching dot
 };
 
 struct square {
-	int number;			// Number inside the square
+	int number;		// Number inside the square
 	int dots[4];		// dots associated to square
 	int lines[4];		// lines associated to square
-	struct point center;		// coords of center of square
+	struct point center;	// coords of center of square
 };
 
 struct line {
-	int state;			// State of line
+	int state;		// State of line
 	int id;			// Number (id) of line
 	int dots[2];		// Dots at ends of line
 	int nsquares;		// Number of squares touching this line (either 1 or 2)
-	int sq[2];			// Squares at each side of line
-	struct point inf[4]; // coords of 4 points defining area of influence
-	struct point inf_box[2]; // [x,y] & [w,h] of box that contains line
+	int sq[2];		// Squares at each side of line
+	struct point inf[4]; 	// coords of 4 points defining area of influence
+	struct point inf_box[2];// [x,y] & [w,h] of box that contains line
 };
 
 struct game {
-	int ndots;				// Number of dots
-	struct dot *dots;		// List of dots
-	int nsquares;			// Number of squares
+	int ndots;		// Number of dots
+	struct dot *dots;	// List of dots
+	int nsquares;		// Number of squares
 	struct square *squares;	// List of squares
 	int nlines;
 	struct line *lines;

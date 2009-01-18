@@ -41,13 +41,13 @@ add_dot_connection(int ndot1, int ndot2, int nline, int nsq)
 	struct line *lin;
 	int i;
 	
-	// add dots at ends of line (we may have harmless repeated assignations, oh well...)
+	// add dots at ends of line (**TODO** think about repeated assignments)
 	lin= board.game->lines + nline;
 	lin->dots[0]= ndot1;
 	lin->dots[1]= ndot2;
 	
 	// Add square touching line (if needed)
-	if (lin->nsquares == 0) {			// no squares assigned yet
+	if (lin->nsquares == 0) {	// no squares assigned yet
 		lin->sq[0]= nsq;
 		lin->nsquares= 1;
 	} else if (lin->nsquares == 1 && lin->sq[0] != nsq) {	
@@ -94,10 +94,10 @@ measure_square_size(struct game *game)
 			sqw= sqh= 0;
 			for(j=0; j<4; ++j) {
 				tmp= abs(game->dots[sq->dots[j]].x 
-						 - game->dots[sq->dots[(j+1)%4]].x);
+					 - game->dots[sq->dots[(j+1)%4]].x);
 				if (tmp > sqw) sqw= tmp;
 				tmp= abs(game->dots[sq->dots[j]].y 
-						 - game->dots[sq->dots[(j+1)%4]].y);
+					 - game->dots[sq->dots[(j+1)%4]].y);
 				if (tmp > sqh) sqh= tmp;
 			}
 			if (sqw < game->sq_width) game->sq_width= sqw;
@@ -135,14 +135,14 @@ fill_line_data(struct game *game)
 			sq= game->squares + lin->sq[1];
 			lin->inf[3].x= sq->center.x;
 			lin->inf[3].y= sq->center.y;
-		} else {					// edge line, must manufacture 4th point
-			/* make up point across line: along line joining center of square
-			  to center of line */
+		} else {	// edge line, must manufacture 4th point
+			/* make up point across line: 
+			 along line joining center of square to center of line */
 			lin->inf[3].x= lin->inf[0].x + lin->inf[2].x - lin->inf[1].x;
 			lin->inf[3].y= lin->inf[0].y + lin->inf[2].y - lin->inf[1].y;
 		}
 		/* define box that contains line as [x,y];[w,h]
-		   inf[0].xy & inf[2].xy are both ends of the line */
+		 inf[0].xy & inf[2].xy are both ends of the line */
 		lin->inf_box[0].x= 
 			(lin->inf[0].x < lin->inf[2].x) ? lin->inf[0].x : lin->inf[2].x;
 		lin->inf_box[1].x= lin->inf[2].x - lin->inf[0].x;
@@ -225,10 +225,10 @@ generate_example_game(struct game *game)
 			sq->number= squaredata[j*dim+i];
 			
 			// set dots on corner of square
-			sq->dots[0]= j*(dim+1)+i;			// top left
-			sq->dots[1]= j*(dim+1)+i+1;			// top right
-			sq->dots[2]= (j+1)*(dim+1)+i+1;		// bot right
-			sq->dots[3]= (j+1)*(dim+1)+i;		// bot left
+			sq->dots[0]= j*(dim+1)+i;	// top left
+			sq->dots[1]= j*(dim+1)+i+1;	// top right
+			sq->dots[2]= (j+1)*(dim+1)+i+1;	// bot right
+			sq->dots[3]= (j+1)*(dim+1)+i;	// bot left
 			
 			// set lines on edges of square
 			sq->lines[0]= j*(dim+dim+1)+i;

@@ -48,8 +48,8 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 		   point.x, point.y);
 
 	/* Find in which tile the point falls */
-	tile= point.x / board.tile_cache->tile_size +
-		board.tile_cache->ntiles_side*(point.y / board.tile_cache->tile_size);
+	tile= point.x / board.tile_cache->tile_size;
+	tile+= board.tile_cache->ntiles_side*(point.y/board.tile_cache->tile_size);
 	printf("mouse: Tile clicked %d\n", tile);
 	list= board.tile_cache->tiles[tile];
 	
@@ -73,11 +73,12 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 				break;
 		}
 		/* schedule redraw of box containing line */
-		gtk_widget_queue_draw_area(GTK_WIDGET(drawarea), 
-								   (gint)(lin->inf_box[0].x*board.width_pxscale), 
-								   (gint)(lin->inf_box[0].y*board.height_pxscale),
-								   (gint)(lin->inf_box[1].x*board.width_pxscale), 
-								   (gint)(lin->inf_box[1].y*board.height_pxscale));
+		gtk_widget_queue_draw_area
+			(GTK_WIDGET(drawarea), 
+			 (gint)(lin->inf_box[0].x*board.width_pxscale), 
+			 (gint)(lin->inf_box[0].y*board.height_pxscale),
+			 (gint)(lin->inf_box[1].x*board.width_pxscale), 
+			 (gint)(lin->inf_box[1].y*board.height_pxscale));
 	}
 
 	return FALSE;

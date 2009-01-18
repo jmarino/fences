@@ -99,21 +99,22 @@ create_window (void)
 	
 	drawarea= GTK_WIDGET(gtk_builder_get_object(builder, "drawingarea"));
 	g_signal_connect(drawarea, "configure-event", G_CALLBACK(drawarea_configure), 
-					 NULL);
+			 NULL);
 	//g_signal_connect(drawarea, "check-resize", G_CALLBACK(drawarea_resize), 
-	//				 NULL);
+	//		 NULL);
 	g_signal_connect(drawarea, "expose_event", G_CALLBACK(board_face_expose), 
-					 &board);
+			 &board);
 	g_signal_connect(window, "delete_event", gtk_main_quit, NULL);
 
 	/* capture any key pressed in the window */
   	g_signal_connect ((gpointer) window, "key-press-event",
-					G_CALLBACK (window_keypressed), NULL);
+			    G_CALLBACK (window_keypressed), NULL);
 	
 	/* catch mouse clicks on game board */
-	gtk_widget_add_events(drawarea, GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK);
+	gtk_widget_add_events(drawarea, 
+			      GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK);
 	g_signal_connect (G_OBJECT (drawarea), "button_release_event", 
-					G_CALLBACK (drawarea_mouseclicked), drawarea);
+			  G_CALLBACK (drawarea_mouseclicked), drawarea);
 	
 	g_object_unref (G_OBJECT (builder));
 
@@ -121,7 +122,7 @@ create_window (void)
 	/*GdkGeometry geo;
 	geo.min_aspect= geo.max_aspect= 1.0;
 	gtk_window_set_geometry_hints(GTK_WINDOW(window), drawarea, &geo, 
-								  GDK_HINT_ASPECT);*/
+					GDK_HINT_ASPECT);*/
 	gtk_widget_set_size_request(drawarea, 500,500);
 	
 	/* store gamedata in window */
