@@ -102,7 +102,7 @@ create_window (void)
 			 NULL);
 	//g_signal_connect(drawarea, "check-resize", G_CALLBACK(drawarea_resize), 
 	//		 NULL);
-	g_signal_connect(drawarea, "expose_event", G_CALLBACK(board_face_expose), 
+	g_signal_connect(drawarea, "expose_event", G_CALLBACK(board_expose), 
 			 &board);
 	g_signal_connect(window, "delete_event", gtk_main_quit, NULL);
 

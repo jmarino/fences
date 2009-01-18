@@ -155,26 +155,3 @@ draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 }
 
 
-gboolean
-board_face_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer board)
-{
-	cairo_t *cr;
-	
-	//printf("expose\n");
-	/* get a cairo_t */
-	cr = gdk_cairo_create (drawarea->window);
-	
-	/* set a clip region for the expose event (faster) */
-	cairo_rectangle (cr,
-					 event->area.x, event->area.y,
-					 event->area.width, event->area.height);
-	cairo_clip (cr);
-	
-	draw_board (drawarea, cr, ((struct board*)board)->game);
-	
-	cairo_destroy (cr);
-	
-	return FALSE;
-}
-
-

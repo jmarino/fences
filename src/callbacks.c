@@ -118,3 +118,29 @@ drawarea_resize(GtkWidget *widget, gpointer user_data)
 	printf("resize: %d, %d\n", 0, 0);
 	return FALSE;
 }
+
+
+/*
+ * Function called when drawing area receives expose event 
+ */
+gboolean
+board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data)
+{
+	cairo_t *cr;
+	
+	//printf("expose\n");
+	/* get a cairo_t */
+	cr = gdk_cairo_create (drawarea->window);
+	
+	/* set a clip region for the expose event (faster) */
+	cairo_rectangle (cr,
+			 event->area.x, event->area.y,
+			 event->area.width, event->area.height);
+	cairo_clip (cr);
+	
+	draw_board (drawarea, cr, board.game);
+	
+	cairo_destroy (cr);
+	
+	return FALSE;
+}
