@@ -44,6 +44,8 @@ struct square {
 	int dots[4];		// dots associated to square
 	int lines[4];		// lines associated to square
 	struct point center;	// coords of center of square
+	int fx_status;		// is it being animated? which animation?
+	int fx_frame;		// frame in FX animation
 };
 
 struct line {
@@ -54,6 +56,8 @@ struct line {
 	int sq[2];		// Squares at each side of line
 	struct point inf[4]; 	// coords of 4 points defining area of influence
 	struct point inf_box[2];// [x,y] & [w,h] of box that contains line
+	int fx_status;		// is it being animated? which animation?
+	int fx_frame;		// frame in FX animation
 };
 
 struct game {
