@@ -58,12 +58,13 @@ draw_board(cairo_t *cr, int width, int height)
 	struct dot *dot1, *dot2;
 	struct line *line;
 	struct square *sq;
-	int i;
+	int i, j;
 	double x, y;
 	cairo_text_extents_t extent[4];
 	const char *nums[]={"0", "1", "2", "3"};
 	double font_scale;
 	struct game *game=board.game;
+	int lines_on;	// how many ON lines a dot has
 	
 	/* white background */
 	cairo_set_source_rgb(cr, 1, 1, 1);
@@ -119,14 +120,21 @@ draw_board(cairo_t *cr, int width, int height)
 	//cairo_stroke(cr);
 	
 	/* Draw dots */
-	dot1= game->dots;
-	cairo_set_source_rgb(cr, 0, 0, 0);
+	dot1= game->dots;	
 	for(i=0; i<game->ndots; ++i) {
+		/* count how many lines on are touching this */
+		lines_on= 0;
+		for(j=0; j < dot1->nlines; ++j) {
+			if (dot1->lines[j]->state == LINE_ON)
+				++lines_on;
+		}
+		/* draw dot */
+		if (lines_on == 2) cairo_set_source_rgb(cr, 0, 0, 1);
+		else cairo_set_source_rgb(cr, 0, 0, 0);
 		cairo_arc (cr, dot1->pos.x, dot1->pos.y, 75, 0, 2 * M_PI);
-		cairo_new_sub_path(cr);
+		cairo_fill(cr);
 		++dot1;
 	}
-	cairo_fill(cr);
 	
 	/* Text in squares */
 	/* calibrate font */
