@@ -18,13 +18,14 @@ AM_CFLAGS =\
 bin_PROGRAMS = fences
 
 fences_SOURCES = \
-	callbacks.c callbacks.h \
-	main.c \
-	draw.c \
-	gamedata.c gamedata.h \
 	fences.glade \
+	main.c \
+	callbacks.c callbacks.h \
+	draw.c draw.h \
+	gamedata.c gamedata.h \
 	tile_cache.c tile_cache.h \
-	geometry_tools.c geometry_tools.h
+	geometry_tools.c geometry_tools.h \
+	draw_thread.c draw_thread.h
 
 fences_LDFLAGS = 
 

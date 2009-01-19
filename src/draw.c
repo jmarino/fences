@@ -19,10 +19,14 @@
 #include <stdlib.h>
 
 #include "gamedata.h"
+#include "draw_thread.h"
 
 
 /* defined in gamedata.c */
 extern struct board board;
+
+
+static GdkPixmap *pixmap = NULL;	// pixmap where thread draws
 
 
 /*
@@ -48,27 +52,27 @@ draw_tiles(cairo_t *cr)
 /*
  * Draw game on board
  */
-static void
-draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
+void
+draw_board(cairo_t *cr, int width, int height)
 {
 	struct dot *dot1, *dot2;
 	struct line *line;
 	struct square *sq;
 	int i,j;
 	double x, y;
-	int w=drawarea->allocation.width;
-	int h=drawarea->allocation.height;
 	cairo_text_extents_t extent[4];
-	char *nums[]={"0", "1", "2", "3"};
+	const char *nums[]={"0", "1", "2", "3"};
 	double font_scale;
+	struct game *game=board.game;
 	
 	/* white background */
 	cairo_set_source_rgb(cr, 1, 1, 1);
-	cairo_rectangle (cr, 0, 0, w, h);
+	cairo_rectangle (cr, 0, 0, width, height);
 	cairo_fill(cr);
 	
 	//printf("%d, %d\n", w, h);
-	cairo_scale (cr, w/(double)board.board_size, h/(double)board.board_size);
+	cairo_scale (cr, width/(double)board.board_size, 
+		     height/(double)board.board_size);
 	//debug
 	//draw_tiles(cr);
 
@@ -77,10 +81,10 @@ draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 	cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
 	cairo_set_line_width (cr, 10);
 	cairo_set_dash(cr, dash, 1, 100);
-	line= gamedata->lines;
-	for(i=0; i<gamedata->nlines; ++i) {
-		dot1= gamedata->dots + line->dots[0];
-		dot2= gamedata->dots + line->dots[1];
+	line= game->lines;
+	for(i=0; i<game->nlines; ++i) {
+		dot1= game->dots + line->dots[0];
+		dot2= game->dots + line->dots[1];
 		if (line->state == LINE_OFF || line->state == LINE_CROSSED) {
 			cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
 			cairo_set_line_width (cr, 10);
@@ -115,9 +119,9 @@ draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 	//cairo_stroke(cr);
 	
 	/* Draw dots */
-	dot1= gamedata->dots;
+	dot1= game->dots;
 	cairo_set_source_rgb(cr, 0, 0, 0);
-	for(i=0; i<gamedata->ndots; ++i) {
+	for(i=0; i<game->ndots; ++i) {
 		cairo_arc (cr, dot1->x, dot1->y, 75, 0, 2 * M_PI);
 		cairo_new_sub_path(cr);
 		++dot1;
@@ -130,24 +134,24 @@ draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 	cairo_text_extents(cr, nums[0], extent);
 	font_scale= 100./extent[0].height;
 	
-	cairo_set_font_size(cr, gamedata->sq_height*font_scale/2.);
+	cairo_set_font_size(cr, game->sq_height*font_scale/2.);
 	for(i=0; i<4; ++i) 
 		cairo_text_extents(cr, nums[i], extent + i);
-	sq= gamedata->squares;
+	sq= game->squares;
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	
-	for(i=0; i<gamedata->nsquares; ++i) {
+	for(i=0; i<game->nsquares; ++i) {
 		if (sq->number != -1) {		// square has a number
 			x= y= 0;
 			for(j=0; j<4; ++j) {
-				dot1= gamedata->dots + sq->dots[j];
+				dot1= game->dots + sq->dots[j];
 				x+= dot1->x;
 				y+= dot1->y;
 			}
 			x/= 4;
 			y/= 4;
 			cairo_move_to(cr, x - extent[sq->number].width/2, 
-						  y + extent[sq->number].height/2);
+				      y + extent[sq->number].height/2);
 			cairo_show_text (cr, nums[sq->number]);
 		}
 		++sq;
@@ -155,3 +159,61 @@ draw_board(GtkWidget *drawarea, cairo_t *cr, struct game *gamedata)
 }
 
 
+/*
+ * Resize drawarea pixmap (called from configure callback
+ */
+void
+resize_board_pixmap(GtkWidget *drawarea, int width, int height, 
+		    int oldw, int oldh)
+{	
+	if (pixmap == NULL) { 	// first time, need to create pixmap
+		pixmap = gdk_pixmap_new(drawarea->window, width, height,-1);
+		/* because we paint our pixmap manually during expose events
+		  we can turn off gtk's automatic painting and double buffering */
+		gtk_widget_set_app_paintable(drawarea, TRUE);
+		gtk_widget_set_double_buffered(drawarea, FALSE);
+		
+		/* request draw of board */
+		request_draw(drawarea);
+	} else {
+		/* unref old pixmap and create new one with new size */
+		g_object_unref(pixmap); 
+		pixmap= gdk_pixmap_new(drawarea->window, width, height, -1);
+		
+		/* request draw of board */
+		request_draw(drawarea);
+	}
+}
+
+
+/*
+ * Return pixmap pointer. To be used by functions from outside this file.
+ */
+inline GdkPixmap*
+get_pixmap(void)
+{
+	return pixmap;
+}
+
+
+/*
+ * Return pixel size of pixmap.
+ */
+void 
+get_pixmap_size(int *width, int *height)
+{
+	gdk_drawable_get_size(pixmap, width, height);
+}
+
+
+/*
+ * Copy cairo surface on gtk pixmap
+ */
+void
+copy_board_on_pixmap(cairo_surface_t *csurf)
+{
+	cairo_t *cr_pixmap = gdk_cairo_create(pixmap);
+	cairo_set_source_surface (cr_pixmap, csurf, 0, 0);
+	cairo_paint(cr_pixmap);
+	cairo_destroy(cr_pixmap);
+}

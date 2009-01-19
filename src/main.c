@@ -28,6 +28,7 @@
 
 #include "callbacks.h"
 #include "gamedata.h"
+#include "draw_thread.h"
 
 
 /*
@@ -52,10 +53,6 @@
 #  define N_(String) (String)
 #endif
 
-
-
-
-gboolean board_face_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer gamedata);
 
 /* defined in gamedata.c */
 extern struct board board;
@@ -126,7 +123,7 @@ create_window (void)
 	gtk_widget_set_size_request(drawarea, 500,500);
 	
 	/* store gamedata in window */
-	g_object_set_data(G_OBJECT(window), "window", &board);
+	g_object_set_data(G_OBJECT(window), "drawarea", drawarea);
 	
 	return window;
 }
@@ -144,6 +141,12 @@ main (int argc, char *argv[])
 	textdomain (GETTEXT_PACKAGE);
 #endif
 
+	/* Initialize thread stuff to make gtk thread-aware */
+	if (!g_thread_supported()) g_thread_init(NULL);
+	gdk_threads_init();
+	/* gtk_main must be between gdk_threads_enter and gdk_threads_leave */
+	gdk_threads_enter();
+
 	/* Init board */
 	initialize_board();
 	
@@ -154,6 +157,14 @@ main (int argc, char *argv[])
 	window = create_window ();
 	gtk_widget_show (window);
 
+	/* start draw thread */
+	start_draw_thread(g_object_get_data(G_OBJECT(window), "drawarea"));
+	
+	/* register timer function to keep frame rate */
+	//(void)g_timeout_add(33, (GSourceFunc)timer_function, drawarea);
+	
 	gtk_main ();
+	gdk_threads_leave();
+
 	return 0;
 }

@@ -23,6 +23,8 @@
 #include "callbacks.h"
 #include "gamedata.h"
 #include "geometry_tools.h"
+#include "draw.h"
+#include "draw_thread.h"
 
 /* defined in gamedata.c */
 extern struct board board;
@@ -72,13 +74,16 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 			case 3: lin->state= (lin->state == LINE_CROSSED) ? LINE_OFF : LINE_CROSSED;
 				break;
 		}
+		/* make sure changes are drawn */
+		request_draw(GTK_WIDGET(drawarea));
+		
 		/* schedule redraw of box containing line */
-		gtk_widget_queue_draw_area
+		/*gtk_widget_queue_draw_area
 			(GTK_WIDGET(drawarea), 
 			 (gint)(lin->inf_box[0].x*board.width_pxscale), 
 			 (gint)(lin->inf_box[0].y*board.height_pxscale),
 			 (gint)(lin->inf_box[1].x*board.width_pxscale), 
-			 (gint)(lin->inf_box[1].y*board.height_pxscale));
+			 (gint)(lin->inf_box[1].y*board.height_pxscale)); */
 	}
 
 	return FALSE;
@@ -102,13 +107,22 @@ window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 gboolean
 drawarea_configure(GtkWidget *drawarea, GdkEventConfigure *event, gpointer user_data)
 {
+	static int oldw = 0;
+	static int oldh = 0;
+
 	printf("configure: %d, %d\n", event->width, event->height);
-		
-	/* setup pixel scales: to go from field coords to pixels on screen */
-	board.width_pxscale= drawarea->allocation.width/(double)board.board_size;
-	board.height_pxscale= drawarea->allocation.height/(double)board.board_size;
 	
-	return FALSE;
+	if (oldw != event->width || oldh != event->height){
+		resize_board_pixmap(drawarea, event->width, event->height, oldw, oldh);
+	}
+	oldw = event->width;
+	oldh = event->height;
+	
+	/* setup pixel scales: to go from field coords to pixels on screen */
+	board.width_pxscale= event->width/(double)board.board_size;
+	board.height_pxscale= event->height/(double)board.board_size;
+	
+	return TRUE;
 }
 
 
@@ -126,21 +140,18 @@ drawarea_resize(GtkWidget *widget, gpointer user_data)
 gboolean
 board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data)
 {
-	cairo_t *cr;
-	
-	//printf("expose\n");
-	/* get a cairo_t */
-	cr = gdk_cairo_create (drawarea->window);
-	
-	/* set a clip region for the expose event (faster) */
-	cairo_rectangle (cr,
-			 event->area.x, event->area.y,
-			 event->area.width, event->area.height);
-	cairo_clip (cr);
-	
-	draw_board (drawarea, cr, board.game);
-	
-	cairo_destroy (cr);
-	
-	return FALSE;
+	/* check if we shouldn't expose (because drawing is busy) */
+	if (is_expose_disabled()) {
+		printf("expose: skipping\n");
+		return TRUE;
+	}
+	printf("expose: hi\n");
+	gdk_draw_drawable(drawarea->window,
+			  drawarea->style->fg_gc[GTK_WIDGET_STATE(drawarea)], 
+			  get_pixmap(),
+			  // Only copy the area that was exposed.
+			  event->area.x, event->area.y,
+			  event->area.x, event->area.y,
+			  event->area.width, event->area.height);
+	return TRUE;
 }
