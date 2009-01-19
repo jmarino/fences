@@ -58,7 +58,7 @@ draw_board(cairo_t *cr, int width, int height)
 	struct dot *dot1, *dot2;
 	struct line *line;
 	struct square *sq;
-	int i,j;
+	int i;
 	double x, y;
 	cairo_text_extents_t extent[4];
 	const char *nums[]={"0", "1", "2", "3"};
@@ -83,21 +83,21 @@ draw_board(cairo_t *cr, int width, int height)
 	cairo_set_dash(cr, dash, 1, 100);
 	line= game->lines;
 	for(i=0; i<game->nlines; ++i) {
-		dot1= game->dots + line->dots[0];
-		dot2= game->dots + line->dots[1];
+		dot1= line->ends[0];
+		dot2= line->ends[1];
 		if (line->state == LINE_OFF || line->state == LINE_CROSSED) {
 			cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
 			cairo_set_line_width (cr, 10);
 			cairo_set_dash(cr, dash, 1, 100);
-			cairo_move_to(cr, dot1->x, dot1->y);
-			cairo_line_to(cr, dot2->x, dot2->y);
+			cairo_move_to(cr, dot1->pos.x, dot1->pos.y);
+			cairo_line_to(cr, dot2->pos.x, dot2->pos.y);
 			cairo_stroke(cr);
 			if (line->state == LINE_CROSSED) { // draw cross
 				cairo_set_source_rgb(cr, 1., 0., 0.);
 				cairo_set_line_width (cr, 50);
 				cairo_set_dash(cr, dash, 0, 100);
-				x= (dot1->x + dot2->x)/2.;
-				y= (dot1->y + dot2->y)/2.;
+				x= (dot1->pos.x + dot2->pos.x)/2.;
+				y= (dot1->pos.y + dot2->pos.y)/2.;
 				cairo_move_to(cr, x-120, y-120);
 				cairo_line_to(cr, x+120, y+120);
 				cairo_move_to(cr, x-120, y+120);
@@ -108,8 +108,8 @@ draw_board(cairo_t *cr, int width, int height)
 			cairo_set_source_rgb(cr, 0., 0., 1.);
 			cairo_set_line_width (cr, 100);
 			cairo_set_dash(cr, dash, 0, 100);
-			cairo_move_to(cr, dot1->x, dot1->y);
-			cairo_line_to(cr, dot2->x, dot2->y);
+			cairo_move_to(cr, dot1->pos.x, dot1->pos.y);
+			cairo_line_to(cr, dot2->pos.x, dot2->pos.y);
 			cairo_stroke(cr);
 		} else {
 			printf("draw.c: line state invalid: %d\n", line->state);
@@ -122,7 +122,7 @@ draw_board(cairo_t *cr, int width, int height)
 	dot1= game->dots;
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	for(i=0; i<game->ndots; ++i) {
-		cairo_arc (cr, dot1->x, dot1->y, 75, 0, 2 * M_PI);
+		cairo_arc (cr, dot1->pos.x, dot1->pos.y, 75, 0, 2 * M_PI);
 		cairo_new_sub_path(cr);
 		++dot1;
 	}
@@ -142,16 +142,8 @@ draw_board(cairo_t *cr, int width, int height)
 	
 	for(i=0; i<game->nsquares; ++i) {
 		if (sq->number != -1) {		// square has a number
-			x= y= 0;
-			for(j=0; j<4; ++j) {
-				dot1= game->dots + sq->dots[j];
-				x+= dot1->x;
-				y+= dot1->y;
-			}
-			x/= 4;
-			y/= 4;
-			cairo_move_to(cr, x - extent[sq->number].width/2, 
-				      y + extent[sq->number].height/2);
+			cairo_move_to(cr, sq->center.x - extent[sq->number].width/2, 
+				      sq->center.y + extent[sq->number].height/2);
 			cairo_show_text (cr, nums[sq->number]);
 		}
 		++sq;

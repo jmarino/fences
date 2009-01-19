@@ -28,32 +28,33 @@ struct point {
 
 struct dot {
 	int id;			// id of dot
-	int x;			// x coordinate of dot
-	int y;			// y coordinate of dot
-	int ndots;		// Number of neighboring dots
-	int dots[8];		// neighboring dots
-	int nsquares;		// number of squares touching this dot
-	int sq[8];		// squares touching dot
+	struct point pos;	// x,y coordinates of dot
 	int nlines;		// number of lines touching dot
-	int lin[8];		// lines touching dot
+	struct line **lines;	// lines touching dot
 };
 
 struct square {
 	int id;			// id of square
 	int number;		// Number inside the square
-	int dots[4];		// dots associated to square
-	int lines[4];		// lines associated to square
+	int nvertex;		// number of vertices of 'square'
+	struct dot **vertex;	// vertices of 'square'
+	int nsides;		// number of sides of 'square'
+	struct line **sides;	// lines around 'square'
 	struct point center;	// coords of center of square
 	int fx_status;		// is it being animated? which animation?
 	int fx_frame;		// frame in FX animation
 };
 
 struct line {
-	int id;			// Number (id) of line
+	int id;			// id of line (line number)
 	int state;		// State of line
-	int dots[2];		// Dots at ends of line
+	struct dot *ends[2];	// coords of ends of line
 	int nsquares;		// Number of squares touching this line (either 1 or 2)
-	int sq[2];		// Squares at each side of line
+	struct square *sq[2];	// squares at each side of line
+	int nin;		// number of lines in
+	int nout;		// number of lines out
+	struct line **in;	// lines in
+	struct line **out;	// lines out
 	struct point inf[4]; 	// coords of 4 points defining area of influence
 	struct point inf_box[2];// [x,y] & [w,h] of box that contains line
 	int fx_status;		// is it being animated? which animation?

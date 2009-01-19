@@ -31,46 +31,168 @@ struct board board;
 //#define FIELD_SIZE		10000
 
 
+
 /*
- * Add two dots to end of line (and also add line to the dots)
+ * Connect sides of square
  */
 static void
-add_dot_connection(int ndot1, int ndot2, int nline, int nsq)
+connect_lines_to_square(struct square *sq)
 {
-	struct dot *d;
+	int i, i2;
 	struct line *lin;
+	
+	/* iterate over all sides of square */
+	for(i=0; i < sq->nsides; ++i) {
+		i2= (i+1) % sq->nsides;
+		lin= sq->sides[i];
+		
+		/* multiple assignations may happen (squares sharing a line) */
+		lin->ends[0]= sq->vertex[i];
+		lin->ends[1]= sq->vertex[i2];
+		
+		/* add current square to list of squares touching line */
+		if (lin->nsquares == 0) {	// no squares assigned yet
+			lin->sq[0]= sq;
+			lin->nsquares= 1;
+		} else if (lin->nsquares == 1 && lin->sq[0] != sq) {	
+			// one was already assigned -> add if different
+			lin->sq[1]= sq;
+			lin->nsquares= 2;
+		}
+	}
+}
+
+
+/*
+ * Recursively fill in 'in' and 'out' lists of lines for each line
+ */
+static void
+join_lines_recursive(struct game *game, int line_id, int *line_handled)
+{
+	struct line **list;
+	struct dot *d;
 	int i;
 	
-	// add dots at ends of line (**TODO** think about repeated assignments)
-	lin= board.game->lines + nline;
-	lin->dots[0]= ndot1;
-	lin->dots[1]= ndot2;
+	/* NOTE: now we do the check before we call: faster */
+	/* check if this line has been already handled */
+	/*if (line_handled[line_id]) {
+		g_debug("***rec: line %d already handled", line_id);
+		return;
+	}*/
 	
-	// Add square touching line (if needed)
-	if (lin->nsquares == 0) {	// no squares assigned yet
-		lin->sq[0]= nsq;
-		lin->nsquares= 1;
-	} else if (lin->nsquares == 1 && lin->sq[0] != nsq) {	
-		// one was already assigned -> add if different
-		lin->sq[1]= nsq;
-		lin->nsquares= 2;
+	/* find lines touching ends[0] */
+	list= game->lines[line_id].in;
+	d= game->lines[line_id].ends[0];
+	for(i=0; i < d->nlines; ++i) {
+		if (d->lines[i]->id != line_id) {
+			*list= d->lines[i];
+			++list;
+		}
 	}
 	
-	d= board.game->dots + ndot1;
-	for(i=0; i < d->ndots && d->dots[i] != ndot2; ++i);
-	if (i == d->ndots) d->dots[d->ndots++]= ndot2;
-	for(i=0; i < d->nsquares && d->sq[i] != nsq; ++i);
-	if (i == d->nsquares) d->sq[d->nsquares++]= nsq;
-	for(i=0; i < d->nlines && d->lin[i] != nline; ++i);
-	if (i == d->nlines) d->lin[d->nlines++]= nline;
+	/* find lines touching ends[1] */
+	list= game->lines[line_id].out;
+	d= game->lines[line_id].ends[1];
+	for(i=0; i < d->nlines; ++i) {
+		if (d->lines[i]->id != line_id) {
+			*list= d->lines[i];
+			++list;
+		}
+	}
 	
-	d= board.game->dots + ndot2;
-	for(i=0; i < d->ndots && d->dots[i] != ndot1; ++i);
-	if (i == d->ndots) d->dots[d->ndots++]= ndot1;
-	for(i=0; i < d->nsquares && d->sq[i] != nsq; ++i);
-	if (i == d->nsquares) d->sq[d->nsquares++]= nsq;
-	for(i=0; i < d->nlines && d->lin[i] != nline; ++i);
-	if (i == d->nlines) d->lin[d->nlines++]= nline;
+	/* mark current line as handled */
+	line_handled[line_id]= 1;
+	
+	/* call recursively on all lines that current line touches */
+	list= game->lines[line_id].in;
+	for(i=0; i < game->lines[line_id].nin; ++i) {
+		if (line_handled[list[i]->id] == 0) // only lines not handled yet
+			join_lines_recursive(game, list[i]->id, line_handled);
+	}
+	list= game->lines[line_id].out;
+	for(i=0; i < game->lines[line_id].nout; ++i) {
+		if (line_handled[list[i]->id] == 0) // only lines not handled yet
+			join_lines_recursive(game, list[i]->id, line_handled);
+	}
+}
+
+
+/*
+ * Join lines to each other (fill the in and out fields)
+ */
+static void
+join_lines(struct game *game)
+{
+	struct line *lin;
+	struct line **list;
+	struct dot *d;
+	int line_handled[game->nlines];
+	int i, j;
+	
+	/* iterate over lines and count how many lines touch each dot */
+	lin= game->lines;
+	for(i=0; i < game->nlines; ++i) {
+		++(lin->ends[0]->nlines);
+		++(lin->ends[1]->nlines);
+		++lin;
+	}
+	
+	/* allocate space for each dot's list of lines */
+	d= game->dots;
+	for(i=0; i < game->ndots; ++i) {
+		/* DEBUG: check that all dots at least have one line */
+		if (d->nlines == 0) 
+			printf("DEBUG (join_lines): dot %d has no lines\n", i);
+		d->lines= (struct line **)g_malloc0(d->nlines*sizeof(void*));
+		if (d->lines == NULL) {
+			printf("join_lines: mem error (d->lines)\n");
+		}
+		++d;
+	}
+	
+	/* iterate over lines, adding them to the dots they touch 
+	   and allocate space for ins and outs */
+	lin= game->lines;
+	for(i=0; i < game->nlines; ++i) {
+		/* first end (in end) */
+		d= lin->ends[0];
+		/* store line in dot's list of lines */
+		list= d->lines;
+		for(j=0; j < d->nlines && *list != NULL; ++j) ++list;
+		if (j == d->nlines) printf("DEBUG (join_lines): shouldn't get here: end 0 line %d\n", i);
+		*list= lin;
+		/* store space for ins */
+		lin->nin= d->nlines - 1;
+		lin->in= (struct line **)g_malloc0(lin->nin*sizeof(void*));
+		if (lin->in == NULL) {
+			printf("join_lines: mem error (lin->in)\n");
+		}
+		
+		/* second end (out end) */
+		d= lin->ends[1];
+		/* store line in dot's list of lines */
+		list= d->lines;
+		for(j=0; j < d->nlines && *list != NULL; ++j) ++list;
+		if (j == d->nlines) printf("DEBUG (join_lines): shouldn't get here: end 1 line %d\n", i);
+		*list= lin;
+		/* store space for outs */
+		lin->nout= d->nlines - 1;
+		lin->out= (struct line **)g_malloc0(lin->nout*sizeof(void*));
+		if (lin->out == NULL) {
+			printf("join_lines: mem error (lin->out)\n");
+		}
+		++lin;
+	}
+	
+	/* connect lines, i.e., fill 'in' & 'out' lists */
+	memset(line_handled, 0, sizeof(int) * game->nlines);
+	join_lines_recursive(game, 0, line_handled);
+	
+	/* DEBUG: check all lines were handled */
+	for(i=0; i < game->nlines; ++i) {
+		if (line_handled[i] == 0) 
+			printf("DEBUG: line %d not handled\n", i);
+	}
 }
 
 
@@ -82,7 +204,7 @@ static void
 measure_square_size(struct game *game)
 {
 	struct square *sq;
-	int i, j;
+	int i, j, j2;
 	int sqw, sqh, tmp;
 	
 	/* go around all squares to measure smallest w and h */
@@ -93,11 +215,12 @@ measure_square_size(struct game *game)
 		if (sq->number != -1) {		// square has a number
 			sqw= sqh= 0;
 			for(j=0; j<4; ++j) {
-				tmp= abs(game->dots[sq->dots[j]].x 
-					 - game->dots[sq->dots[(j+1)%4]].x);
+				j2= (j + 1) % 4;
+				tmp= abs(sq->vertex[j]->pos.x - 
+					 sq->vertex[j2]->pos.x);
 				if (tmp > sqw) sqw= tmp;
-				tmp= abs(game->dots[sq->dots[j]].y 
-					 - game->dots[sq->dots[(j+1)%4]].y);
+				tmp= abs(sq->vertex[j]->pos.y - 
+					 sq->vertex[j2]->pos.y);
 				if (tmp > sqh) sqh= tmp;
 			}
 			if (sqw < game->sq_width) game->sq_width= sqw;
@@ -121,18 +244,17 @@ fill_line_data(struct game *game)
 	
 	lin= game->lines;
 	for(i=0; i<game->nlines; ++i) {
-		lin->id= i;
-		d1= game->dots + lin->dots[0];
-		lin->inf[0].x= d1->x;
-		lin->inf[0].y= d1->y;
-		sq= game->squares + lin->sq[0];
+		d1= lin->ends[0];
+		lin->inf[0].x= d1->pos.x;
+		lin->inf[0].y= d1->pos.y;
+		sq= lin->sq[0];
 		lin->inf[1].x= sq->center.x;
 		lin->inf[1].y= sq->center.y;
-		d1= game->dots + lin->dots[1];
-		lin->inf[2].x= d1->x;
-		lin->inf[2].y= d1->y;
+		d1= lin->ends[1];
+		lin->inf[2].x= d1->pos.x;
+		lin->inf[2].y= d1->pos.y;
 		if (lin->nsquares == 2) {
-			sq= game->squares + lin->sq[1];
+			sq= lin->sq[1];
 			lin->inf[3].x= sq->center.x;
 			lin->inf[3].y= sq->center.y;
 		} else {	// edge line, must manufacture 4th point
@@ -167,13 +289,13 @@ fill_line_data(struct game *game)
 void
 generate_example_game(struct game *game)
 {
-	int i, j;
+	int i, j, k;
 	const int dim=7;		// num of squares per side
 	int ypos;
 	struct dot *dot;
 	struct square *sq;
 	struct line *lin;
-	int nsq;
+	int id;
 	int squaredata[dim*dim]={
 		-1,-1,-1,-1,-1,-1,-1,
 		-1,-1,-1, 3, 2,-1, 2,
@@ -203,60 +325,68 @@ generate_example_game(struct game *game)
 		ypos= ((float)board.game_size)/dim*j + board.board_margin;
 		for(i=0; i < dim + 1; ++i) {
 			dot->id= j*(dim + 1) + i;
-			dot->ndots= dot->nsquares= dot->nlines= 0;
-			dot->x= ((float)board.game_size)/dim*i + board.board_margin;
-			dot->y= ypos;
+			dot->nlines= 0;		// value will be set in 'join_lines'
+			dot->lines= NULL;
+			dot->pos.x= ((float)board.game_size)/dim*i + board.board_margin;
+			dot->pos.y= ypos;
 			++dot;
 		}
 	}
 	
 	/* initialize lines */
 	lin= game->lines;
-	for(i=0; i < game->nlines; ++i) {
+	for (id= 0; id < game->nlines; ++id) {
+		lin->id= id;
 		lin->nsquares= 0;
 		++lin;
 	}
 	
 	/* initialize squares */
 	sq= game->squares;
-	nsq= 0;
+	id= 0;
 	for(j=0; j<dim; ++j) {
 		for(i=0; i<dim; ++i) {
-			sq->id= j*dim + i;
-			// set number inside square
-			sq->number= squaredata[sq->id];
+			sq->id= id;
+			/* set number inside square */
+			sq->number= squaredata[id];
 			
-			// set dots on corner of square
-			sq->dots[0]= j*(dim+1)+i;	// top left
-			sq->dots[1]= j*(dim+1)+i+1;	// top right
-			sq->dots[2]= (j+1)*(dim+1)+i+1;	// bot right
-			sq->dots[3]= (j+1)*(dim+1)+i;	// bot left
+			/* set vertices */
+			sq->nvertex= 4;
+			sq->vertex= (struct dot **)g_malloc(4 * sizeof(void*));
+			if (sq->vertex == NULL) {
+				printf("generate_example_game: memory error (vertex)\n");
+			}
+			sq->vertex[0]= game->dots + j*(dim+1)+i;	// top left
+			sq->vertex[1]= game->dots + j*(dim+1)+i+1;	// top right
+			sq->vertex[2]= game->dots + (j+1)*(dim+1)+i+1;	// bot right
+			sq->vertex[3]= game->dots + (j+1)*(dim+1)+i;	// bot left
+			
+			/* calculate position of center of square */
+			sq->center.x= sq->vertex[0]->pos.x;
+			sq->center.y= sq->vertex[0]->pos.y;
+			for(k=1; k < sq->nvertex; ++k) {
+				sq->center.x+= sq->vertex[k]->pos.x;
+				sq->center.y+= sq->vertex[k]->pos.y;
+			}
+			sq->center.x= (int)(sq->center.x/(double)sq->nvertex);
+			sq->center.y= (int)(sq->center.y/(double)sq->nvertex);
 			
 			// set lines on edges of square
-			sq->lines[0]= j*(dim+dim+1)+i;
-			sq->lines[1]= j*(dim+dim+1)+dim+i+1;
-			sq->lines[2]= (j+1)*(dim+dim+1)+i;
-			sq->lines[3]= j*(dim+dim+1)+dim+i;
+			sq->nsides= 4;
+			sq->sides= (struct line **)g_malloc(4 * sizeof(void *));
+			if (sq->sides == NULL) {
+				printf("generate_example_game: memory error (sides)\n");
+			} 
+			sq->sides[0]= game->lines + j*(dim+dim+1)+i;
+			sq->sides[1]= game->lines + j*(dim+dim+1)+dim+i+1;
+			sq->sides[2]= game->lines + (j+1)*(dim+dim+1)+i;
+			sq->sides[3]= game->lines + j*(dim+dim+1)+dim+i;
 			
-			// connect dots
-			add_dot_connection(sq->dots[0], sq->dots[1], sq->lines[0], nsq);
-			add_dot_connection(sq->dots[1], sq->dots[2], sq->lines[1], nsq);
-			add_dot_connection(sq->dots[2], sq->dots[3], sq->lines[2], nsq);
-			add_dot_connection(sq->dots[3], sq->dots[0], sq->lines[3], nsq);
-			
-			// calculate position of center of square
-			int k;
-			sq->center.x= sq->center.y= 0;
-			for(k=0; k<4; ++k) {
-				dot= game->dots + sq->dots[k];
-				sq->center.x+= dot->x;
-				sq->center.y+= dot->y;
-			}
-			sq->center.x/= 4;
-			sq->center.y/= 4;
-			
+			/* connect lines to square and vertices */
+			connect_lines_to_square(sq);
+					
 			++sq;
-			++nsq;
+			++id;
 		}
 	}
 
@@ -266,6 +396,8 @@ generate_example_game(struct game *game)
 		//printf("lin %d:  %2d,%2d\n", i, lin->dots[0], lin->dots[1]);
 		++lin;
 	}
+	
+	join_lines(game);
 
 	fill_line_data(game);
 	measure_square_size(game);
