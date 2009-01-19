@@ -27,6 +27,7 @@ struct point {
 };
 
 struct dot {
+	int id;			// id of dot
 	int x;			// x coordinate of dot
 	int y;			// y coordinate of dot
 	int ndots;		// Number of neighboring dots
@@ -38,6 +39,7 @@ struct dot {
 };
 
 struct square {
+	int id;			// id of square
 	int number;		// Number inside the square
 	int dots[4];		// dots associated to square
 	int lines[4];		// lines associated to square
@@ -45,8 +47,8 @@ struct square {
 };
 
 struct line {
-	int state;		// State of line
 	int id;			// Number (id) of line
+	int state;		// State of line
 	int dots[2];		// Dots at ends of line
 	int nsquares;		// Number of squares touching this line (either 1 or 2)
 	int sq[2];		// Squares at each side of line

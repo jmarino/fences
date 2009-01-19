@@ -202,6 +202,7 @@ generate_example_game(struct game *game)
 	for(j=0; j < dim + 1; ++j) {
 		ypos= ((float)board.game_size)/dim*j + board.board_margin;
 		for(i=0; i < dim + 1; ++i) {
+			dot->id= j*(dim + 1) + i;
 			dot->ndots= dot->nsquares= dot->nlines= 0;
 			dot->x= ((float)board.game_size)/dim*i + board.board_margin;
 			dot->y= ypos;
@@ -221,8 +222,9 @@ generate_example_game(struct game *game)
 	nsq= 0;
 	for(j=0; j<dim; ++j) {
 		for(i=0; i<dim; ++i) {
+			sq->id= j*dim + i;
 			// set number inside square
-			sq->number= squaredata[j*dim+i];
+			sq->number= squaredata[sq->id];
 			
 			// set dots on corner of square
 			sq->dots[0]= j*(dim+1)+i;	// top left
