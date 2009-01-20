@@ -43,6 +43,7 @@ draw_thread(void *drawarea)
 	sigset_t sigset;
 	static int old_width=0;
 	static int old_height=0;
+	int width, height;
 	
 	/* look for SIGALRM */
 	sigemptyset(&sigset);
@@ -53,7 +54,6 @@ draw_thread(void *drawarea)
 		while (sigwaitinfo(&sigset, &info) > 0) {
 			g_atomic_int_set(&currently_drawing, 1);
 			
-			int width, height;
 			gdk_threads_enter();
 			get_pixmap_size(&width, &height);
 			gdk_threads_leave();
@@ -80,7 +80,7 @@ draw_thread(void *drawarea)
 			/* schedule expose on window to refresh window */
 			gtk_widget_queue_draw_area(GTK_WIDGET(drawarea), 
 						   0, 0, width, height);
-			gdk_threads_leave();	
+			gdk_threads_leave();
 			
 			/* done drawing */
 			g_atomic_int_set(&currently_drawing, 0);
