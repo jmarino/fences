@@ -94,9 +94,12 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
  * Callback when key is pressed
  */
 gboolean 
-window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 {
 	printf("key: %d\n", event->keyval);
+	
+	(void)g_timeout_add(100, (GSourceFunc)timer_function, drawarea);
+	
 	return FALSE;
 }
 

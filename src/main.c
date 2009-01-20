@@ -105,7 +105,7 @@ create_window (void)
 
 	/* capture any key pressed in the window */
   	g_signal_connect ((gpointer) window, "key-press-event",
-			    G_CALLBACK (window_keypressed), NULL);
+			    G_CALLBACK (window_keypressed), drawarea);
 	
 	/* catch mouse clicks on game board */
 	gtk_widget_add_events(drawarea, 

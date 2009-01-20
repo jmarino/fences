@@ -412,6 +412,14 @@ generate_example_game(struct game *game)
 	game->lines[0].state= LINE_ON;
 	game->lines[12].state= LINE_ON;
 	game->lines[15].state= LINE_CROSSED;
+	game->lines[0].fx_status= 1;
+	
+	/* artificial test for FX animation */
+	for(i=0; i < 7; ++i) {
+		game->lines[i].state= LINE_ON;
+		game->lines[i].fx_status= 1;
+		game->lines[i].fx_frame= i;
+	}
 }
 
 

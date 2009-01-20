@@ -47,7 +47,49 @@ draw_tiles(cairo_t *cr)
 		}
 	}
 }
-			 
+
+
+/*
+ * Select color according to FX status and frame
+ */
+static void
+fx_setcolor(cairo_t *cr, struct line *line)
+{
+	switch(line->fx_status) {
+		case 0: //FX_OFF:
+			cairo_set_source_rgb(cr, 0., 0., 1.);
+		break;
+		case 1://FX_LOOP:
+			cairo_set_source_rgb(cr,  
+					     0.2 + 0.8*sin(line->fx_frame/20.0*M_PI),
+					     0., 1.); 
+		break;
+		default:
+			g_debug("line %d, unknown FX: %d", line->id, line->fx_status);
+	}
+}
+
+
+/*
+ * Increase frame number for FX animation
+ */
+static void
+fx_nextframe(struct line *line)
+{
+	switch(line->fx_status) {
+		case 0: //FX_OFF 
+			return;
+		break;
+		case 1://FX_LOOP:
+			gdk_threads_enter();
+			line->fx_frame= (line->fx_frame + 1)%20;
+			gdk_threads_leave();
+		break;
+		default:
+			g_debug("line %d, unknown FX: %d", line->id, line->fx_status);
+	}
+}
+
 
 /*
  * Draw game on board
@@ -106,14 +148,16 @@ draw_board(cairo_t *cr, int width, int height)
 				cairo_stroke(cr);
 			}
 		} else if (line->state == LINE_ON) {
-			cairo_set_source_rgb(cr, 0., 0., 1.);
+			fx_setcolor(cr, line);
+			//cairo_set_source_rgb(cr, 0., 0., 1.);
 			cairo_set_line_width (cr, 100);
 			cairo_set_dash(cr, dash, 0, 100);
 			cairo_move_to(cr, dot1->pos.x, dot1->pos.y);
 			cairo_line_to(cr, dot2->pos.x, dot2->pos.y);
 			cairo_stroke(cr);
+			fx_nextframe(line);
 		} else {
-			printf("draw.c: line state invalid: %d\n", line->state);
+			g_debug("draw_line: line (%d) state invalid: %d", line->id, line->state);
 		}
 		++line;
 	}
