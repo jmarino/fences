@@ -142,10 +142,10 @@ board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data)
 {
 	/* check if we shouldn't expose (because drawing is busy) */
 	if (is_expose_disabled()) {
-		printf("expose: skipping\n");
+		//printf("expose: skipping\n");
 		return TRUE;
 	}
-	printf("expose: hi\n");
+	//printf("expose: hi\n");
 	gdk_draw_drawable(drawarea->window,
 			  drawarea->style->fg_gc[GTK_WIDGET_STATE(drawarea)], 
 			  get_pixmap(),

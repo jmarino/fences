@@ -51,7 +51,6 @@ draw_thread(void *drawarea)
 	while(1) {
 		/* sit here waiting for our SIGALRM to start drawing */
 		while (sigwaitinfo(&sigset, &info) > 0) {
-			printf("draw_thread: about to draw\n");
 			g_atomic_int_set(&currently_drawing, 1);
 			
 			int width, height;
@@ -85,7 +84,6 @@ draw_thread(void *drawarea)
 			
 			/* done drawing */
 			g_atomic_int_set(&currently_drawing, 0);
-			printf("draw_thread: drawing done\n");
 		}
 	}
 	
