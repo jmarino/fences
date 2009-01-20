@@ -338,6 +338,8 @@ generate_example_game(struct game *game)
 	for (id= 0; id < game->nlines; ++id) {
 		lin->id= id;
 		lin->nsquares= 0;
+		lin->fx_status= 0;
+		lin->fx_frame= 0;
 		++lin;
 	}
 	
@@ -384,7 +386,11 @@ generate_example_game(struct game *game)
 			
 			/* connect lines to square and vertices */
 			connect_lines_to_square(sq);
-					
+			
+			/* ini FX status */
+			sq->fx_status= 0;
+			sq->fx_frame= 0;
+			
 			++sq;
 			++id;
 		}
