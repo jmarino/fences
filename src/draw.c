@@ -110,12 +110,14 @@ draw_board(cairo_t *cr, int width, int height)
 	
 	/* white background */
 	cairo_set_source_rgb(cr, 1, 1, 1);
-	cairo_rectangle (cr, 0, 0, width, height);
+	//cairo_rectangle (cr, 0, 0, width, height);
+	cairo_rectangle (cr, 0, 0, board.board_size, board.board_size);
 	cairo_fill(cr);
+	//cairo_paint(cr);
 	
 	//printf("%d, %d\n", w, h);
-	cairo_scale (cr, width/(double)board.board_size, 
-		     height/(double)board.board_size);
+	//cairo_scale (cr, width/(double)board.board_size, 
+	//	     height/(double)board.board_size);
 	//debug
 	//draw_tiles(cr);
 
@@ -155,7 +157,7 @@ draw_board(cairo_t *cr, int width, int height)
 			cairo_move_to(cr, dot1->pos.x, dot1->pos.y);
 			cairo_line_to(cr, dot2->pos.x, dot2->pos.y);
 			cairo_stroke(cr);
-			fx_nextframe(line);
+			//fx_nextframe(line);
 		} else {
 			g_debug("draw_line: line (%d) state invalid: %d", line->id, line->state);
 		}

@@ -32,6 +32,10 @@ static cairo_t *cr=NULL;		// cairo context (gtk independent)
 static pthread_t thread_info;		// thread info
 
 
+static void draw_benchmark(GtkWidget *drawarea);
+
+#include "gamedata.h"
+extern struct board board;
 
 /*
  * Main draw routine run in a thread
@@ -65,6 +69,8 @@ draw_thread(void *drawarea)
 				csurf= cairo_image_surface_create
 					(CAIRO_FORMAT_ARGB32, width, height);
 				cr= cairo_create(csurf);
+				cairo_scale (cr, width/(double)board.board_size, 
+				height/(double)board.board_size);
 			}
 			
 			/* draw board */
@@ -144,6 +150,12 @@ start_draw_thread(GtkWidget *drawarea)
 	
 	/* make sure this is only run once */
 	if (!first_time) return;
+
+	
+	if (1) {
+		draw_benchmark(drawarea);
+	}
+	
 	
 	/* block SIGALRM in the main thread */
 	sigset_t sigset;
@@ -176,4 +188,62 @@ inline int
 is_expose_disabled(void)
 {
 	return g_atomic_int_get(&expose_disabled);
+}
+
+
+
+#include <sys/time.h>
+
+/*
+ * Benchmark draw routine
+ */
+static void
+draw_benchmark(GtkWidget *drawarea)
+{
+
+	cairo_surface_t *csurf=NULL;	// cairo surf where we draw (gtk independent)
+	cairo_t *cr=NULL;		// cairo context (gtk independent)
+	struct timeval start_time;	// Contains starting time
+	struct timeval end_time;	// Contains ending time
+	double result;
+	int i;
+	int width=400;
+	int height=400;
+	int iters=1000;
+	GdkPixmap* pixmap=gdk_pixmap_new(drawarea->window, width, height,-1);
+		 
+	
+	/* white pixmap */
+	cairo_t *cr_pixmap = gdk_cairo_create(pixmap);
+	cairo_set_source_rgb(cr_pixmap, 1, 1, 1);
+	cairo_rectangle (cr_pixmap, 0, 0, width, height);
+	cairo_fill(cr_pixmap);
+	cairo_destroy(cr_pixmap);
+	
+	csurf= cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+					  width, height);
+	//cairo_t *cr_pixmap = gdk_cairo_create(pixmap);
+	cr= cairo_create(csurf);
+	
+	cairo_scale (cr, width/(double)board.board_size, 
+		     height/(double)board.board_size);
+
+	gettimeofday (&start_time, NULL);
+	for(i=0; i < iters; ++i) {
+		draw_board(cr, width, height);
+		//cairo_t *cr_pixmap = gdk_cairo_create(pixmap);
+		//cairo_set_source_surface (cr_pixmap, csurf, 0, 0);
+		//cairo_paint(cr_pixmap);
+		//cairo_destroy(cr_pixmap);
+	}
+	gettimeofday (&end_time, NULL);
+	result= ((double)(end_time.tv_sec - start_time.tv_sec))*1000000. \
+		+ ((double)(end_time.tv_usec - start_time.tv_usec));
+
+	printf("Benchmark (%d): total= %9.1lf us ; iter=%9.1lf us\n", iters, result,
+		result/iters);
+
+	//cairo_destroy(cr_pixmap);
+	cairo_destroy(cr);
+	cairo_surface_destroy(csurf);
 }
