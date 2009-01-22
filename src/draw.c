@@ -28,6 +28,15 @@ extern struct board board;
 
 static GdkPixmap *pixmap = NULL;	// pixmap where thread draws
 
+#define ON_LINE_WIDTH		5/500.0*board.board_size
+#define OFF_LINE_WIDTH		0.5/500.0*board.board_size
+#define DASH_OFFSET		10/500.0*board.board_size
+#define DASH_LENGTH		2.25/500.0*board.board_size
+#define CROSS_LINE_WIDTH	2.25/500.0*board.board_size
+#define CROSS_RADIUS		5.5/500.0*board.board_size
+#define DOT_RADIUS		3.5/500.0*board.board_size
+
+
 
 /*
  * Hack to display tile cache as a green grid
@@ -36,10 +45,11 @@ static void
 draw_tiles(cairo_t *cr)
 {
 	int i, j;
-	int width=board.tile_cache->tile_size;
+	double width=board.tile_cache->tile_size;
 	
+	g_message("draw_tiles");
 	cairo_set_source_rgb(cr, 0., 150/256., 0.);
-	cairo_set_line_width (cr, 10);
+	cairo_set_line_width (cr, OFF_LINE_WIDTH);
 	for(i=0; i < 10; ++i) {
 		for(j=0; j < 10; ++j) {
 			cairo_rectangle (cr, i*width, j*width, width, width);
@@ -107,13 +117,14 @@ draw_board(cairo_t *cr, int width, int height)
 	double font_scale;
 	struct game *game=board.game;
 	int lines_on;	// how many ON lines a dot has
+	double dash[]={DASH_LENGTH};
 	
 	/* white background */
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	//cairo_rectangle (cr, 0, 0, width, height);
-	cairo_rectangle (cr, 0, 0, board.board_size, board.board_size);
-	cairo_fill(cr);
-	//cairo_paint(cr);
+	//cairo_rectangle (cr, 0, 0, board.board_size, board.board_size);
+	//cairo_fill(cr);
+	cairo_paint(cr);
 	
 	//printf("%d, %d\n", w, h);
 	//cairo_scale (cr, width/(double)board.board_size, 
@@ -122,38 +133,38 @@ draw_board(cairo_t *cr, int width, int height)
 	//draw_tiles(cr);
 
 	/* Draw lines */
-	double dash[]={50};
-	cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
-	cairo_set_line_width (cr, 10);
-	cairo_set_dash(cr, dash, 1, 100);
+	//cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
+	//cairo_set_line_width (cr, OFF_LINE_WIDTH);
+	//cairo_set_dash(cr, dash, 2, DASH_OFFSET);
 	line= game->lines;
 	for(i=0; i<game->nlines; ++i) {
+		cairo_new_path(cr);
 		dot1= line->ends[0];
 		dot2= line->ends[1];
 		if (line->state == LINE_OFF || line->state == LINE_CROSSED) {
 			cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
-			cairo_set_line_width (cr, 10);
-			cairo_set_dash(cr, dash, 1, 100);
+			cairo_set_line_width (cr, OFF_LINE_WIDTH);
+			cairo_set_dash(cr, dash, 1, DASH_OFFSET);
 			cairo_move_to(cr, dot1->pos.x, dot1->pos.y);
 			cairo_line_to(cr, dot2->pos.x, dot2->pos.y);
 			cairo_stroke(cr);
 			if (line->state == LINE_CROSSED) { // draw cross
 				cairo_set_source_rgb(cr, 1., 0., 0.);
-				cairo_set_line_width (cr, 50);
-				cairo_set_dash(cr, dash, 0, 100);
+				cairo_set_line_width (cr, CROSS_LINE_WIDTH);
+				cairo_set_dash(cr, dash, 0, 0);
 				x= (dot1->pos.x + dot2->pos.x)/2.;
 				y= (dot1->pos.y + dot2->pos.y)/2.;
-				cairo_move_to(cr, x-120, y-120);
-				cairo_line_to(cr, x+120, y+120);
-				cairo_move_to(cr, x-120, y+120);
-				cairo_line_to(cr, x+120, y-120);
+				cairo_move_to(cr, x-CROSS_RADIUS, y-CROSS_RADIUS);
+				cairo_line_to(cr, x+CROSS_RADIUS, y+CROSS_RADIUS);
+				cairo_move_to(cr, x-CROSS_RADIUS, y+CROSS_RADIUS);
+				cairo_line_to(cr, x+CROSS_RADIUS, y-CROSS_RADIUS);
 				cairo_stroke(cr);
 			}
 		} else if (line->state == LINE_ON) {
 			fx_setcolor(cr, line);
 			//cairo_set_source_rgb(cr, 0., 0., 1.);
-			cairo_set_line_width (cr, 100);
-			cairo_set_dash(cr, dash, 0, 100);
+			cairo_set_line_width (cr, ON_LINE_WIDTH);
+			cairo_set_dash(cr, dash, 0, 0);
 			cairo_move_to(cr, dot1->pos.x, dot1->pos.y);
 			cairo_line_to(cr, dot2->pos.x, dot2->pos.y);
 			cairo_stroke(cr);
@@ -177,20 +188,20 @@ draw_board(cairo_t *cr, int width, int height)
 		/* draw dot */
 		if (lines_on == 2) cairo_set_source_rgb(cr, 0, 0, 1);
 		else cairo_set_source_rgb(cr, 0, 0, 0);
-		cairo_arc (cr, dot1->pos.x, dot1->pos.y, 75, 0, 2 * M_PI);
+		cairo_arc (cr, dot1->pos.x, dot1->pos.y, DOT_RADIUS, 0, 2 * M_PI);
 		cairo_fill(cr);
 		++dot1;
 	}
 	
 	/* Text in squares */
 	/* calibrate font */
-	cairo_set_font_size(cr, 100.);
-	cairo_text_extents(cr, nums[0], extent);
-	font_scale= 100./extent[0].height;
+	cairo_set_font_size(cr, board.board_size/100.);
+	cairo_text_extents(cr, nums[0], &extent[0]);
+	font_scale= board.board_size/100./extent[0].height;
 	
 	cairo_set_font_size(cr, game->sq_height*font_scale/2.);
-	for(i=0; i<4; ++i) 
-		cairo_text_extents(cr, nums[i], extent + i);
+	for(i=0; i < 4; ++i) 
+		cairo_text_extents(cr, nums[i], &extent[i]);
 	sq= game->squares;
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	

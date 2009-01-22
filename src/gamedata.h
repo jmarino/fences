@@ -23,7 +23,7 @@
 #define LINE_CROSSED		2
 
 struct point {
-	int x, y;
+	double x, y;
 };
 
 struct dot {
@@ -68,8 +68,8 @@ struct game {
 	struct square *squares;	// List of squares
 	int nlines;
 	struct line *lines;
-	int sq_width;
-	int sq_height;
+	double sq_width;
+	double sq_height;
 };
 
 
@@ -77,15 +77,15 @@ struct game {
 struct tile_cache {
 	int ntiles_side;	// number of tiles per side
 	int ntiles;		// Total num of tiles (ntiles_side^2)
-	int tile_size;		// size of boxes that tile gameboard
+	double tile_size;		// size of boxes that tile gameboard
 	GSList **tiles;		// array of lists (board tile -> lines in it)
 };
 
 struct board {
 	struct game *game;
-	int board_size;		// Size of gameboard field (game + margin)
-	int board_margin;	// margin around actual game area
-	int game_size;		// Size of game area (board_size-2*board_margin)
+	double board_size;		// Size of gameboard field (game + margin)
+	double board_margin;	// margin around actual game area
+	double game_size;		// Size of game area (board_size-2*board_margin)
 	double width_pxscale;	// Width board-to-pixel scale
 	double height_pxscale;	// Height board-to-pixel scale
 	struct tile_cache *tile_cache; // tile to line cache	

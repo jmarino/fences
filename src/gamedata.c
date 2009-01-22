@@ -205,7 +205,7 @@ measure_square_size(struct game *game)
 {
 	struct square *sq;
 	int i, j, j2;
-	int sqw, sqh, tmp;
+	double sqw, sqh, tmp;
 	
 	/* go around all squares to measure smallest w and h */
 	game->sq_width= board.board_size;
@@ -213,13 +213,13 @@ measure_square_size(struct game *game)
 	sq= game->squares;
 	for(i=0; i<game->nsquares; ++i) {
 		if (sq->number != -1) {		// square has a number
-			sqw= sqh= 0;
-			for(j=0; j<4; ++j) {
-				j2= (j + 1) % 4;
-				tmp= abs(sq->vertex[j]->pos.x - 
+			sqw= sqh= 0.;
+			for(j=0; j < sq->nvertex; ++j) {
+				j2= (j + 1) % sq->nvertex;
+				tmp= fabs(sq->vertex[j]->pos.x - 
 					 sq->vertex[j2]->pos.x);
 				if (tmp > sqw) sqw= tmp;
-				tmp= abs(sq->vertex[j]->pos.y - 
+				tmp= fabs(sq->vertex[j]->pos.y - 
 					 sq->vertex[j2]->pos.y);
 				if (tmp > sqh) sqh= tmp;
 			}
@@ -274,10 +274,10 @@ fill_line_data(struct game *game)
 		lin->inf_box[1].y= lin->inf[2].y - lin->inf[0].y;
 		if (lin->inf_box[1].y < 0) lin->inf_box[1].y= -lin->inf_box[1].y;
 		/* pad inf_box a bit just in case */
-		lin->inf_box[0].x-= 200;
-		lin->inf_box[0].y-= 200;
-		lin->inf_box[1].x+= 400;
-		lin->inf_box[1].y+= 400;
+		lin->inf_box[0].x-= 0.025;
+		lin->inf_box[0].y-= 0.025;
+		lin->inf_box[1].x+= 0.050;
+		lin->inf_box[1].y+= 0.050;
 		++lin;
 	}
 }
@@ -291,7 +291,7 @@ generate_example_game(struct game *game)
 {
 	int i, j, k;
 	const int dim=7;		// num of squares per side
-	int ypos;
+	double ypos;
 	struct dot *dot;
 	struct square *sq;
 	struct line *lin;
@@ -322,12 +322,12 @@ generate_example_game(struct game *game)
 	/* initialize dots */
 	dot= game->dots;
 	for(j=0; j < dim + 1; ++j) {
-		ypos= ((float)board.game_size)/dim*j + board.board_margin;
+		ypos= ((double)board.game_size)/dim*j + board.board_margin;
 		for(i=0; i < dim + 1; ++i) {
 			dot->id= j*(dim + 1) + i;
 			dot->nlines= 0;		// value will be set in 'join_lines'
 			dot->lines= NULL;
-			dot->pos.x= ((float)board.game_size)/dim*i + board.board_margin;
+			dot->pos.x= ((double)board.game_size)/dim*i + board.board_margin;
 			dot->pos.y= ypos;
 			++dot;
 		}
@@ -370,8 +370,8 @@ generate_example_game(struct game *game)
 				sq->center.x+= sq->vertex[k]->pos.x;
 				sq->center.y+= sq->vertex[k]->pos.y;
 			}
-			sq->center.x= (int)(sq->center.x/(double)sq->nvertex);
-			sq->center.y= (int)(sq->center.y/(double)sq->nvertex);
+			sq->center.x= sq->center.x/(double)sq->nvertex;
+			sq->center.y= sq->center.y/(double)sq->nvertex;
 			
 			// set lines on edges of square
 			sq->nsides= 4;
@@ -430,8 +430,8 @@ void
 initialize_board(void)
 {
 	/* Setup coordinate size of board */
-	board.board_size= 11000;
-	board.board_margin= 500;
+	board.board_size= 1;//11000;
+	board.board_margin= 0.05;//500;
 	board.game_size= board.board_size - 2*board.board_margin; //10000
 	board.tile_cache= NULL;
 

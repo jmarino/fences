@@ -43,15 +43,16 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	gboolean inside;
 	
 	/* Translate pixel coords to board coords */
-	point.x= (int)(event->x/500.*board.board_size);
-	point.y= (int)(event->y/500.*board.board_size);
+	/* **TODO** use actual pixel size */
+	point.x= event->x/500.*board.board_size;
+	point.y= event->y/500.*board.board_size;
 
-	printf("mouse: %3.1lf,%3.1lf  (%d,%d)\n", event->x, event->y,
+	printf("mouse: %3.1lf,%3.1lf  (%lf,%lf)\n", event->x, event->y,
 		   point.x, point.y);
 
 	/* Find in which tile the point falls */
 	tile= point.x / board.tile_cache->tile_size;
-	tile+= board.tile_cache->ntiles_side*(point.y/board.tile_cache->tile_size);
+	tile+= board.tile_cache->ntiles_side*(int)(point.y/board.tile_cache->tile_size);
 	printf("mouse: Tile clicked %d\n", tile);
 	list= board.tile_cache->tiles[tile];
 	

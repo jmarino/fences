@@ -38,9 +38,9 @@ gboolean
 is_area_inside_box(struct point *area, struct point *box, int debug)
 {
 	int i, j;
-	int box_s[2];			// box shadow
+	double box_s[2];		// box shadow
 	struct point area_s[2];		// area shadow
-	int p;
+	double p;
 	double angle;
 	double sin_angle, cos_angle;
 	
@@ -60,13 +60,13 @@ is_area_inside_box(struct point *area, struct point *box, int debug)
 	if (area_s[1].y < box[0].y || area_s[0].y > box[1].y)
 		return FALSE;
 	if (debug) {
-		printf("area: (%d,%d) ; (%d,%d) ; (%d, %d) ; (%d, %d)\n",
+		printf("area: (%lf,%lf) ; (%lf,%lf) ; (%lf, %lf) ; (%lf, %lf)\n",
 		       area[0].x, area[0].y, area[1].x, area[1].y,
 		       area[2].x, area[2].y, area[3].x, area[3].y);
-		printf("x -> area_s: %d,%d\t;\tbox: %d, %d\n",
+		printf("x -> area_s: %lf,%lf\t;\tbox: %lf, %lf\n",
 		       area_s[0].x, area_s[1].x,
 		       box[0].x, box[1].x);
-		printf("y -> area_s: %d,%d\t;\tbox: %d, %d\n",
+		printf("y -> area_s: %lf,%lf\t;\tbox: %lf, %lf\n",
 		       area_s[0].y, area_s[1].y,
 		       box[0].y, box[1].y);
 	}
@@ -129,8 +129,8 @@ is_point_inside_area(struct point *point, struct point *area)
 		center.x+= area[i].x;
 		center.y+= area[i].y;
 	}
-	center.x/= 4;
-	center.y/= 4;
+	center.x/= 4.;
+	center.y/= 4.;
 
 	/* calculate the intersection of center point with all sides
 	 * of area. If intersection is between corners -> outside
