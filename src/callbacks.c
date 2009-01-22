@@ -99,7 +99,7 @@ window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 {
 	printf("key: %d\n", event->keyval);
 	
-	(void)g_timeout_add(100, (GSourceFunc)timer_function, drawarea);
+	(void)g_timeout_add(200, (GSourceFunc)timer_function, drawarea);
 	
 	return FALSE;
 }
