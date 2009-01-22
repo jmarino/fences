@@ -24,8 +24,7 @@ fences_SOURCES = \
 	draw.c draw.h \
 	gamedata.c gamedata.h \
 	tile_cache.c tile_cache.h \
-	geometry_tools.c geometry_tools.h \
-	draw_thread.c draw_thread.h
+	geometry_tools.c geometry_tools.h
 
 fences_LDFLAGS = 
 

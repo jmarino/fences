@@ -19,7 +19,6 @@
 #include <stdlib.h>
 
 #include "gamedata.h"
-#include "draw_thread.h"
 
 
 /* defined in gamedata.c */
@@ -121,21 +120,16 @@ draw_board(cairo_t *cr, int width, int height)
 	
 	/* white background */
 	cairo_set_source_rgb(cr, 1, 1, 1);
-	//cairo_rectangle (cr, 0, 0, width, height);
-	//cairo_rectangle (cr, 0, 0, board.board_size, board.board_size);
-	//cairo_fill(cr);
 	cairo_paint(cr);
 	
-	//printf("%d, %d\n", w, h);
-	//cairo_scale (cr, width/(double)board.board_size, 
-	//	     height/(double)board.board_size);
+	/* set scale so we draw in board_size space */
+	cairo_scale (cr, width/(double)board.board_size, 
+		     height/(double)board.board_size);
+
 	//debug
 	//draw_tiles(cr);
 
 	/* Draw lines */
-	//cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
-	//cairo_set_line_width (cr, OFF_LINE_WIDTH);
-	//cairo_set_dash(cr, dash, 2, DASH_OFFSET);
 	line= game->lines;
 	for(i=0; i<game->nlines; ++i) {
 		cairo_new_path(cr);
@@ -216,61 +210,3 @@ draw_board(cairo_t *cr, int width, int height)
 }
 
 
-/*
- * Resize drawarea pixmap (called from configure callback
- */
-void
-resize_board_pixmap(GtkWidget *drawarea, int width, int height, 
-		    int oldw, int oldh)
-{	
-	if (pixmap == NULL) { 	// first time, need to create pixmap
-		pixmap = gdk_pixmap_new(drawarea->window, width, height,-1);
-		/* because we paint our pixmap manually during expose events
-		  we can turn off gtk's automatic painting and double buffering */
-		gtk_widget_set_app_paintable(drawarea, TRUE);
-		gtk_widget_set_double_buffered(drawarea, FALSE);
-		
-		/* request draw of board */
-		request_draw(drawarea);
-	} else {
-		/* unref old pixmap and create new one with new size */
-		g_object_unref(pixmap); 
-		pixmap= gdk_pixmap_new(drawarea->window, width, height, -1);
-		
-		/* request draw of board */
-		request_draw(drawarea);
-	}
-}
-
-
-/*
- * Return pixmap pointer. To be used by functions from outside this file.
- */
-inline GdkPixmap*
-get_pixmap(void)
-{
-	return pixmap;
-}
-
-
-/*
- * Return pixel size of pixmap.
- */
-void 
-get_pixmap_size(int *width, int *height)
-{
-	gdk_drawable_get_size(pixmap, width, height);
-}
-
-
-/*
- * Copy cairo surface on gtk pixmap
- */
-void
-copy_board_on_pixmap(cairo_surface_t *csurf)
-{
-	cairo_t *cr_pixmap = gdk_cairo_create(pixmap);
-	cairo_set_source_surface (cr_pixmap, csurf, 0, 0);
-	cairo_paint(cr_pixmap);
-	cairo_destroy(cr_pixmap);
-}

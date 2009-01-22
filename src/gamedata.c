@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <glib.h>
+#include <math.h>
 
 #include "gamedata.h"
 #include "tile_cache.h"

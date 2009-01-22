@@ -28,7 +28,6 @@
 
 #include "callbacks.h"
 #include "gamedata.h"
-#include "draw_thread.h"
 
 
 /*
@@ -146,7 +145,7 @@ main (int argc, char *argv[])
 	gdk_threads_init();
 	/* gtk_main must be between gdk_threads_enter and gdk_threads_leave */
 	gdk_threads_enter();
-
+	
 	/* Init board */
 	initialize_board();
 	
@@ -156,15 +155,12 @@ main (int argc, char *argv[])
 	/* create GUI from xml file */
 	window = create_window ();
 	gtk_widget_show (window);
-
-	/* start draw thread */
-	start_draw_thread(g_object_get_data(G_OBJECT(window), "drawarea"));
 	
-	/* register timer function to keep frame rate */
-	//(void)g_timeout_add(33, (GSourceFunc)timer_function, drawarea);
+	/* start draw thread */
+	//start_draw_thread(g_object_get_data(G_OBJECT(window), "drawarea"));
 	
 	gtk_main ();
 	gdk_threads_leave();
-
+	
 	return 0;
 }

@@ -19,10 +19,5 @@
 
 
 void draw_board(cairo_t *cr, int width, int height);
-void resize_board_pixmap(GtkWidget *drawarea, int width, int height, 
-			 int oldw, int oldh);
-inline GdkPixmap* get_pixmap(void);
-void get_pixmap_size(int *width, int *height);
-void copy_board_on_pixmap(cairo_surface_t *csurf);
 
 #endif
