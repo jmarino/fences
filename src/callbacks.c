@@ -83,8 +83,8 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 			 (gint)(lin->inf_box[1].x*board.width_pxscale), 
 			 (gint)(lin->inf_box[1].y*board.height_pxscale));
 	}
-
-	return FALSE;
+	
+	return TRUE;
 }
 
 
