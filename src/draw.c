@@ -17,6 +17,7 @@
 #include <gtk/gtk.h>
 #include <math.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
 #include "gamedata.h"
 
