@@ -19,10 +19,12 @@
 #endif
 
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 
 #include "callbacks.h"
 #include "gamedata.h"
 #include "geometry_tools.h"
+#include "draw.h"
 
 /* defined in gamedata.c */
 extern struct board board;
@@ -94,6 +96,9 @@ window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 {
 	printf("key: %d\n", event->keyval);
 	
+	if (event->keyval == GDK_b) {
+		draw_benchmark(drawarea);
+	}
 	//(void)g_timeout_add(200, (GSourceFunc)timer_function, drawarea);
 	
 	return FALSE;

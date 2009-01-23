@@ -210,3 +210,33 @@ draw_board(cairo_t *cr, int width, int height)
 }
 
 
+
+
+/*
+ * Benchmark speed of drawing routine
+ */
+void
+draw_benchmark(GtkWidget *drawarea)
+{
+	cairo_t *cr;
+	struct timeval start_time;	// Contains starting time
+	struct timeval end_time;	// Contains ending time
+	double result;
+	int i;
+	int iters=1000;
+		
+	printf("Benchmark (%d): starting ...\n", iters);
+	gettimeofday (&start_time, NULL);
+	for(i=0; i < iters; ++i) {
+		cr= gdk_cairo_create (drawarea->window);
+		draw_board(cr, drawarea->allocation.width, 
+			   drawarea->allocation.height);
+		cairo_destroy(cr);
+	}
+	gettimeofday (&end_time, NULL);
+	result= ((double)(end_time.tv_sec - start_time.tv_sec))*1000000. \
+		+ ((double)(end_time.tv_usec - start_time.tv_usec));
+
+	printf("Benchmark (%d): total= %7.2lf ms ; iter=%5.2lf ms\n", iters, 
+	       result/1000., result/iters/1000.);
+}

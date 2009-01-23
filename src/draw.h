@@ -19,5 +19,6 @@
 
 
 void draw_board(cairo_t *cr, int width, int height);
+void draw_benchmark(GtkWidget *drawarea);
 
 #endif
