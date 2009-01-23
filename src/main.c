@@ -148,6 +148,9 @@ main (int argc, char *argv[])
 	
 	/* Init board */
 	initialize_board();
+
+	/* Test penrose tiling routine */
+	build_penrose_tiling();
 	
 	gtk_set_locale ();
 	gtk_init (&argc, &argv);
