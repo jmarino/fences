@@ -26,8 +26,6 @@
 extern struct board board;
 
 
-static GdkPixmap *pixmap = NULL;	// pixmap where thread draws
-
 #define ON_LINE_WIDTH		5/500.0*board.board_size
 #define OFF_LINE_WIDTH		0.5/500.0*board.board_size
 #define DASH_OFFSET		10/500.0*board.board_size
@@ -117,7 +115,6 @@ draw_board(cairo_t *cr, int width, int height)
 	double font_scale;
 	struct game *game=board.game;
 	int lines_on;	// how many ON lines a dot has
-	double dash[]={DASH_LENGTH};
 	
 	/* white background */
 	cairo_set_source_rgb(cr, 1, 1, 1);
@@ -130,41 +127,46 @@ draw_board(cairo_t *cr, int width, int height)
 	//debug
 	//draw_tiles(cr);
 
-	/* Draw lines */
+	/* Draw OFF lines first */
+	cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
+	cairo_set_line_width (cr, OFF_LINE_WIDTH);
 	line= game->lines;
 	for(i=0; i<game->nlines; ++i) {
-		cairo_new_path(cr);
 		dot1= line->ends[0];
 		dot2= line->ends[1];
-		if (line->state == LINE_OFF || line->state == LINE_CROSSED) {
-			cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
-			cairo_set_line_width (cr, OFF_LINE_WIDTH);
-			cairo_set_dash(cr, dash, 1, DASH_OFFSET);
+		if (line->state != LINE_ON) {	
 			cairo_move_to(cr, dot1->pos.x, dot1->pos.y);
 			cairo_line_to(cr, dot2->pos.x, dot2->pos.y);
+		}
+		++line;
+	}
+	cairo_stroke(cr);
+	
+	/* Draw lines */
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+	line= game->lines;
+	for(i=0; i<game->nlines; ++i) {
+		dot1= line->ends[0];
+		dot2= line->ends[1];
+		if (line->state == LINE_CROSSED) { // draw cross
+			cairo_set_source_rgb(cr, 1., 0., 0.);
+			cairo_set_line_width (cr, CROSS_LINE_WIDTH);
+			x= (dot1->pos.x + dot2->pos.x)/2.;
+			y= (dot1->pos.y + dot2->pos.y)/2.;
+			cairo_move_to(cr, x-CROSS_RADIUS, y-CROSS_RADIUS);
+			cairo_line_to(cr, x+CROSS_RADIUS, y+CROSS_RADIUS);
+			cairo_move_to(cr, x-CROSS_RADIUS, y+CROSS_RADIUS);
+			cairo_line_to(cr, x+CROSS_RADIUS, y-CROSS_RADIUS);
 			cairo_stroke(cr);
-			if (line->state == LINE_CROSSED) { // draw cross
-				cairo_set_source_rgb(cr, 1., 0., 0.);
-				cairo_set_line_width (cr, CROSS_LINE_WIDTH);
-				cairo_set_dash(cr, dash, 0, 0);
-				x= (dot1->pos.x + dot2->pos.x)/2.;
-				y= (dot1->pos.y + dot2->pos.y)/2.;
-				cairo_move_to(cr, x-CROSS_RADIUS, y-CROSS_RADIUS);
-				cairo_line_to(cr, x+CROSS_RADIUS, y+CROSS_RADIUS);
-				cairo_move_to(cr, x-CROSS_RADIUS, y+CROSS_RADIUS);
-				cairo_line_to(cr, x+CROSS_RADIUS, y-CROSS_RADIUS);
-				cairo_stroke(cr);
-			}
 		} else if (line->state == LINE_ON) {
 			fx_setcolor(cr, line);
 			//cairo_set_source_rgb(cr, 0., 0., 1.);
 			cairo_set_line_width (cr, ON_LINE_WIDTH);
-			cairo_set_dash(cr, dash, 0, 0);
 			cairo_move_to(cr, dot1->pos.x, dot1->pos.y);
 			cairo_line_to(cr, dot2->pos.x, dot2->pos.y);
 			cairo_stroke(cr);
 			//fx_nextframe(line);
-		} else {
+		} else if (line->state != LINE_OFF) {
 			g_debug("draw_line: line (%d) state invalid: %d", line->id, line->state);
 		}
 		++line;
@@ -172,20 +174,23 @@ draw_board(cairo_t *cr, int width, int height)
 	//cairo_stroke(cr);
 	
 	/* Draw dots */
-	dot1= game->dots;	
-	for(i=0; i<game->ndots; ++i) {
-		/* count how many lines on are touching this */
-		lines_on= 0;
-		for(j=0; j < dot1->nlines; ++j) {
-			if (dot1->lines[j]->state == LINE_ON)
-				++lines_on;
+	if (0) {
+		dot1= game->dots;
+		for(i=0; i<game->ndots; ++i) {
+			/* count how many lines on are touching this */
+			lines_on= 0;
+			for(j=0; j < dot1->nlines; ++j) {
+				if (dot1->lines[j]->state == LINE_ON)
+					++lines_on;
+			}
+			/* draw dot */
+			if (lines_on == 2) cairo_set_source_rgb(cr, 0, 0, 1);
+			else cairo_set_source_rgb(cr, 0, 0, 0);
+			cairo_arc (cr, dot1->pos.x, dot1->pos.y, DOT_RADIUS, 
+				   0, 2 * M_PI);
+			cairo_fill(cr);
+			++dot1;
 		}
-		/* draw dot */
-		if (lines_on == 2) cairo_set_source_rgb(cr, 0, 0, 1);
-		else cairo_set_source_rgb(cr, 0, 0, 0);
-		cairo_arc (cr, dot1->pos.x, dot1->pos.y, DOT_RADIUS, 0, 2 * M_PI);
-		cairo_fill(cr);
-		++dot1;
 	}
 	
 	/* Text in squares */
