@@ -96,6 +96,9 @@ struct board {
  * Functions
  */
 
+void build_line_network(struct game *game);
+void define_line_infarea(struct game *game);
+void find_smallest_numbered_square(struct game *game);
 void initialize_board(void);
 
 #endif
