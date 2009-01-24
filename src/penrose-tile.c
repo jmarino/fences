@@ -269,10 +269,46 @@ trim_repeated_rombs(GSList *penrose)
 
 
 /*
+ * Eliminate rombs outside a certain radius
+ * Returns new trimmed list
+ */
+static GSList *
+trim_outside_rombs(GSList *penrose, double radius)
+{
+	GSList *current;
+	GSList *next;
+	struct romb *romb;
+	struct point vertex[4];
+	double dist;
+	int i;
+	
+	current= penrose;
+	while(current != NULL) {
+		romb= (struct romb*) current->data;
+		
+		get_romb_vertices(romb, vertex);
+		next= g_slist_next(current);
+		for(i=0; i < 4; ++i) {
+			vertex[i].x-= board.board_size/2.;
+			vertex[i].y-= board.board_size/2.;
+			dist= sqrt(vertex[i].x*vertex[i].x + vertex[i].y*vertex[i].y);
+			if (dist > radius) {
+				g_free(current->data);
+				penrose= g_slist_delete_link(penrose, current);
+				break;
+			}
+		}
+		current= next;
+	}
+	return penrose;
+}
+
+
+/*
  * Unfold current list of rombs
  */
-GSList*
-penrose_unfold(GSList* penrose)
+static GSList*
+penrose_unfold(GSList* penrose, gboolean trim)
 {
 	GSList *newpenrose=NULL;
 	struct romb *romb;
@@ -296,6 +332,10 @@ penrose_unfold(GSList* penrose)
 	/* get rid of repeated rombs */
 	separate_distance= ((struct romb*)newpenrose->data)->side/10.;
 	newpenrose= trim_repeated_rombs(newpenrose);
+	
+	/* get rid of rombs outside a certain radius */
+	if (trim)
+		newpenrose= trim_outside_rombs(newpenrose, board.game_size/2.);
 
 	/* debug: count number of rombs in list */
 	g_debug("rombs in list: %d", g_slist_length(newpenrose));
@@ -542,14 +582,29 @@ build_penrose_board(void)
 	GSList *penrose=NULL;
 	struct romb *romb;
 	struct game *game;
+	int i;
+	const int num_unfolds=6;
 
 	/* starting shape */
 	romb= (struct romb*)g_malloc(sizeof(struct romb));
-	romb->type= THIN_ROMB;	/**NOTE** thin romb is not unfolding well */
-	romb->pos.x= board.board_size/6.;
+	romb->type= FAT_ROMB;
+	romb->side= board.game_size/RATIO * 2.005;
+	romb->angle= D2R(270);
+	romb->pos.x= board.board_size/2.;
+	romb->pos.y= (board.board_size - board.board_margin) - 
+		(board.game_size - romb->side*RATIO)/2.;
+	/* shift down by: old_side/2 + new_side + old_side */
+	//romb->pos.y= board.board_margin + 
+	//	romb->side/pow(RATIO, num_unfolds)*(RATIO/2 + RATIO + 1);
+	
+	romb->type= THIN_ROMB;
+	romb->side= board.game_size/(2*cos(D2R(18))) * 2.25;
+	romb->angle= D2R(180);
+	romb->pos.x= (board.board_size - board.board_margin) - 
+		(board.game_size - romb->side*2*cos(D2R(18)))/2.;
 	romb->pos.y= board.board_size/2.;
-	romb->side= board.board_size/2.5;
-	romb->angle= 0.;
+	romb->pos.y-= romb->side/pow(RATIO, num_unfolds) * ( 1. + sin(D2R(18)) );
+	
 
 	/* create initial list of shapes (just a big one) */
 	penrose= g_slist_prepend(penrose, romb);
@@ -557,11 +612,10 @@ build_penrose_board(void)
 	//draw_penrose_tile(penrose);
 	
 	/* unfold list of shapes */
-	penrose= penrose_unfold(penrose);
-	penrose= penrose_unfold(penrose);
-	penrose= penrose_unfold(penrose);
-	//penrose= penrose_unfold(penrose);
-	//penrose= penrose_unfold(penrose);
+	for(i=0; i < num_unfolds - 1; ++i) 
+		penrose= penrose_unfold(penrose, FALSE);
+	penrose= penrose_unfold(penrose, TRUE);
+	
 
 	/* clip rombs to make tile round */
 	/***TODO***/
