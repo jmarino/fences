@@ -83,6 +83,27 @@ draw_areainf(cairo_t *cr)
 
 
 /*
+ * DEBUG: Hack to display square centers
+ */
+static void
+draw_square_centers(cairo_t *cr)
+{
+	int i;
+	struct square *sq;
+	
+	cairo_set_source_rgba(cr, 0., 1., 0., 0.2);
+	sq= board.game->squares;
+	for(i=0; i < board.game->nsquares; ++i) {
+		cairo_new_sub_path(cr);
+		cairo_arc (cr, sq->center.x, sq->center.y, 2*DOT_RADIUS, 
+			   0, 2 * M_PI);
+		++sq;
+	}
+	cairo_fill(cr);
+}
+
+
+/*
  * Select color according to FX status and frame
  */
 static void
@@ -152,6 +173,7 @@ draw_board(cairo_t *cr, int width, int height)
 	// debug
 	//draw_tiles(cr);
 	draw_areainf(cr);
+	draw_square_centers(cr);
 
 	/* Draw OFF lines first */
 	cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
