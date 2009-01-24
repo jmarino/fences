@@ -94,10 +94,11 @@ setup_tile_cache(void)
 			else
 				inside= is_area_inside_box(lin->inf, edge, 0);
 			if (inside) {
-				//printf("box %d (%d,%d;%d,%d): add line %d  (%d,%d)\n", b, 
+				//printf("box %d (%lf,%lf;%lf,%lf): add line %d  (%lf,%lf)\n", b, 
 				//	   edge[0].x,edge[0].y, edge[1].x, edge[1].y, l, 
-				//	   lin->center.x, lin->center.y);
+				//	   lin->ends[0]->pos.x, lin->ends[0]->pos.y);
 				tiles[b]= g_slist_prepend(tiles[b], lin);
+				//printf("line %d in tile %d\n", lin->id, b);
 			}
 			++lin;
 		}

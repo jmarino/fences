@@ -149,7 +149,7 @@ draw_board(cairo_t *cr, int width, int height)
 	cairo_scale (cr, width/(double)board.board_size, 
 		     height/(double)board.board_size);
 
-	//debug
+	// debug
 	//draw_tiles(cr);
 	draw_areainf(cr);
 

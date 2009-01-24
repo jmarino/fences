@@ -47,8 +47,8 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	point.x= event->x/500.*board.board_size;
 	point.y= event->y/500.*board.board_size;
 
-	printf("mouse: %3.1lf,%3.1lf  (%lf,%lf)\n", event->x, event->y,
-		   point.x, point.y);
+	//printf("mouse: %3.1lf,%3.1lf  (%lf,%lf)\n", event->x, event->y,
+	//	   point.x, point.y);
 
 	/* Find in which tile the point falls */
 	tile= point.x / board.tile_cache->tile_size;
@@ -67,6 +67,7 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	
 	/* check if a line was found */
 	if (list != NULL) {
+		printf("mouse: - Line %d\n", lin->id);
 		switch(event->button) {
 			/* left button */
 			case 1: lin->state= (lin->state == LINE_ON) ? LINE_OFF : LINE_ON;
