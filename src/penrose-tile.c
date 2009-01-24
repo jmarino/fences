@@ -548,7 +548,7 @@ penrose_tile_to_game(GSList *penrose)
  * Build a penrose tiling by 
  */ 
 struct game*
-build_penrose_tiling(void)
+build_penrose_board(void)
 {
 	GSList *penrose=NULL;
 	struct romb *romb;

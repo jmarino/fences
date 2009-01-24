@@ -17,6 +17,6 @@
 #ifndef __INCLUDED_PENROSE_TILE_H__
 #define __INCLUDED_PENROSE_TILE_H__
 
-struct game* build_penrose_tiling(void);
+struct game* build_penrose_board(void);
 
 #endif
