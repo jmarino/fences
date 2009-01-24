@@ -104,6 +104,35 @@ draw_square_centers(cairo_t *cr)
 
 
 /*
+ * DEBUG: Hack to display which squares are associated with each line
+ */
+static void
+draw_linesquares(cairo_t *cr)
+{
+	int i;
+	struct line *lin;
+	double x, y;
+	
+	cairo_set_source_rgba(cr, 0., 1., 0., 0.4);
+	cairo_set_line_width (cr, OFF_LINE_WIDTH);
+	lin= board.game->lines;
+	for(i=0; i < board.game->nlines; ++i) {
+		/* find middle of line */
+		x= (lin->ends[0]->pos.x + lin->ends[1]->pos.x)/2.;
+		y= (lin->ends[0]->pos.y + lin->ends[1]->pos.y)/2.;
+		cairo_move_to(cr, x, y);
+		cairo_line_to(cr, lin->sq[0]->center.x, lin->sq[0]->center.y);
+		if (lin->nsquares == 2) {
+			cairo_move_to(cr, x, y);
+			cairo_line_to(cr, lin->sq[1]->center.x, lin->sq[1]->center.y);
+		}
+		++lin;
+	}
+	cairo_stroke(cr);
+}
+
+
+/*
  * Select color according to FX status and frame
  */
 static void
@@ -174,6 +203,7 @@ draw_board(cairo_t *cr, int width, int height)
 	//draw_tiles(cr);
 	draw_areainf(cr);
 	draw_square_centers(cr);
+	draw_linesquares(cr);
 
 	/* Draw OFF lines first */
 	cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
