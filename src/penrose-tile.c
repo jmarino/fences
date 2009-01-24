@@ -429,7 +429,6 @@ set_lines_on_square(struct square *sq, struct game *game)
 			++game->nlines;
 		}
 	}
-	g_debug("-set lines in square %d", sq->id);
 }
 
 
@@ -475,8 +474,6 @@ penrose_tile_to_game(GSList *penrose)
 		list= g_slist_next(list);
 	}
 	
-	printf("ndots: %d\n", ndots);
-	
 	/* change to actual number of dots */
 	game->ndots= ndots;
 	game->dots= g_realloc(game->dots, ndots*sizeof(struct dot));
@@ -495,14 +492,11 @@ penrose_tile_to_game(GSList *penrose)
 		++lin;
 	}
 	
-	printf("nlines guess: %d\n", game->nlines);
-	
 	/* initialize squares (rombs) */
 	list= penrose;
 	sq= game->squares;
 	game->nlines= 0;		// we'll add them as we find them
 	for(i=0; i < game->nsquares; ++i) {
-		g_debug("square %d (%d)", i, (int)sq);
 		sq->id= i;
 		sq->number= -1;	// all squares are initialized empty
 		sq->nvertex= 4;
@@ -528,7 +522,6 @@ penrose_tile_to_game(GSList *penrose)
 			
 		++sq;	
 		list= g_slist_next(list);
-		g_debug("-square %d", i);
 	}
 	
 	/* change to actual number of lines */
