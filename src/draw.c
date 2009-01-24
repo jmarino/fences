@@ -37,7 +37,7 @@ extern struct board board;
 
 
 /*
- * Hack to display tile cache as a green grid
+ * DEBUG: Hack to display tile cache as a green grid
  */
 static void
 draw_tiles(cairo_t *cr)
@@ -45,8 +45,8 @@ draw_tiles(cairo_t *cr)
 	int i, j;
 	double width=board.tile_cache->tile_size;
 	
-	g_message("draw_tiles");
-	cairo_set_source_rgb(cr, 0., 150/256., 0.);
+	//g_message("draw_tiles");
+	cairo_set_source_rgba(cr, 0., 1., 0., 0.2);
 	cairo_set_line_width (cr, OFF_LINE_WIDTH);
 	for(i=0; i < 10; ++i) {
 		for(j=0; j < 10; ++j) {
