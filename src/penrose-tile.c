@@ -550,19 +550,19 @@ struct game*
 build_penrose_tiling(void)
 {
 	GSList *penrose=NULL;
+	struct romb *romb;
 	struct game *game;
-	struct romb *start;
 
 	/* starting shape */
-	start= (struct romb*)g_malloc(sizeof(struct romb));
-	start->type= THIN_ROMB;	/**NOTE** thin romb is not unfolding well */
-	start->pos.x= board.board_size/6.;
-	start->pos.y= board.board_size/2.;
-	start->side= board.board_size/2.5;
-	start->angle= 0.;
+	romb= (struct romb*)g_malloc(sizeof(struct romb));
+	romb->type= THIN_ROMB;	/**NOTE** thin romb is not unfolding well */
+	romb->pos.x= board.board_size/6.;
+	romb->pos.y= board.board_size/2.;
+	romb->side= board.board_size/2.5;
+	romb->angle= 0.;
 
 	/* create initial list of shapes (just a big one) */
-	penrose= g_slist_prepend(penrose, start);
+	penrose= g_slist_prepend(penrose, romb);
 
 	//draw_penrose_tile(penrose);
 	
