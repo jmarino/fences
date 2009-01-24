@@ -303,14 +303,254 @@ penrose_unfold(GSList* penrose)
 }
 
 
+/*
+ * Return coordinates of vertices of romb
+ */
+void
+get_romb_vertices(struct romb *romb, struct point *vertex)
+{
+	vertex[0].x= romb->pos.x;
+	vertex[0].y= romb->pos.y;
+	if (romb->type == FAT_ROMB) {
+		vertex[1].x= romb->pos.x + romb->side*cos(romb->angle - D2R(36));
+		vertex[1].y= romb->pos.y + romb->side*sin(romb->angle - D2R(36));
+		vertex[2].x= romb->pos.x + romb->side*RATIO*cos(romb->angle);
+		vertex[2].y= romb->pos.y + romb->side*RATIO*sin(romb->angle);
+		vertex[3].x= romb->pos.x + romb->side*cos(romb->angle + D2R(36));
+		vertex[3].y= romb->pos.y + romb->side*sin(romb->angle + D2R(36));
+	} else {
+		vertex[1].x= romb->pos.x + romb->side*cos(romb->angle - D2R(18));
+		vertex[1].y= romb->pos.y + romb->side*sin(romb->angle - D2R(18));
+		vertex[2].x= romb->pos.x + 2*romb->side*cos(D2R(18))*cos(romb->angle);
+		vertex[2].y= romb->pos.y + 2*romb->side*cos(D2R(18))*sin(romb->angle);
+		vertex[3].x= romb->pos.x + romb->side*cos(romb->angle + D2R(18));
+		vertex[3].y= romb->pos.y + romb->side*sin(romb->angle + D2R(18));
+	}
+}
+
+
+/*
+ * Check if coordinates of vertex are unique (not in the list of previous vertices)
+ */
+gboolean
+is_vertex_unique(struct point *v, struct dot* dots, int ndots)
+{
+	int i;
+	double x, y;
+	
+	for(i=0; i < ndots; ++i) {
+		x= v->x - dots[i].pos.x;
+		y= v->y - dots[i].pos.y;
+		if ( sqrt(x*x + y*y) < separate_distance )
+			return FALSE;
+	}
+	
+	return TRUE;
+}
+
+
+/*
+ * Find vertex on dot list by vertex coordinates
+ */
+struct dot*
+find_dot_by_coords(struct point *v, struct game *game)
+{
+	int i;
+	double x, y;
+	
+	for(i=0; i < game->ndots; ++i) {
+		x= v->x - game->dots[i].pos.x;
+		y= v->y - game->dots[i].pos.y;
+		if ( sqrt(x*x + y*y) < separate_distance )
+			return game->dots + i;
+	}
+	
+	g_debug("find_dot_by_coords: vertex not found on dot list");
+	return NULL;
+}
+
+
+/*
+ * Square has vertices already set. Now set lines.
+ */
+void
+set_lines_on_square(struct square *sq, struct game *game)
+{
+	struct dot *d1;
+	struct dot *d2;
+	struct line *lin;
+	int i, j;
+	double x, y;
+	
+	g_debug("set lines in square %d", sq->id);
+	for(i=0; i < 4; ++i) {
+		j= (i + 1) % 4;
+		d1= sq->vertex[i];
+		d2= sq->vertex[j];
+		
+		/* align points in line so first point is closest to origin */
+		if ( (d1->pos.x*d1->pos.x + d1->pos.y*d1->pos.y) > 
+		    (d2->pos.x*d2->pos.x + d2->pos.y*d2->pos.y) ) {
+			d2= sq->vertex[i];
+			d1= sq->vertex[j];
+		}
+		
+		/* look for line in line list */
+		for(j=0; j < game->nlines; ++j) {
+			x= d1->pos.x - game->lines[j].ends[0]->pos.x;
+			y= d1->pos.y - game->lines[j].ends[0]->pos.y;
+			if ( sqrt(x*x + y*y) < separate_distance ) {
+				/* if top left point matches: try bottom right */
+				x= d2->pos.x - game->lines[j].ends[1]->pos.x;
+				y= d2->pos.y - game->lines[j].ends[1]->pos.y;
+				if ( sqrt(x*x + y*y) < separate_distance )
+					break;	// line found!
+			}
+		}
+		
+		/* set square and line fields accordingly */
+		if (j < game->nlines) { // line found
+			lin= game->lines + j;
+			sq->sides[i]= lin;
+			if (lin->nsquares == 0) {
+				lin->sq[0]= sq;
+				++lin->nsquares;
+			} else if (lin->nsquares == 1 && lin->sq[0] != sq) {	
+				// one was already assigned -> add if different
+				lin->sq[1]= sq;
+				lin->nsquares= 2;
+			}
+		} else {		// line NOT found, add it
+			lin= game->lines + game->nlines;
+			sq->sides[i]= lin;
+			lin->id= game->nlines;
+			lin->ends[0]= d1;
+			lin->ends[1]= d2;
+			lin->sq[0]= sq;
+			++game->nlines;
+		}
+	}
+	g_debug("-set lines in square %d", sq->id);
+}
+
+
+/*
+ * Transform list of rombs to game data
+ */
+static struct game*
+penrose_tile_to_game(GSList *penrose)
+{
+	struct game *game;
+	struct dot *dot;
+	struct line *lin;
+	struct square *sq;
+	int ndots;
+	GSList *list;
+	struct point vertex[4];
+	int i, j;
+	
+	/* Allocate memory for game data */
+	game= (struct game*)g_malloc(sizeof(struct game));
+	game->nsquares= g_slist_length(penrose);
+	game->ndots= game->nsquares*4.0; // over count (undo at the end)
+	game->squares= (struct square*)g_malloc(game->nsquares*sizeof(struct square));
+	game->dots= (struct dot*)g_malloc(game->ndots*sizeof(struct dot));
+	
+	/* Compile vertices (and count how many) */
+	ndots= 0;
+	list= penrose;
+	dot= game->dots;
+	while(list != NULL) {
+		get_romb_vertices((struct romb*)list->data, vertex);
+		for(i=0; i < 4; ++i) {
+			if (is_vertex_unique(&vertex[i], game->dots, ndots)) {
+				dot->id= ndots;
+				dot->nlines= 0; // value will be set later
+				dot->lines= NULL;
+				dot->pos.x= vertex[i].x;
+				dot->pos.y= vertex[i].y;
+				++ndots;
+				++dot;
+			}
+		}
+		list= g_slist_next(list);
+	}
+	
+	printf("ndots: %d\n", ndots);
+	
+	/* change to actual number of dots */
+	game->ndots= ndots;
+	game->dots= g_realloc(game->dots, ndots*sizeof(struct dot));
+	
+	/* allocate space for lines */
+	game->nlines= game->nsquares*4; // assume same number of lines as dots
+	game->lines= (struct line*)g_malloc(game->nlines*sizeof(struct line));
+	
+	/* initialize lines */
+	lin= game->lines;
+	for (i= 0; i < game->nlines; ++i) {
+		lin->id= i;
+		lin->nsquares= 0;
+		lin->fx_status= 0;
+		lin->fx_frame= 0;
+		++lin;
+	}
+	
+	printf("nlines guess: %d\n", game->nlines);
+	
+	/* initialize squares (rombs) */
+	list= penrose;
+	sq= game->squares;
+	game->nlines= 0;		// we'll add them as we find them
+	for(i=0; i < game->nsquares; ++i) {
+		g_debug("square %d (%d)", i, (int)sq);
+		sq->id= i;
+		sq->number= -1;	// all squares are initialized empty
+		sq->nvertex= 4;
+		sq->vertex= (struct dot **)g_malloc(4 * sizeof(void*));
+		
+		/* set square (romb) vertex pointers */
+		get_romb_vertices((struct romb*)list->data, vertex);
+		for(j=0; j < 4; ++j) {
+			sq->vertex[j]= find_dot_by_coords(&vertex[j], game);
+		}
+		
+		/* calculate position of center of square (romb) */
+		get_romb_center((struct romb*)list->data, &sq->center);
+		
+		/* set lines on edges of square (romb) */
+		sq->nsides= 4;
+		sq->sides= (struct line **)g_malloc(4 * sizeof(void *));
+		set_lines_on_square(sq, game);
+		
+		/* ini FX status */
+		sq->fx_status= 0;
+		sq->fx_frame= 0;
+			
+		++sq;	
+		list= g_slist_next(list);
+		g_debug("-square %d", i);
+	}
+	
+	/* change to actual number of lines */
+	game->lines= g_realloc(game->lines, game->nlines*sizeof(struct line));
+	
+	printf("nsquares: %d (%d)\n", game->nsquares, 4*game->nsquares);
+	printf("ndots: %d\n", game->ndots);
+	printf("nlines actual: %d\n", game->nlines);
+	
+	return game;
+}
+
 
 /*
  * Build a penrose tiling by 
  */ 
-void
+struct game*
 build_penrose_tiling(void)
 {
 	GSList *penrose=NULL;
+	struct game *game;
 	struct romb *start;
 
 	/* starting shape */
@@ -328,10 +568,16 @@ build_penrose_tiling(void)
 	
 	/* unfold list of shapes */
 	penrose= penrose_unfold(penrose);
-	penrose= penrose_unfold(penrose); 
-	penrose= penrose_unfold(penrose); 
-	/*penrose= penrose_unfold(penrose);
-	penrose= penrose_unfold(penrose);*/
+	//penrose= penrose_unfold(penrose);
+	//penrose= penrose_unfold(penrose);
+	//penrose= penrose_unfold(penrose);
+	//penrose= penrose_unfold(penrose);
+
+	/* clip rombs to make tile round */
+	/***TODO***/
+	
+	/* transform tile into game data (points, lines & squares) */
+	game= penrose_tile_to_game(penrose);
 	
 	draw_penrose_tile(penrose);
 	
@@ -340,6 +586,10 @@ build_penrose_tiling(void)
 		g_free(penrose->data);
 		penrose= g_slist_delete_link(penrose, penrose);
 	}
+	
+	//exit(1);
+	
+	return game;
 }
 
 
