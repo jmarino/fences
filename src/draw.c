@@ -26,7 +26,7 @@
 extern struct board board;
 
 
-#define ON_LINE_WIDTH		5/500.0*board.board_size
+#define ON_LINE_WIDTH		2.5/500.0*board.board_size
 #define OFF_LINE_WIDTH		0.5/500.0*board.board_size
 #define DASH_OFFSET		10/500.0*board.board_size
 #define DASH_LENGTH		2.25/500.0*board.board_size
