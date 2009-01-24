@@ -569,8 +569,8 @@ build_penrose_board(void)
 	
 	/* unfold list of shapes */
 	penrose= penrose_unfold(penrose);
-	//penrose= penrose_unfold(penrose);
-	//penrose= penrose_unfold(penrose);
+	penrose= penrose_unfold(penrose);
+	penrose= penrose_unfold(penrose);
 	//penrose= penrose_unfold(penrose);
 	//penrose= penrose_unfold(penrose);
 
@@ -580,7 +580,11 @@ build_penrose_board(void)
 	/* transform tile into game data (points, lines & squares) */
 	game= penrose_tile_to_game(penrose);
 	
+	/* interconnect all the lines */
+	build_line_network(game);
 	
+	/* define area of influence of each line */
+	define_line_infarea(game);
 	
 	/* debug: draw to file */
 	//draw_penrose_tile(penrose);
