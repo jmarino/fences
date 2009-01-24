@@ -411,11 +411,8 @@ set_lines_on_square(struct square *sq, struct game *game)
 		if (j < game->nlines) { // line found
 			lin= game->lines + j;
 			sq->sides[i]= lin;
-			if (lin->nsquares == 0) {
-				lin->sq[0]= sq;
-				++lin->nsquares;
-			} else if (lin->nsquares == 1 && lin->sq[0] != sq) {	
-				// one was already assigned -> add if different
+			// sq is not already in line -> add it
+			if (lin->nsquares == 1 && lin->sq[0] != sq) {
 				lin->sq[1]= sq;
 				lin->nsquares= 2;
 			}
@@ -426,6 +423,7 @@ set_lines_on_square(struct square *sq, struct game *game)
 			lin->ends[0]= d1;
 			lin->ends[1]= d2;
 			lin->sq[0]= sq;
+			lin->nsquares= 1;
 			++game->nlines;
 		}
 	}
