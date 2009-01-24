@@ -383,15 +383,13 @@ set_lines_on_square(struct square *sq, struct game *game)
 	int i, j;
 	double x, y;
 	
-	g_debug("set lines in square %d", sq->id);
 	for(i=0; i < 4; ++i) {
 		j= (i + 1) % 4;
 		d1= sq->vertex[i];
 		d2= sq->vertex[j];
 		
-		/* align points in line so first point is closest to origin */
-		if ( (d1->pos.x*d1->pos.x + d1->pos.y*d1->pos.y) > 
-		    (d2->pos.x*d2->pos.x + d2->pos.y*d2->pos.y) ) {
+		/* align points in line so first point has smallest y (top point) */
+		if (d2->pos.y < d1->pos.y) {
 			d2= sq->vertex[i];
 			d1= sq->vertex[j];
 		}
@@ -401,7 +399,7 @@ set_lines_on_square(struct square *sq, struct game *game)
 			x= d1->pos.x - game->lines[j].ends[0]->pos.x;
 			y= d1->pos.y - game->lines[j].ends[0]->pos.y;
 			if ( sqrt(x*x + y*y) < separate_distance ) {
-				/* if top left point matches: try bottom right */
+				/* if top point matches: try bottom point */
 				x= d2->pos.x - game->lines[j].ends[1]->pos.x;
 				y= d2->pos.y - game->lines[j].ends[1]->pos.y;
 				if ( sqrt(x*x + y*y) < separate_distance )
