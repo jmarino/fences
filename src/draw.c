@@ -58,6 +58,31 @@ draw_tiles(cairo_t *cr)
 
 
 /*
+ * DEBUG: Hack to display lines area of influence
+ */
+static void
+draw_areainf(cairo_t *cr)
+{
+	int i, j;
+	struct line *lin;
+	
+	cairo_set_source_rgba(cr, 0., 1., 0., 0.2);
+	cairo_set_line_width (cr, OFF_LINE_WIDTH);
+	lin= board.game->lines;
+	for(i=0; i < board.game->nlines; ++i) {
+		cairo_move_to(cr, lin->inf[0].x, lin->inf[0].y);
+		for(j=1; j < 4; ++j) {
+			cairo_line_to(cr, lin->inf[j].x, lin->inf[j].y);
+			
+		}
+		cairo_line_to(cr, lin->inf[0].x, lin->inf[0].y);
+		++lin;
+	}
+	cairo_stroke(cr);
+}
+
+
+/*
  * Select color according to FX status and frame
  */
 static void
@@ -126,6 +151,7 @@ draw_board(cairo_t *cr, int width, int height)
 
 	//debug
 	//draw_tiles(cr);
+	draw_areainf(cr);
 
 	/* Draw OFF lines first */
 	cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
