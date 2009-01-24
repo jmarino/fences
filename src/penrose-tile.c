@@ -14,6 +14,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+#include <stdio.h>
 #include <glib.h>
 #include <math.h>
 #include <cairo.h>
@@ -55,7 +56,7 @@ static double separate_distance=0.;
  * Unfold a fat romb
  * Add new rombs to list newpenrose and return it
  */ 
-GSList*
+static GSList*
 penrose_unfold_fatromb(GSList *newpenrose, struct romb *romb)
 {
 	struct romb *nromb;
@@ -123,7 +124,7 @@ penrose_unfold_fatromb(GSList *newpenrose, struct romb *romb)
  * Unfold a thin romb
  * Add new rombs to list newpenrose and return it
  */ 
-GSList*
+static GSList*
 penrose_unfold_thinromb(GSList *newpenrose, struct romb *romb)
 {
 	struct romb *nromb;
@@ -579,8 +580,11 @@ build_penrose_tiling(void)
 	/* transform tile into game data (points, lines & squares) */
 	game= penrose_tile_to_game(penrose);
 	
-	draw_penrose_tile(penrose);
 	
+	
+	/* debug: draw to file */
+	//draw_penrose_tile(penrose);
+		
 	/* free data */
 	while (penrose != NULL) {
 		g_free(penrose->data);
@@ -593,6 +597,9 @@ build_penrose_tiling(void)
 }
 
 
+/*
+ * Draw tile to png file (for debug purposes only)
+ */
 void
 draw_penrose_tile(GSList *penrose)
 {
