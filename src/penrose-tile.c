@@ -46,6 +46,10 @@ struct romb {
 #define WRAP(x)		x= ((x) > 2.*M_PI) ? (x) -  2.*M_PI : (x)
 
 
+/* contains minimum distance required to consider two vertices different */
+static double separate_distance=0.;
+
+
 
 /*
  * Unfold a fat romb
@@ -173,6 +177,95 @@ penrose_unfold_thinromb(GSList *newpenrose, struct romb *romb)
 }
 
 
+/*
+ * Check if two rombs are the same
+ * Finds center of both rombs and see if they're within side/10.
+ * **NOTE** unused
+ */
+static gboolean
+are_rombs_same(struct romb *r1, struct romb *r2)
+{
+	double x, y;
+	
+	if (r1->type != r2->type) return FALSE;
+	if (r1->type == FAT_ROMB) {
+		x= r1->pos.x + r1->side*RATIO/2.0*cos(r1->angle);
+		y= r1->pos.y + r1->side*RATIO/2.0*sin(r1->angle);
+		x-= r2->pos.x + r2->side*RATIO/2.0*cos(r2->angle);
+		y-= r2->pos.y + r2->side*RATIO/2.0*sin(r2->angle);
+	} else {
+		x= r1->pos.x + r1->side*cos(D2R(18))*cos(r1->angle);
+		y= r1->pos.y + r1->side*cos(D2R(18))*sin(r1->angle);
+		x-= r2->pos.x + r2->side*cos(D2R(18))*cos(r2->angle);
+		y-= r2->pos.y + r2->side*cos(D2R(18))*sin(r2->angle);
+	}
+	if ( sqrt(x*x + y*y) < r1->side/10. ) return TRUE;
+	return FALSE;
+}
+
+
+/*
+ * Calculate center point of romb
+ */
+static void
+get_romb_center(struct romb *romb, struct point *center)
+{
+	if (romb->type == FAT_ROMB) {
+		center->x= romb->pos.x + romb->side*RATIO/2.0*cos(romb->angle);
+		center->y= romb->pos.y + romb->side*RATIO/2.0*sin(romb->angle);
+	} else {
+		center->x= romb->pos.x + romb->side*cos(D2R(18))*cos(romb->angle);
+		center->y= romb->pos.y + romb->side*cos(D2R(18))*sin(romb->angle);
+	}
+}
+
+
+/*
+ * Eliminate repeated rombs in the list
+ * Returns new trimmed list
+ */
+GSList *
+trim_repeated_rombs(GSList *penrose)
+{
+	GSList *current;
+	GSList *next;
+	GSList *p;
+	struct romb *r1, *r2;
+	struct point center1, center2;
+	double dist;
+	
+	current= penrose;
+	while(current != NULL) {
+		p= g_slist_next(current);
+		r1= (struct romb*)current->data;
+		get_romb_center(r1, &center1);
+		/* iterate over rest of rombs */
+		while(p != NULL) {
+			r2= (struct romb*)p->data;
+			if (r1->type != r2->type) { // not same type, next
+				p= g_slist_next(p);
+				continue;
+			}
+			get_romb_center(r2, &center2);
+			/* calculate dist between centers of both rombs */
+			center2.x-= center1.x;
+			center2.y-= center1.y;
+			dist= sqrt(center2.x*center2.x + center2.y*center2.y); 
+			if (dist < separate_distance ) { // same romb
+				//g_debug("delete romb, dist: %lf < %lf", dist, r1->side/10.);
+				g_free(p->data);
+				next= g_slist_next(p);
+				penrose= g_slist_delete_link(penrose, p);
+				p= next;
+			} else {
+				p= g_slist_next(p);
+			}
+		}
+		current= g_slist_next(current);
+	}
+	return penrose;
+}
+
 
 /*
  * Unfold current list of rombs
@@ -200,8 +293,12 @@ penrose_unfold(GSList* penrose)
 	}
 
 	/* get rid of repeated rombs */
-	/***TODO***/
+	separate_distance= ((struct romb*)newpenrose->data)->side/10.;
+	newpenrose= trim_repeated_rombs(newpenrose);
 
+	/* debug: count number of rombs in list */
+	g_debug("rombs in list: %d", g_slist_length(newpenrose));
+		
 	return newpenrose;
 }
 
