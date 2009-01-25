@@ -608,8 +608,6 @@ build_penrose_board(void)
 
 	/* create initial list of shapes (just a big one) */
 	penrose= g_slist_prepend(penrose, romb);
-
-	//draw_penrose_tile(penrose);
 	
 	/* unfold list of shapes */
 	penrose= penrose_unfold(penrose, 0.);
@@ -618,7 +616,9 @@ build_penrose_board(void)
 		penrose= penrose_unfold(penrose, board.game_size*2.);
 	penrose= penrose_unfold(penrose, board.game_size/1.8);
 	
-
+	/* draw to file */
+	//draw_penrose_tile(penrose);
+	
 	/* clip rombs to make tile round */
 	/***TODO***/
 	
