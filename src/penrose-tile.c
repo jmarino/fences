@@ -308,7 +308,7 @@ trim_outside_rombs(GSList *penrose, double radius)
  * Unfold current list of rombs
  */
 static GSList*
-penrose_unfold(GSList* penrose, gboolean trim)
+penrose_unfold(GSList* penrose, double edge)
 {
 	GSList *newpenrose=NULL;
 	struct romb *romb;
@@ -334,8 +334,8 @@ penrose_unfold(GSList* penrose, gboolean trim)
 	newpenrose= trim_repeated_rombs(newpenrose);
 	
 	/* get rid of rombs outside a certain radius */
-	if (trim)
-		newpenrose= trim_outside_rombs(newpenrose, board.game_size/2.);
+	if (edge > 0)
+		newpenrose= trim_outside_rombs(newpenrose, edge);
 
 	/* debug: count number of rombs in list */
 	g_debug("rombs in list: %d", g_slist_length(newpenrose));
@@ -612,9 +612,11 @@ build_penrose_board(void)
 	//draw_penrose_tile(penrose);
 	
 	/* unfold list of shapes */
-	for(i=0; i < num_unfolds - 1; ++i) 
-		penrose= penrose_unfold(penrose, FALSE);
-	penrose= penrose_unfold(penrose, TRUE);
+	penrose= penrose_unfold(penrose, 0.);
+	penrose= penrose_unfold(penrose, 0.);
+	for(i=2; i < num_unfolds - 1; ++i) 
+		penrose= penrose_unfold(penrose, board.game_size*2.);
+	penrose= penrose_unfold(penrose, board.game_size/1.8);
 	
 
 	/* clip rombs to make tile round */
