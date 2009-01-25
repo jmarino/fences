@@ -43,9 +43,8 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	gboolean inside;
 	
 	/* Translate pixel coords to board coords */
-	/* **TODO** use actual pixel size */
-	point.x= event->x/500.*board.board_size;
-	point.y= event->y/500.*board.board_size;
+	point.x= event->x/board.width_pxscale;
+	point.y= event->y/board.height_pxscale;
 
 	//printf("mouse: %3.1lf,%3.1lf  (%lf,%lf)\n", event->x, event->y,
 	//	   point.x, point.y);
