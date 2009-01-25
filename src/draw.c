@@ -133,6 +133,27 @@ draw_linesquares(cairo_t *cr)
 
 
 /*
+ * DEBUG: Hack to display center of screen and penrose clip circle
+ */
+static void
+draw_bounds(cairo_t *cr)
+{
+	/* debug: draw dot in the middle of board */
+	cairo_set_source_rgba(cr, 0, 1., 0, 0.2);
+	cairo_arc(cr, board.board_size/2., board.board_size/2., DOT_RADIUS, 
+		  0, 2 * M_PI);
+	cairo_fill(cr);
+	
+	/* debug: draw circle showing clipping */
+	cairo_set_line_width (cr, OFF_LINE_WIDTH);
+	cairo_set_source_rgba(cr, 0, 1., 0, 0.4);
+	cairo_arc(cr, board.board_size/2., board.board_size/2., board.game_size/2., 
+		  0, 2 * M_PI);
+	cairo_stroke(cr);
+}
+
+
+/*
  * Select color according to FX status and frame
  */
 static void
@@ -201,9 +222,10 @@ draw_board(cairo_t *cr, int width, int height)
 
 	// debug
 	//draw_tiles(cr);
-	draw_areainf(cr);
-	draw_square_centers(cr);
-	draw_linesquares(cr);
+	//draw_areainf(cr);
+	//draw_square_centers(cr);
+	//draw_linesquares(cr);
+	//draw_bounds(cr);
 
 	/* Draw OFF lines first */
 	cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
