@@ -270,7 +270,8 @@ initialize_board(void)
 
 	/* make up example game */
 	//board.game= generate_example_game();
-	board.game= build_penrose_board();
+	board.game= build_square_board(17);
+	//board.game= build_penrose_board();
 
 	/* generate tile cache for lines */
 	setup_tile_cache();

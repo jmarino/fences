@@ -18,5 +18,6 @@
 #define __INCLUDED_SQUARE_TILE_H__
 
 struct game* generate_example_game(void);
+struct game* build_square_board(const int dim);
 
 #endif
