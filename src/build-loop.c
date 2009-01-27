@@ -87,7 +87,6 @@ count_contiguous_lines(struct square *sq, struct loop *loop)
 			if (count > max) max= count;
 		} else count= 0;
 	}
-	printf("max: %d ; total_on: %d\n", max, total_on);
 	if (max != total_on) return 0;
 	return max;
 }
@@ -112,7 +111,6 @@ is_square_available(struct square *sq, struct loop *loop, int index)
 			break;
 	}
 	if (i < sq->nsides) {
-		printf("--- square has unavailable line -> not good\n");
 		return FALSE;
 	}
 			
@@ -121,7 +119,6 @@ is_square_available(struct square *sq, struct loop *loop, int index)
 	res= square_has_corner(sq, loop);
 	loop->state[index]= LINE_ON;
 	if (res) {
-		printf("--- square has line corner -> not good\n");
 		return FALSE;
 	}
 				
@@ -129,7 +126,6 @@ is_square_available(struct square *sq, struct loop *loop, int index)
 	/* it should be between 1 and sq->nsides/2 */
 	num_lines= count_contiguous_lines(sq, loop);
 	if (num_lines == 0 || num_lines > sq->nsides/2) {
-		printf("-- square has %d contiguous lines -> not good\n", num_lines);
 		return FALSE;
 	}
 	return TRUE;
@@ -169,27 +165,16 @@ build_loop(const struct game *game)
 	
 	/* select a ramdom square to start the loop */
 	sq= game->squares +  g_random_int_range(0, game->nsquares);
-	printf("initial loop: lines ");
 	for(i=0; i < sq->nsides; ++i) {
 		loop->state[sq->sides[i]->id]= LINE_ON;
-		printf("%d ", sq->sides[i]->id);
 	}
-	printf("\n");
 	loop->nlines= sq->nsides;
 	loop->navailable= sq->nsides;
 	
 	/* extend current loop */
 	while(num_stuck < 3) {
-		printf("num_stuck: %d\n", num_stuck);
-		if (loop->navailable == -2) {
-			//g_error("build_loop: unable to open loop");
-			g_message("build_loop: unable to open loop");
-			break;
-		}
-
 		/* pick random line out of 'loop->navailable' */
 		count= g_random_int_range(0, loop->navailable);
-		printf("- selected count: %d / %d\n", count, loop->navailable-1);
 		for(i=0; i < game->nlines; ++i) {
 			//printf("-  >>> loop->state[i]:%d, loop->mask[i]:%d, count:%d\n", loop->state[i], loop->mask[i], count);
 			if (loop->state[i] == LINE_ON &&
@@ -200,12 +185,10 @@ build_loop(const struct game *game)
 			}
 		}
 		lin= game->lines + index;
-		printf("- selected line: %d\n", index);
 
 		/* 1st check to see if lin is suitable (necessary but not sufficient) */
 		/*    ->  line has 2 squares associated */
 		if ( lin->nsquares != 2 ) {
-			printf("-- line %d not suitable. nsquares %d\n", index, lin->nsquares);
 			loop->mask[index]= FALSE;	/* disable line */
 			--loop->navailable;
 			goto next_iteration;
@@ -220,21 +203,16 @@ build_loop(const struct game *game)
 
 			/* is square available? */
 			if (is_square_available(sq, loop, index)) {
-				/* if we got this far, square is good */
-				printf("-- line %d, square %d is good\n", index, count);
-				break;
+				break;	// square is good
 			}
 			 sq= NULL;
 			 count= (count + 1) % 2;
 		}
 		if (sq == NULL) {	// line not suitable
-			printf("-- line %d not suitable. nsquares %d\n", index, lin->nsquares);
 			loop->mask[index]= FALSE;	/* disable line */
 			--loop->navailable;
 			goto next_iteration;
 		}
-
-		printf("-- line %d OK! -> square %d\n", index, count);
 		
 		/* go around sides of square switching lines */
 		for(i=0; i < sq->nsides; ++i) {
@@ -243,13 +221,11 @@ build_loop(const struct game *game)
 				loop->mask[ sq->sides[i]->id ]= FALSE;
 				--loop->nlines;
 				--loop->navailable;
-				printf("--- line %d OFF\n", sq->sides[i]->id);
 			} else {
 				loop->state[ sq->sides[i]->id ]= LINE_ON;
 				loop->mask[ sq->sides[i]->id ]= TRUE;
 				++loop->nlines;
 				++loop->navailable;
-				printf("--- line %d ON\n", sq->sides[i]->id);
 			}
 		}
 
