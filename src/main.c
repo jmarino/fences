@@ -148,6 +148,9 @@ main (int argc, char *argv[])
 	
 	/* Init board */
 	initialize_board();
+
+	/* test routine to build loop */
+	try_loop(board.game);
 	
 	gtk_set_locale ();
 	gtk_init (&argc, &argv);

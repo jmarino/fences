@@ -26,7 +26,8 @@ fences_SOURCES = \
 	tile_cache.c tile_cache.h \
 	geometry_tools.c geometry_tools.h \
 	penrose-tile.c penrose-tile.h \
-	square-tile.c square-tile.h
+	square-tile.c square-tile.h \
+	build-loop.c 
 
 fences_LDFLAGS = 
 
