@@ -34,6 +34,8 @@ struct vertex {
 	struct point pos;	// x,y coordinates of dot
 	int nlines;		// number of lines touching dot
 	struct line **lines;	// lines touching dot
+	int nsquares;		// number of squares vertex touches
+	struct square **sq;	// squares vertex touches
 };
 
 
@@ -90,8 +92,9 @@ struct geometry {
 /*
  * Functions
  */
-void geometry_build_line_network(struct geometry *geo);
-void geometry_define_line_infarea(struct geometry *geo);
-
+struct geometry* geometry_create_new(int nsquares, int nvertex, int nlines);
+void geometry_initialize_lines(struct geometry *geo);
+void geometry_free(struct geometry *geo);
+void geometry_connect_elements(struct geometry *geo);
 
 #endif

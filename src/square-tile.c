@@ -68,20 +68,10 @@ build_square_board(const int dim)
 	double ypos;
 	struct vertex *ver;
 	struct square *sq;
-	struct line *lin;
 	int id;
 	
-	/* generate a 7x7 squares in a grid */
-	geo= (struct geometry*) g_malloc(sizeof(struct geometry));
-	geo->nsquares= dim*dim;
-	geo->squares= (struct square*)
-		g_malloc(geo->nsquares*sizeof(struct square));
-	geo->nvertex= (dim + 1)*(dim + 1);
-	geo->vertex= (struct vertex*)
-		g_malloc(geo->nvertex*sizeof(struct vertex));
-	geo->nlines= 2*dim*(dim + 1);
-	geo->lines= (struct line*)
-		g_malloc(geo->nlines*sizeof(struct line));
+	/* create new geometry (nsquares, nvertex, nlines) */
+	geo= geometry_create_new(dim*dim, (dim + 1)*(dim + 1), 2*dim*(dim + 1));
 
 	/* initialize vertices */
 	ver= geo->vertex;
@@ -98,14 +88,7 @@ build_square_board(const int dim)
 	}
 	
 	/* initialize lines */
-	lin= geo->lines;
-	for (id= 0; id < geo->nlines; ++id) {
-		lin->id= id;
-		lin->nsquares= 0;
-		lin->fx_status= 0;
-		lin->fx_frame= 0;
-		++lin;
-	}
+	geometry_initialize_lines(geo);
 	
 	/* initialize squares */
 	sq= geo->squares;
@@ -150,12 +133,9 @@ build_square_board(const int dim)
 			++id;
 		}
 	}
-	
-	/* interconnect all the lines */
-	geometry_build_line_network(geo);
-	
-	/* define area of influence of each line */
-	geometry_define_line_infarea(geo);
+
+	/* finalize geometry data: tie everything together */
+	geometry_connect_elements(geo);
 
 	return geo;
 }

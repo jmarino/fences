@@ -78,17 +78,34 @@ join_lines_recursive(struct geometry *geo, int line_id, int *line_handled)
 }
 
 
+
 /*
- * Build line network by connecting lines to each other (fill the in and out fields)
+ * Count how many squares touch each vertex
  */
-void
-geometry_build_line_network(struct geometry *geo)
+static void
+geometry_count_squares_touching_vertex(struct geometry *geo)
 {
-	struct line *lin;
-	struct line **list;
-	struct vertex *v;
-	int line_handled[geo->nlines];
 	int i, j;
+	struct square *sq;
+	
+	/* iterate over squares increasing the square count of each of its vertices */
+	sq= geo->squares;
+	for(i=0; i < geo->nsquares; ++i) {
+		for(j=0; j < sq->nvertex; ++j) 
+			++(sq->vertex[j]->nsquares);
+		++sq;
+	}
+}
+
+
+/*
+ * Count how many squares touch each vertex
+ */
+static void
+geometry_count_lines_touching_vertex(struct geometry *geo)
+{
+	int i;
+	struct line *lin;
 	
 	/* iterate over lines and count how many lines touch each vertex */
 	lin= geo->lines;
@@ -97,15 +114,54 @@ geometry_build_line_network(struct geometry *geo)
 		++(lin->ends[1]->nlines);
 		++lin;
 	}
+}
+
+
+/*
+ * Build networks. 
+ * Connect lines to each other (fill the in and out fields), vertices to squares,
+ * and vertices to lines
+ */
+static void
+geometry_build_networks(struct geometry *geo)
+{
+	struct line *lin;
+	struct square *sq;
+	struct vertex *vertex;
+	int line_handled[geo->nlines];
+	int i, j;
 	
-	/* allocate space for each vertex's list of lines */
-	v= geo->vertex;
+	/* count how many lines touch each vertex */
+	geometry_count_lines_touching_vertex(geo);
+	
+	/* count how many squares touch each vertex */
+	geometry_count_squares_touching_vertex(geo);
+	
+	/* allocate space for each line's in & out arrays */
+	lin= geo->lines;
+	for(i=0; i < geo->nlines; ++i) {
+		/* store space for ins (lines touching vertex - 1) */
+		lin->nin= lin->ends[0]->nlines - 1;
+		lin->in= (struct line **)g_malloc0(lin->nin*sizeof(void*));
+		/* store space for outs (lines touching vertex - 1) */
+		lin->nout= lin->ends[1]->nlines - 1;
+		lin->out= (struct line **)g_malloc0(lin->nout*sizeof(void*));
+		++lin;
+	}
+	
+	/* allocate space for each vertex's list of lines and squares */
+	vertex= geo->vertex;
 	for(i=0; i < geo->nvertex; ++i) {
 		/* DEBUG: check that all vertices at least have one line */
-		if (v->nlines == 0) 
+		if (vertex->nlines == 0) 
 			g_debug("vertex %d is isolated, has no lines associated", i);
-		v->lines= (struct line **)g_malloc0(v->nlines*sizeof(void*));
-		++v;
+		if (vertex->nsquares == 0) 
+			g_debug("vertex %d is isolated, has no squares associated", i);
+		vertex->lines= (struct line **)g_malloc(vertex->nlines*sizeof(void*));
+		vertex->sq= (struct square **)g_malloc(vertex->nsquares*sizeof(void*));
+		vertex->nsquares= 0;	// we use this as a counter in the loop below
+		vertex->nlines= 0;
+		++vertex;
 	}
 	
 	/* iterate over lines, adding them to the vertices they touch 
@@ -113,29 +169,25 @@ geometry_build_line_network(struct geometry *geo)
 	lin= geo->lines;
 	for(i=0; i < geo->nlines; ++i) {
 		/* first end (in end) */
-		v= lin->ends[0];
-		/* store line in vertex's list of lines */
-		list= v->lines;
-		for(j=0; j < v->nlines && *list != NULL; ++j) ++list;
-		if (j == v->nlines) 
-			g_debug("line %d being assoc. to vertex:%d (line's end 0): too many lines in vertex\n", i, v->id);
-		*list= lin;
-		/* store space for ins */
-		lin->nin= v->nlines - 1;
-		lin->in= (struct line **)g_malloc0(lin->nin*sizeof(void*));
-		
+		vertex= lin->ends[0];
+		vertex->lines[vertex->nlines]= lin;
+		++(vertex->nlines);
 		/* second end (out end) */
-		v= lin->ends[1];
-		/* store line in vertex's list of lines */
-		list= v->lines;
-		for(j=0; j < v->nlines && *list != NULL; ++j) ++list;
-		if (j == v->nlines) 
-			g_debug("line %d being assoc. to vertex:%d (line's end 1): too many lines in vertex\n", i, v->id);
-		*list= lin;
-		/* store space for outs */
-		lin->nout= v->nlines - 1;
-		lin->out= (struct line **)g_malloc0(lin->nout*sizeof(void*));
+		vertex= lin->ends[1];
+		vertex->lines[vertex->nlines]= lin;
+		++(vertex->nlines);
 		++lin;
+	}
+	
+	/* iterate over squares adding them to their vertex list */
+	sq= geo->squares;
+	for(i=0; i < geo->nsquares; ++i) {
+		for(j=0; j < sq->nvertex; ++j) {
+			vertex= sq->vertex[j];
+			vertex->sq[vertex->nsquares]= sq;
+			++(vertex->nsquares);
+		}
+		++sq;
 	}
 	
 	/* connect lines, i.e., fill 'in' & 'out' lists */
@@ -153,7 +205,7 @@ geometry_build_line_network(struct geometry *geo)
 /*
  * Define area of influence for each line (4 points)
  */
-void
+static void
 geometry_define_line_infarea(struct geometry *geo)
 {
 	int i;
@@ -199,4 +251,86 @@ geometry_define_line_infarea(struct geometry *geo)
 		lin->inf_box[1].y+= 0.050;
 		++lin;
 	}
+}
+
+
+/*
+ * Create new geometry
+ */
+struct geometry*
+geometry_create_new(int nsquares, int nvertex, int nlines)
+{
+	struct geometry *geo;
+	
+	/* Allocate memory for geometry data */
+	geo= (struct geometry*)g_malloc(sizeof(struct geometry));
+	geo->nsquares= nsquares;
+	geo->nvertex= nvertex;
+	geo->nlines= nlines;
+	geo->squares= (struct square*)g_malloc(geo->nsquares*sizeof(struct square));
+	geo->vertex= (struct vertex*)g_malloc(geo->nvertex*sizeof(struct vertex));
+	geo->lines= (struct line*)g_malloc(geo->nlines*sizeof(struct line));
+	
+	return geo;
+}
+
+
+/*
+ * Initialize lines in geometry structure
+ */
+void
+geometry_initialize_lines(struct geometry *geo)
+{
+	int i;
+	struct line *lin;
+
+	lin= geo->lines;
+	for (i= 0; i < geo->nlines; ++i) {
+		lin->id= i;
+		lin->nsquares= 0;
+		lin->fx_status= 0;
+		lin->fx_frame= 0;
+		++lin;
+	}
+}
+
+
+/*
+ * Free memory used by a geometry structure
+ */
+void
+geometry_destroy(struct geometry *geo)
+{
+	int i;
+	
+	for(i=0; i < geo->nsquares; ++i) {
+		g_free(geo->squares[i].vertex);
+		g_free(geo->squares[i].sides);
+	}
+	for(i=0; i < geo->nvertex; ++i) {
+		g_free(geo->vertex[i].lines);
+		g_free(geo->vertex[i].sq);
+	}
+	for(i=0; i < geo->nlines; ++i) {
+		g_free(geo->lines[i].in);
+		g_free(geo->lines[i].out);
+	}
+	g_free(geo->squares);
+	g_free(geo->vertex);
+	g_free(geo->lines);
+	g_free(geo);
+}
+
+
+/*
+ * Finalize geometry data. Connect all elements together.
+ */
+void
+geometry_connect_elements(struct geometry *geo)
+{
+	/* interconnect all the lines, vertices and squares */
+	geometry_build_networks(geo);
+	
+	/* define area of influence of each line */
+	geometry_define_line_infarea(geo);
 }

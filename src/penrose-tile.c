@@ -484,19 +484,17 @@ penrose_tile_to_geometry(GSList *penrose)
 {
 	struct geometry *geo;
 	struct vertex *v;
-	struct line *lin;
 	struct square *sq;
 	int nvertex;
 	GSList *list;
 	struct point vertex[4];
 	int i, j;
+	int nsquares;
 	
-	/* Allocate memory for geometry data */
-	geo= (struct geometry*)g_malloc(sizeof(struct geometry));
-	geo->nsquares= g_slist_length(penrose);
-	geo->nvertex= geo->nsquares*4.0; // over count (undo at the end)
-	geo->squares= (struct square*)g_malloc(geo->nsquares*sizeof(struct square));
-	geo->vertex= (struct vertex*)g_malloc(geo->nvertex*sizeof(struct vertex));
+	/* create new geometry (nsquares, nvertex, nlines) */
+	nsquares= g_slist_length(penrose);
+	geo= geometry_create_new(nsquares, nsquares*4, nsquares*4);
+	/* NOTE: oversize nvertex and nlines. Will adjust below */
 	
 	/* Compile vertices (and count how many) */
 	list= penrose;
@@ -522,19 +520,8 @@ penrose_tile_to_geometry(GSList *penrose)
 	geo->nvertex= nvertex;
 	geo->vertex= g_realloc(geo->vertex, nvertex*sizeof(struct vertex));
 	
-	/* allocate space for lines */
-	geo->nlines= geo->nsquares*4; // assume same number of lines as vertices
-	geo->lines= (struct line*)g_malloc(geo->nlines*sizeof(struct line));
-	
 	/* initialize lines */
-	lin= geo->lines;
-	for (i= 0; i < geo->nlines; ++i) {
-		lin->id= i;
-		lin->nsquares= 0;
-		lin->fx_status= 0;
-		lin->fx_frame= 0;
-		++lin;
-	}
+	geometry_initialize_lines(geo);
 	
 	/* initialize squares (rombs) */
 	list= penrose;
@@ -567,7 +554,7 @@ penrose_tile_to_geometry(GSList *penrose)
 		list= g_slist_next(list);
 	}
 	
-	/* change to actual number of lines */
+	/* reallocate to actual number of lines */
 	geo->lines= g_realloc(geo->lines, geo->nlines*sizeof(struct line));
 	
 	//printf("nsquares: %d (%d)\n", geo->nsquares, 4*geo->nsquares);
@@ -631,11 +618,8 @@ build_penrose_board(void)
 	/* transform tile into geometry data (points, lines & squares) */
 	geo= penrose_tile_to_geometry(penrose);
 	
-	/* interconnect all the lines */
-	geometry_build_line_network(geo);
-	
-	/* define area of influence of each line */
-	geometry_define_line_infarea(geo);
+	/* finalize geometry data: tie everything together */
+	geometry_connect_elements(geo);
 	
 	/* debug: draw to file */
 	//draw_penrose_tile(penrose);
