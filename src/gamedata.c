@@ -116,9 +116,6 @@ build_line_network(struct game *game)
 		if (d->nlines == 0) 
 			printf("DEBUG (join_lines): dot %d has no lines\n", i);
 		d->lines= (struct line **)g_malloc0(d->nlines*sizeof(void*));
-		if (d->lines == NULL) {
-			printf("join_lines: mem error (d->lines)\n");
-		}
 		++d;
 	}
 	
@@ -136,9 +133,6 @@ build_line_network(struct game *game)
 		/* store space for ins */
 		lin->nin= d->nlines - 1;
 		lin->in= (struct line **)g_malloc0(lin->nin*sizeof(void*));
-		if (lin->in == NULL) {
-			printf("join_lines: mem error (lin->in)\n");
-		}
 		
 		/* second end (out end) */
 		d= lin->ends[1];
@@ -150,9 +144,6 @@ build_line_network(struct game *game)
 		/* store space for outs */
 		lin->nout= d->nlines - 1;
 		lin->out= (struct line **)g_malloc0(lin->nout*sizeof(void*));
-		if (lin->out == NULL) {
-			printf("join_lines: mem error (lin->out)\n");
-		}
 		++lin;
 	}
 	
