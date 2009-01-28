@@ -28,7 +28,8 @@ fences_SOURCES = \
 	geometry_tools.c geometry_tools.h \
 	penrose-tile.c penrose-tile.h \
 	square-tile.c square-tile.h \
-	build-loop.c build-loop.h
+	build-loop.c build-loop.h \
+	game-solver.c
 
 fences_LDFLAGS = 
 
