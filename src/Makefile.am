@@ -22,6 +22,7 @@ fences_SOURCES = \
 	main.c \
 	callbacks.c callbacks.h \
 	draw.c draw.h \
+	geometry.c geometry.h \
 	gamedata.c gamedata.h \
 	tile_cache.c tile_cache.h \
 	geometry_tools.c geometry_tools.h \

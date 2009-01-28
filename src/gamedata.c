@@ -14,9 +14,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <glib.h>
 #include <math.h>
 
@@ -30,154 +27,24 @@
 struct board board;
 
 
-/* Game area size */
-//#define FIELD_SIZE		10000
-
-
-
-/*
- * Recursively fill in 'in' and 'out' lists of lines for each line
- */
-static void
-join_lines_recursive(struct game *game, int line_id, int *line_handled)
-{
-	struct line **list;
-	struct dot *d;
-	int i;
-	
-	/* NOTE: now we do the check before we call: faster */
-	/* check if this line has been already handled */
-	/*if (line_handled[line_id]) {
-		g_debug("***rec: line %d already handled", line_id);
-		return;
-	}*/
-	
-	/* find lines touching ends[0] */
-	list= game->lines[line_id].in;
-	d= game->lines[line_id].ends[0];
-	for(i=0; i < d->nlines; ++i) {
-		if (d->lines[i]->id != line_id) {
-			*list= d->lines[i];
-			++list;
-		}
-	}
-	
-	/* find lines touching ends[1] */
-	list= game->lines[line_id].out;
-	d= game->lines[line_id].ends[1];
-	for(i=0; i < d->nlines; ++i) {
-		if (d->lines[i]->id != line_id) {
-			*list= d->lines[i];
-			++list;
-		}
-	}
-	
-	/* mark current line as handled */
-	line_handled[line_id]= 1;
-	
-	/* call recursively on all lines that current line touches */
-	list= game->lines[line_id].in;
-	for(i=0; i < game->lines[line_id].nin; ++i) {
-		if (line_handled[list[i]->id] == 0) // only lines not handled yet
-			join_lines_recursive(game, list[i]->id, line_handled);
-	}
-	list= game->lines[line_id].out;
-	for(i=0; i < game->lines[line_id].nout; ++i) {
-		if (line_handled[list[i]->id] == 0) // only lines not handled yet
-			join_lines_recursive(game, list[i]->id, line_handled);
-	}
-}
-
-
-/*
- * Build line network by connecting lines to each other (fill the in and out fields)
- */
-void
-build_line_network(struct game *game)
-{
-	struct line *lin;
-	struct line **list;
-	struct dot *d;
-	int line_handled[game->nlines];
-	int i, j;
-	
-	/* iterate over lines and count how many lines touch each dot */
-	lin= game->lines;
-	for(i=0; i < game->nlines; ++i) {
-		++(lin->ends[0]->nlines);
-		++(lin->ends[1]->nlines);
-		++lin;
-	}
-	
-	/* allocate space for each dot's list of lines */
-	d= game->dots;
-	for(i=0; i < game->ndots; ++i) {
-		/* DEBUG: check that all dots at least have one line */
-		if (d->nlines == 0) 
-			g_debug("dot %d is isolated, has no lines associated", i);
-		d->lines= (struct line **)g_malloc0(d->nlines*sizeof(void*));
-		++d;
-	}
-	
-	/* iterate over lines, adding them to the dots they touch 
-	   and allocate space for ins and outs */
-	lin= game->lines;
-	for(i=0; i < game->nlines; ++i) {
-		/* first end (in end) */
-		d= lin->ends[0];
-		/* store line in dot's list of lines */
-		list= d->lines;
-		for(j=0; j < d->nlines && *list != NULL; ++j) ++list;
-		if (j == d->nlines) 
-			g_debug("line %d being assoc. to dot:%d (line's end 0): too many lines in dot\n", i, d->id);
-		*list= lin;
-		/* store space for ins */
-		lin->nin= d->nlines - 1;
-		lin->in= (struct line **)g_malloc0(lin->nin*sizeof(void*));
-		
-		/* second end (out end) */
-		d= lin->ends[1];
-		/* store line in dot's list of lines */
-		list= d->lines;
-		for(j=0; j < d->nlines && *list != NULL; ++j) ++list;
-		if (j == d->nlines) 
-			g_debug("line %d being assoc. to dot:%d (line's end 1): too many lines in dot\n", i, d->id);
-		*list= lin;
-		/* store space for outs */
-		lin->nout= d->nlines - 1;
-		lin->out= (struct line **)g_malloc0(lin->nout*sizeof(void*));
-		++lin;
-	}
-	
-	/* connect lines, i.e., fill 'in' & 'out' lists */
-	memset(line_handled, 0, sizeof(int) * game->nlines);
-	join_lines_recursive(game, 0, line_handled);
-	
-	/* DEBUG: check all lines were handled */
-	for(i=0; i < game->nlines; ++i) {
-		if (line_handled[i] == 0) 
-			g_debug("after connect lines: line %d not handled\n", i);
-	}
-}
-
 
 /*
  * Measure smallest width and height of a square with a number in it
  * Used to decide what font size to use
  */
 void
-find_smallest_numbered_square(struct game *game)
+find_smallest_numbered_square(struct geometry *geo, struct game *game)
 {
 	struct square *sq;
 	int i, j, j2;
 	double sqw, sqh, tmp;
 	
 	/* go around all squares to measure smallest w and h */
-	game->sq_width= board.board_size;
-	game->sq_height= board.board_size;
-	sq= game->squares;
-	for(i=0; i<game->nsquares; ++i) {
-		if (sq->number != -1) {		// square has a number
+	geo->sq_width= board.board_size;
+	geo->sq_height= board.board_size;
+	sq= geo->squares;
+	for(i=0; i<geo->nsquares; ++i) {
+		if (game->numbers[sq->id] != -1) {		// square has a number
 			sqw= sqh= 0.;
 			for(j=0; j < sq->nvertex; ++j) {
 				j2= (j + 1) % sq->nvertex;
@@ -188,8 +55,8 @@ find_smallest_numbered_square(struct game *game)
 					 sq->vertex[j2]->pos.y);
 				if (tmp > sqh) sqh= tmp;
 			}
-			if (sqw < game->sq_width) game->sq_width= sqw;
-			if (sqh < game->sq_height) game->sq_height= sqh;
+			if (sqw < geo->sq_width) geo->sq_width= sqw;
+			if (sqh < geo->sq_height) geo->sq_height= sqh;
 		}
 		++sq;
 	}
@@ -197,56 +64,82 @@ find_smallest_numbered_square(struct game *game)
 
 
 /*
- * Define area of influence for each line (4 points)
+ * Create a new empty game structure that fits geometry 'geo'
  */
-void
-define_line_infarea(struct game *game)
+struct game*
+create_empty_gamedata(struct geometry *geo)
 {
+	struct game *game;
 	int i;
-	struct line *lin;
-	struct dot *d1;
-	struct square *sq;
 	
-	lin= game->lines;
-	for(i=0; i<game->nlines; ++i) {
-		d1= lin->ends[0];
-		lin->inf[0].x= d1->pos.x;
-		lin->inf[0].y= d1->pos.y;
-		sq= lin->sq[0];
-		lin->inf[1].x= sq->center.x;
-		lin->inf[1].y= sq->center.y;
-		d1= lin->ends[1];
-		lin->inf[2].x= d1->pos.x;
-		lin->inf[2].y= d1->pos.y;
-		if (lin->nsquares == 2) {
-			sq= lin->sq[1];
-			lin->inf[3].x= sq->center.x;
-			lin->inf[3].y= sq->center.y;
-		} else {	// edge line, must manufacture 4th point
-			/* make up point across line: 
-			 along line joining center of square to center of line */
-			lin->inf[3].x= lin->inf[0].x + lin->inf[2].x - lin->inf[1].x;
-			lin->inf[3].y= lin->inf[0].y + lin->inf[2].y - lin->inf[1].y;
-		}
-		/* define box that contains line as [x,y];[w,h]
-		 inf[0].xy & inf[2].xy are both ends of the line */
-		lin->inf_box[0].x= 
-			(lin->inf[0].x < lin->inf[2].x) ? lin->inf[0].x : lin->inf[2].x;
-		lin->inf_box[1].x= lin->inf[2].x - lin->inf[0].x;
-		if (lin->inf_box[1].x < 0) lin->inf_box[1].x= -lin->inf_box[1].x;
-		lin->inf_box[0].y= 
-			(lin->inf[0].y < lin->inf[2].y) ? lin->inf[0].y : lin->inf[2].y;
-		lin->inf_box[1].y= lin->inf[2].y - lin->inf[0].y;
-		if (lin->inf_box[1].y < 0) lin->inf_box[1].y= -lin->inf_box[1].y;
-		/* pad inf_box a bit just in case */
-		lin->inf_box[0].x-= 0.025;
-		lin->inf_box[0].y-= 0.025;
-		lin->inf_box[1].x+= 0.050;
-		lin->inf_box[1].y+= 0.050;
-		++lin;
-	}
+	/* allocate and initialize */
+	game= (struct game*)g_malloc(sizeof(struct game));
+	game->states= (int*)g_malloc(geo->nlines*sizeof(int));
+	game->numbers= (int*)g_malloc(geo->nsquares*sizeof(int));
+	for(i=0; i < geo->nlines; ++i)
+		game->states[i]= LINE_OFF;
+	for(i=0; i < geo->nsquares; ++i)
+		game->numbers[i]= -1;
+	
+	return game;
 }
 
+
+/*
+ * Free game structure
+ */
+void
+free_gamedata(struct game *game)
+{
+	g_free(game->states);
+	g_free(game->numbers);
+	g_free(game);
+}
+
+
+/*
+ * generate a 7x7 example game by hand
+ */
+static struct game*
+generate_example_game(struct geometry *geo)
+{
+	int i;
+	const int dim=7;		// num of squares per side
+	struct game *game;
+	int squaredata[dim*dim]={
+		-1,-1,-1,-1,-1,-1,-1,
+		-1,-1,-1, 3, 2,-1, 2,
+		-1, 3,-1, 1,-1,-1,-1,
+		-1, 3, 0,-1, 3,-1,-1,
+		-1, 3, 2, 2, 1, 2,-1,
+		-1,-1, 2, 2,-1, 1,-1,
+		-1,-1,-1, 2, 2, 2,-1};
+	
+	/* Create empty game data that fits geo */
+	game= create_empty_gamedata(geo);
+	
+	/* set number inside square */
+	for(i=0; i < geo->nsquares; ++i) {
+		game->numbers[i]= squaredata[i];
+	}
+	
+	/* measure smallest square with a number (used to determine font size) */
+	find_smallest_numbered_square(geo, game);
+	
+	// test line states
+	game->states[0]= LINE_ON;
+	game->states[12]= LINE_ON;
+	game->states[15]= LINE_CROSSED;
+	
+	/* artificial test for FX animation */
+	/*for(i=0; i < 7; ++i) {
+		game->lines[i].state= LINE_ON;
+		game->lines[i].fx_status= 1;
+		game->lines[i].fx_frame= i;
+	}*/
+	
+	return game;
+}
 
 
 /*
@@ -262,9 +155,11 @@ initialize_board(void)
 	board.tile_cache= NULL;
 
 	/* make up example game */
-	//board.game= generate_example_game();
-	board.game= build_square_board(17);
-	//board.game= build_penrose_board();
+	board.geo= build_square_board(7);
+	board.game= generate_example_game(board.geo);
+	//board.geo= build_square_board(17);
+	//board.geo= build_penrose_board();
+	//board.game= create_empty_gamedata(board.geo);
 
 	/* generate tile cache for lines */
 	setup_tile_cache();

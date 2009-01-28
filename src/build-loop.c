@@ -23,7 +23,7 @@
 
 
 struct loop {
-	struct game *game;
+	struct geometry *geo;
 	int *state;
 	int nlines;
 	gboolean *mask; /* indicates lines that can be changed */
@@ -42,7 +42,7 @@ static gboolean
 square_has_corner(struct square *sq, struct loop *loop)
 {
 	int i, j, k;
-	struct dot *vertex;
+	struct vertex *vertex;
 	int count;
 	gboolean skip;
 
@@ -134,10 +134,10 @@ is_square_available(struct square *sq, struct loop *loop, int index)
 
 /*
  * Build a single loop on a board
- * It sets lines in a separate loop structure and does not touch game data
+ * It sets lines in a separate loop structure
  */
 struct loop*
-build_loop(const struct game *game)
+build_loop(const struct geometry *geo)
 {
 	int i, j;
 	int index=0;
@@ -151,20 +151,20 @@ build_loop(const struct game *game)
 
 	/* alloc and init loop structure */
 	loop= (struct loop*)g_malloc(sizeof(struct loop));
-	loop->game= (struct game *)game;
-	loop->state= (int*)g_malloc(game->nlines*sizeof(int));
+	loop->geo= (struct geometry *)geo;
+	loop->state= (int*)g_malloc(geo->nlines*sizeof(int));
 	loop->nlines= 0;
-	for(i=0; i < game->nlines; ++i)
+	for(i=0; i < geo->nlines; ++i)
 		loop->state[i]= LINE_OFF;
 
 	/* allocate loop->mask: indicates lines available to be changed */
-	loop->mask= (gboolean*)g_malloc(game->nlines*sizeof(gboolean));
-	for(i=0; i < game->nlines; ++i)
+	loop->mask= (gboolean*)g_malloc(geo->nlines*sizeof(gboolean));
+	for(i=0; i < geo->nlines; ++i)
 		loop->mask[i]= TRUE;
 	loop->navailable= 0;
 	
 	/* select a ramdom square to start the loop */
-	sq= game->squares +  g_random_int_range(0, game->nsquares);
+	sq= geo->squares +  g_random_int_range(0, geo->nsquares);
 	for(i=0; i < sq->nsides; ++i) {
 		loop->state[sq->sides[i]->id]= LINE_ON;
 	}
@@ -175,7 +175,7 @@ build_loop(const struct game *game)
 	while(num_stuck < 3) {
 		/* pick random line out of 'loop->navailable' */
 		count= g_random_int_range(0, loop->navailable);
-		for(i=0; i < game->nlines; ++i) {
+		for(i=0; i < geo->nlines; ++i) {
 			if (loop->state[i] == LINE_ON &&
 			    loop->mask[i]) --count;
 			if (count < 0) {
@@ -183,7 +183,7 @@ build_loop(const struct game *game)
 				break;
 			}
 		}
-		lin= game->lines + index;
+		lin= geo->lines + index;
 
 		/* 1st check to see if lin is suitable (necessary but not sufficient) */
 		/*    ->  line has 2 squares associated */
@@ -238,7 +238,7 @@ build_loop(const struct game *game)
 			++num_stuck;
 			/* make every line available again */
 			loop->navailable= 0;
-			for(i=0; i < game->nlines; ++i) {
+			for(i=0; i < geo->nlines; ++i) {
 				loop->mask[i]= TRUE;
 				if (loop->state[i] == LINE_ON)
 					++loop->navailable;
@@ -252,16 +252,16 @@ build_loop(const struct game *game)
 
 
 void
-try_loop(struct game *game)
+try_loop(struct geometry *geo, struct game *game)
 {
 	struct loop *loop;
 	int i;
 	
-	loop= build_loop(game);
+	loop= build_loop(geo);
 	
 	/* copy loop on to game data */
-	for(i=0; i < game->nlines; ++i) {
-		game->lines[i].state= loop->state[i];
+	for(i=0; i < geo->nlines; ++i) {
+		game->states[i]= loop->state[i];
 	}
 	
 	g_free(loop->state);

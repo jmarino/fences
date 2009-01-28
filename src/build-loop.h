@@ -18,6 +18,6 @@
 #define __INCLUDED_BUILD_LOOP_H__
 
 
-void try_loop(struct game *game);
+void try_loop(struct geometry *geo, struct game *game);
 
 #endif

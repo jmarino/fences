@@ -41,6 +41,7 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	GSList *list;
 	struct line *lin;
 	gboolean inside;
+	int *states;
 	
 	/* Translate pixel coords to board coords */
 	point.x= event->x/board.width_pxscale;
@@ -64,12 +65,17 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	/* check if a line was found */
 	if (list != NULL) {
 		//printf("mouse: - Line %d\n", lin->id);
+		states= board.game->states;
 		switch(event->button) {
 			/* left button */
-			case 1: lin->state= (lin->state == LINE_ON) ? LINE_OFF : LINE_ON;
+			case 1: 
+				states[lin->id]= (states[lin->id] == LINE_ON) ? 
+					LINE_OFF : LINE_ON;
 				break;
 			/* right button */
-			case 3: lin->state= (lin->state == LINE_CROSSED) ? LINE_OFF : LINE_CROSSED;
+			case 3: 
+				states[lin->id]= (states[lin->id] == LINE_CROSSED) ? 
+					LINE_OFF : LINE_CROSSED;
 				break;
 		}
 		/* schedule redraw of box containing line */

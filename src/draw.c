@@ -68,8 +68,8 @@ draw_areainf(cairo_t *cr)
 	
 	cairo_set_source_rgba(cr, 0., 1., 0., 0.2);
 	cairo_set_line_width (cr, OFF_LINE_WIDTH);
-	lin= board.game->lines;
-	for(i=0; i < board.game->nlines; ++i) {
+	lin= board.geo->lines;
+	for(i=0; i < board.geo->nlines; ++i) {
 		cairo_move_to(cr, lin->inf[0].x, lin->inf[0].y);
 		for(j=1; j < 4; ++j) {
 			cairo_line_to(cr, lin->inf[j].x, lin->inf[j].y);
@@ -92,8 +92,8 @@ draw_square_centers(cairo_t *cr)
 	struct square *sq;
 	
 	cairo_set_source_rgba(cr, 0., 1., 0., 0.2);
-	sq= board.game->squares;
-	for(i=0; i < board.game->nsquares; ++i) {
+	sq= board.geo->squares;
+	for(i=0; i < board.geo->nsquares; ++i) {
 		cairo_new_sub_path(cr);
 		cairo_arc (cr, sq->center.x, sq->center.y, 2*DOT_RADIUS, 
 			   0, 2 * M_PI);
@@ -115,8 +115,8 @@ draw_linesquares(cairo_t *cr)
 	
 	cairo_set_source_rgba(cr, 0., 1., 0., 0.4);
 	cairo_set_line_width (cr, OFF_LINE_WIDTH);
-	lin= board.game->lines;
-	for(i=0; i < board.game->nlines; ++i) {
+	lin= board.geo->lines;
+	for(i=0; i < board.geo->nlines; ++i) {
 		/* find middle of line */
 		x= (lin->ends[0]->pos.x + lin->ends[1]->pos.x)/2.;
 		y= (lin->ends[0]->pos.y + lin->ends[1]->pos.y)/2.;
@@ -201,7 +201,7 @@ fx_nextframe(struct line *line)
 void
 draw_board(cairo_t *cr, int width, int height)
 {
-	struct dot *dot1, *dot2;
+	struct vertex *vertex1, *vertex2;
 	struct line *line;
 	struct square *sq;
 	int i, j;
@@ -209,8 +209,10 @@ draw_board(cairo_t *cr, int width, int height)
 	cairo_text_extents_t extent[4];
 	const char *nums[]={"0", "1", "2", "3"};
 	double font_scale;
+	struct geometry *geo=board.geo;
+	int lines_on;	// how many ON lines a vertex has
 	struct game *game=board.game;
-	int lines_on;	// how many ON lines a dot has
+	int number;
 	
 	/* white background */
 	cairo_set_source_rgb(cr, 1, 1, 1);
@@ -230,13 +232,13 @@ draw_board(cairo_t *cr, int width, int height)
 	/* Draw OFF lines first */
 	cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
 	cairo_set_line_width (cr, OFF_LINE_WIDTH);
-	line= game->lines;
-	for(i=0; i<game->nlines; ++i) {
-		dot1= line->ends[0];
-		dot2= line->ends[1];
-		if (line->state != LINE_ON) {	
-			cairo_move_to(cr, dot1->pos.x, dot1->pos.y);
-			cairo_line_to(cr, dot2->pos.x, dot2->pos.y);
+	line= geo->lines;
+	for(i=0; i<geo->nlines; ++i) {
+		vertex1= line->ends[0];
+		vertex2= line->ends[1];
+		if (game->states[line->id] != LINE_ON) {	
+			cairo_move_to(cr, vertex1->pos.x, vertex1->pos.y);
+			cairo_line_to(cr, vertex2->pos.x, vertex2->pos.y);
 		}
 		++line;
 	}
@@ -244,52 +246,53 @@ draw_board(cairo_t *cr, int width, int height)
 	
 	/* Draw lines */
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-	line= game->lines;
-	for(i=0; i<game->nlines; ++i) {
-		dot1= line->ends[0];
-		dot2= line->ends[1];
-		if (line->state == LINE_CROSSED) { // draw cross
+	line= geo->lines;
+	for(i=0; i<geo->nlines; ++i) {
+		vertex1= line->ends[0];
+		vertex2= line->ends[1];
+		if (game->states[line->id] == LINE_CROSSED) { // draw cross
 			cairo_set_source_rgb(cr, 1., 0., 0.);
 			cairo_set_line_width (cr, CROSS_LINE_WIDTH);
-			x= (dot1->pos.x + dot2->pos.x)/2.;
-			y= (dot1->pos.y + dot2->pos.y)/2.;
+			x= (vertex1->pos.x + vertex2->pos.x)/2.;
+			y= (vertex1->pos.y + vertex2->pos.y)/2.;
 			cairo_move_to(cr, x-CROSS_RADIUS, y-CROSS_RADIUS);
 			cairo_line_to(cr, x+CROSS_RADIUS, y+CROSS_RADIUS);
 			cairo_move_to(cr, x-CROSS_RADIUS, y+CROSS_RADIUS);
 			cairo_line_to(cr, x+CROSS_RADIUS, y-CROSS_RADIUS);
 			cairo_stroke(cr);
-		} else if (line->state == LINE_ON) {
+		} else if (game->states[line->id] == LINE_ON) {
 			fx_setcolor(cr, line);
 			//cairo_set_source_rgb(cr, 0., 0., 1.);
 			cairo_set_line_width (cr, ON_LINE_WIDTH);
-			cairo_move_to(cr, dot1->pos.x, dot1->pos.y);
-			cairo_line_to(cr, dot2->pos.x, dot2->pos.y);
+			cairo_move_to(cr, vertex1->pos.x, vertex1->pos.y);
+			cairo_line_to(cr, vertex2->pos.x, vertex2->pos.y);
 			cairo_stroke(cr);
 			//fx_nextframe(line);
-		} else if (line->state != LINE_OFF) {
-			g_debug("draw_line: line (%d) state invalid: %d", line->id, line->state);
+		} else if (game->states[line->id] != LINE_OFF) {
+			g_debug("draw_line: line (%d) state invalid: %d", 
+				line->id, game->states[line->id]);
 		}
 		++line;
 	}
 	//cairo_stroke(cr);
 	
-	/* Draw dots */
+	/* Draw vertexs */
 	if (0) {
-		dot1= game->dots;
-		for(i=0; i<game->ndots; ++i) {
+		vertex1= geo->vertex;
+		for(i=0; i < geo->nvertex; ++i) {
 			/* count how many lines on are touching this */
 			lines_on= 0;
-			for(j=0; j < dot1->nlines; ++j) {
-				if (dot1->lines[j]->state == LINE_ON)
+			for(j=0; j < vertex1->nlines; ++j) {
+				if (game->states[vertex1->lines[j]->id] == LINE_ON)
 					++lines_on;
 			}
-			/* draw dot */
+			/* draw vertex */
 			if (lines_on == 2) cairo_set_source_rgb(cr, 0, 0, 1);
 			else cairo_set_source_rgb(cr, 0, 0, 0);
-			cairo_arc (cr, dot1->pos.x, dot1->pos.y, DOT_RADIUS, 
+			cairo_arc (cr, vertex1->pos.x, vertex1->pos.y, DOT_RADIUS, 
 				   0, 2 * M_PI);
 			cairo_fill(cr);
-			++dot1;
+			++vertex1;
 		}
 	}
 	
@@ -299,17 +302,18 @@ draw_board(cairo_t *cr, int width, int height)
 	cairo_text_extents(cr, nums[0], &extent[0]);
 	font_scale= board.board_size/100./extent[0].height;
 	
-	cairo_set_font_size(cr, game->sq_height*font_scale/2.);
+	cairo_set_font_size(cr, geo->sq_height*font_scale/2.);
 	for(i=0; i < 4; ++i) 
 		cairo_text_extents(cr, nums[i], &extent[i]);
-	sq= game->squares;
+	sq= geo->squares;
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	
-	for(i=0; i<game->nsquares; ++i) {
-		if (sq->number != -1) {		// square has a number
-			cairo_move_to(cr, sq->center.x - extent[sq->number].width/2, 
-				      sq->center.y + extent[sq->number].height/2);
-			cairo_show_text (cr, nums[sq->number]);
+	for(i=0; i<geo->nsquares; ++i) {
+		number= game->numbers[sq->id];
+		if (number != -1) {	// square has a number
+			cairo_move_to(cr, sq->center.x - extent[number].width/2, 
+				      sq->center.y + extent[number].height/2);
+			cairo_show_text (cr, nums[number]);
 		}
 		++sq;
 	}

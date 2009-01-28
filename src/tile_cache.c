@@ -85,8 +85,8 @@ setup_tile_cache(void)
 		edge[0].y= (b / cache->ntiles_side) * cache->tile_size;
 		edge[1].x= edge[0].x + cache->tile_size;
 		edge[1].y= edge[0].y + cache->tile_size;
-		lin= board.game->lines;
-		for(l=0; l < board.game->nlines; ++l) {
+		lin= board.geo->lines;
+		for(l=0; l < board.geo->nlines; ++l) {
 			/* check if line's area of influence intersects the box */
 			if(b == 0 && l == 22)
 				inside= is_area_inside_box(lin->inf, edge, 1);

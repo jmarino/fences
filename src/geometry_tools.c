@@ -18,7 +18,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "gamedata.h"
+#include "geometry.h"
 
 #define NUM_TILES_PER_SIDE	10
 #define NUM_TILES			NUM_TILES_PER_SIDE*NUM_TILES_PER_SIDE

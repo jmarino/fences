@@ -17,73 +17,39 @@
 #ifndef __INCLUDED_GAMEDATA_H__
 #define __INCLUDED_GAMEDATA_H__
 
+#include "geometry.h"
+
+
 /* Line states */
 #define LINE_OFF		0
 #define LINE_ON			1
 #define LINE_CROSSED		2
 
-struct point {
-	double x, y;
-};
 
-struct dot {
-	int id;			// id of dot
-	struct point pos;	// x,y coordinates of dot
-	int nlines;		// number of lines touching dot
-	struct line **lines;	// lines touching dot
-};
 
-struct square {
-	int id;			// id of square
-	int number;		// Number inside the square
-	int nvertex;		// number of vertices of 'square'
-	struct dot **vertex;	// vertices of 'square'
-	int nsides;		// number of sides of 'square'
-	struct line **sides;	// lines around 'square'
-	struct point center;	// coords of center of square
-	int fx_status;		// is it being animated? which animation?
-	int fx_frame;		// frame in FX animation
-};
-
-struct line {
-	int id;			// id of line (line number)
-	int state;		// State of line
-	struct dot *ends[2];	// coords of ends of line
-	int nsquares;		// Number of squares touching this line (either 1 or 2)
-	struct square *sq[2];	// squares at each side of line
-	int nin;		// number of lines in
-	int nout;		// number of lines out
-	struct line **in;	// lines in
-	struct line **out;	// lines out
-	struct point inf[4]; 	// coords of 4 points defining area of influence
-	struct point inf_box[2];// [x,y] & [w,h] of box that contains line
-	int fx_status;		// is it being animated? which animation?
-	int fx_frame;		// frame in FX animation
-};
-
+/*
+ * Holds game data (square numbers and lines that are on)
+ */
 struct game {
-	int ndots;		// Number of dots
-	struct dot *dots;	// List of dots
-	int nsquares;		// Number of squares
-	struct square *squares;	// List of squares
-	int nlines;
-	struct line *lines;
-	double sq_width;
-	double sq_height;
+	int *states;		// Line states
+	int *numbers;		// Number in squares
 };
 
 
-
+/*
+ * Cache listing lines found inside each cache tile
+ */
 struct tile_cache {
 	int ntiles_side;	// number of tiles per side
 	int ntiles;		// Total num of tiles (ntiles_side^2)
-	double tile_size;		// size of boxes that tile gameboard
+	double tile_size;	// size of boxes that tile gameboard
 	GSList **tiles;		// array of lists (board tile -> lines in it)
 };
 
 struct board {
-	struct game *game;
-	double board_size;		// Size of gameboard field (game + margin)
+	struct geometry *geo;	// geometry info of lines, squares & vertices
+	struct game *game;	// game data (line states and square numbers)
+	double board_size;	// Size of gameboard field (game + margin)
 	double board_margin;	// margin around actual game area
 	double game_size;		// Size of game area (board_size-2*board_margin)
 	double width_pxscale;	// Width board-to-pixel scale
@@ -95,10 +61,10 @@ struct board {
 /*
  * Functions
  */
-
-void build_line_network(struct game *game);
-void define_line_infarea(struct game *game);
-void find_smallest_numbered_square(struct game *game);
+void find_smallest_numbered_square(struct geometry *geo, struct game *game);
+struct game* create_empty_gamedata(struct geometry *geo);
+void free_gamedata(struct game *game);
 void initialize_board(void);
+
 
 #endif
