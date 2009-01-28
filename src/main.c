@@ -150,7 +150,7 @@ main (int argc, char *argv[])
 	initialize_board();
 
 	/* test routine to build loop */
-	try_loop(board.geo, board.game);
+	//try_loop(board.geo, board.game);
 	
 	gtk_set_locale ();
 	gtk_init (&argc, &argv);

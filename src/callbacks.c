@@ -102,6 +102,14 @@ window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 	if (event->keyval == GDK_b) {
 		draw_benchmark(drawarea);
 	}
+	if (event->keyval == GDK_l) {
+		try_loop(board.geo, board.game);
+		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
+	}
+	if (event->keyval == GDK_s) {
+		test_solve_game(board.geo, board.game);
+		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
+	}
 	//(void)g_timeout_add(200, (GSourceFunc)timer_function, drawarea);
 	
 	return FALSE;
