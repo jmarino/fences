@@ -81,6 +81,8 @@ build_square_board(const int dim)
 			ver->id= j*(dim + 1) + i;
 			ver->nlines= 0;		// value will be set in 'join_lines'
 			ver->lines= NULL;
+			ver->nsquares= 0;
+			ver->sq= NULL;
 			ver->pos.x= ((double)board.game_size)/dim*i + board.board_margin;
 			ver->pos.y= ypos;
 			++ver;

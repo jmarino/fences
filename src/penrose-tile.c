@@ -507,6 +507,8 @@ penrose_tile_to_geometry(GSList *penrose)
 				v->id= nvertex;
 				v->nlines= 0; // value will be set later
 				v->lines= NULL;
+				v->nsquares= 0;
+				v->sq= NULL;
 				v->pos.x= vertex[i].x;
 				v->pos.y= vertex[i].y;
 				++nvertex;
