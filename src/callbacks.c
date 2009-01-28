@@ -46,13 +46,10 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	point.x= event->x/board.width_pxscale;
 	point.y= event->y/board.height_pxscale;
 
-	//printf("mouse: %3.1lf,%3.1lf  (%lf,%lf)\n", event->x, event->y,
-	//	   point.x, point.y);
-
 	/* Find in which tile the point falls */
 	tile= point.x / board.tile_cache->tile_size;
 	tile+= board.tile_cache->ntiles_side*(int)(point.y/board.tile_cache->tile_size);
-	printf("mouse: Tile clicked %d\n", tile);
+	//printf("mouse: Tile clicked %d\n", tile);
 	list= board.tile_cache->tiles[tile];
 	
 	/* Find in which line's area of influence the point falls */
@@ -66,7 +63,7 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	
 	/* check if a line was found */
 	if (list != NULL) {
-		printf("mouse: - Line %d\n", lin->id);
+		//printf("mouse: - Line %d\n", lin->id);
 		switch(event->button) {
 			/* left button */
 			case 1: lin->state= (lin->state == LINE_ON) ? LINE_OFF : LINE_ON;
@@ -94,7 +91,7 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 gboolean 
 window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 {
-	printf("key: %d\n", event->keyval);
+	//printf("key: %d\n", event->keyval);
 	
 	if (event->keyval == GDK_b) {
 		draw_benchmark(drawarea);
@@ -111,7 +108,7 @@ window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 gboolean
 drawarea_configure(GtkWidget *drawarea, GdkEventConfigure *event, gpointer user_data)
 {
-	printf("configure: %d, %d\n", event->width, event->height);
+	//printf("configure: %d, %d\n", event->width, event->height);
 		
 	/* setup pixel scales: to go from field coords to pixels on screen */
 	board.width_pxscale= event->width/(double)board.board_size;

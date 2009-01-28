@@ -565,9 +565,9 @@ penrose_tile_to_game(GSList *penrose)
 	/* change to actual number of lines */
 	game->lines= g_realloc(game->lines, game->nlines*sizeof(struct line));
 	
-	printf("nsquares: %d (%d)\n", game->nsquares, 4*game->nsquares);
-	printf("ndots: %d\n", game->ndots);
-	printf("nlines actual: %d\n", game->nlines);
+	//printf("nsquares: %d (%d)\n", game->nsquares, 4*game->nsquares);
+	//printf("ndots: %d\n", game->ndots);
+	//printf("nlines actual: %d\n", game->nlines);
 	
 	return game;
 }

@@ -114,7 +114,7 @@ build_line_network(struct game *game)
 	for(i=0; i < game->ndots; ++i) {
 		/* DEBUG: check that all dots at least have one line */
 		if (d->nlines == 0) 
-			printf("DEBUG (join_lines): dot %d has no lines\n", i);
+			g_debug("dot %d is isolated, has no lines associated", i);
 		d->lines= (struct line **)g_malloc0(d->nlines*sizeof(void*));
 		++d;
 	}
@@ -128,7 +128,8 @@ build_line_network(struct game *game)
 		/* store line in dot's list of lines */
 		list= d->lines;
 		for(j=0; j < d->nlines && *list != NULL; ++j) ++list;
-		if (j == d->nlines) printf("DEBUG (join_lines): shouldn't get here: end 0 line %d\n", i);
+		if (j == d->nlines) 
+			g_debug("line %d being assoc. to dot:%d (line's end 0): too many lines in dot\n", i, d->id);
 		*list= lin;
 		/* store space for ins */
 		lin->nin= d->nlines - 1;
@@ -139,7 +140,8 @@ build_line_network(struct game *game)
 		/* store line in dot's list of lines */
 		list= d->lines;
 		for(j=0; j < d->nlines && *list != NULL; ++j) ++list;
-		if (j == d->nlines) printf("DEBUG (join_lines): shouldn't get here: end 1 line %d\n", i);
+		if (j == d->nlines) 
+			g_debug("line %d being assoc. to dot:%d (line's end 1): too many lines in dot\n", i, d->id);
 		*list= lin;
 		/* store space for outs */
 		lin->nout= d->nlines - 1;
@@ -154,7 +156,7 @@ build_line_network(struct game *game)
 	/* DEBUG: check all lines were handled */
 	for(i=0; i < game->nlines; ++i) {
 		if (line_handled[i] == 0) 
-			printf("DEBUG: line %d not handled\n", i);
+			g_debug("after connect lines: line %d not handled\n", i);
 	}
 }
 

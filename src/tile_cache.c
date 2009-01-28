@@ -81,7 +81,6 @@ setup_tile_cache(void)
 	
 	/* Iterate through the tiles: build list of lines in each tile */
 	for(b=0; b < NUM_TILES; ++b) {
-		//printf("setup_box_lookup_table: b: %d\n", b);
 		edge[0].x= (b % cache->ntiles_side) * cache->tile_size;
 		edge[0].y= (b / cache->ntiles_side) * cache->tile_size;
 		edge[1].x= edge[0].x + cache->tile_size;
@@ -98,7 +97,6 @@ setup_tile_cache(void)
 				//	   edge[0].x,edge[0].y, edge[1].x, edge[1].y, l, 
 				//	   lin->ends[0]->pos.x, lin->ends[0]->pos.y);
 				tiles[b]= g_slist_prepend(tiles[b], lin);
-				//printf("line %d in tile %d\n", lin->id, b);
 			}
 			++lin;
 		}

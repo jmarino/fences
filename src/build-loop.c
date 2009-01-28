@@ -176,7 +176,6 @@ build_loop(const struct game *game)
 		/* pick random line out of 'loop->navailable' */
 		count= g_random_int_range(0, loop->navailable);
 		for(i=0; i < game->nlines; ++i) {
-			//printf("-  >>> loop->state[i]:%d, loop->mask[i]:%d, count:%d\n", loop->state[i], loop->mask[i], count);
 			if (loop->state[i] == LINE_ON &&
 			    loop->mask[i]) --count;
 			if (count < 0) {
