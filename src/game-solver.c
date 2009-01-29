@@ -462,6 +462,9 @@ solve_game(struct geometry *geo, struct game *game)
 {
 	struct solution *sol;
 	int i;
+	int count;
+	int score=0;
+	int old_score;
 	
 	/* init solution structure */
 	sol= (struct solution *)g_malloc(sizeof(struct solution));
@@ -478,16 +481,32 @@ solve_game(struct geometry *geo, struct game *game)
 		sol->sq_mask[i]= TRUE;
 	
 	/* These two tests only run once at the very start */
-	solve_handle_zero_squares(sol);
-	solve_handle_maxnumber_squares(sol);
+	count= solve_handle_zero_squares(sol);
+	score+= count;
+	printf("zero: count %d\n", count);
+	count= solve_handle_maxnumber_squares(sol);
+	score+= count;
+	printf("maxnumber: count %d\n", count);
 	
-	for(i=0; i < 10; ++i) {
-		solve_handle_busy_vertex(sol);
-		solve_handle_trivial_squares(sol);
-		solve_handle_trivial_vertex(sol);
+	old_score= score - 1;
+	while(old_score != score) {
+		/* common solving schemes */
+		while(old_score != score) {
+			old_score= score;
+			count= solve_handle_busy_vertex(sol);
+			score+= count;
+			printf("busyvertex: count %d\n", count);
+			count= solve_handle_trivial_squares(sol);
+			score+= count;
+			printf("trivialsq: count %d\n", count);
+			count= solve_handle_trivial_vertex(sol);
+			score+= count;
+			printf("trivialver: count %d\n", count);
+		}
+		count= solve_handle_loop_bottleneck(sol);
+		score+= count;
+		printf("loopneck: count %d\n", count);
 	}
-	solve_handle_loop_bottleneck(sol);
-	
 	return sol;
 }
 
