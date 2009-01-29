@@ -203,7 +203,7 @@ solve_handle_trivial_vertex(struct solution *sol)
 static int
 solve_handle_maxnumber_squares(struct solution *sol)
 {
-	int i, j, k;
+	int i, j, k, k2;
 	struct square *sq, *sq2=NULL;
 	int pos1, pos2;
 	struct vertex *vertex;
@@ -223,8 +223,10 @@ solve_handle_maxnumber_squares(struct solution *sol)
 			vertex= sq->vertex[j];
 			/* vertex is in a corner -> enable lines touching it */
 			if (vertex->nlines == 2) {
-				SET_LINE(vertex->lines[0]);
-				SET_LINE(vertex->lines[1]);
+				if (STATE(vertex->lines[0]) != LINE_ON)
+					SET_LINE(vertex->lines[0]);
+				if (STATE(vertex->lines[1]) != LINE_ON)
+					SET_LINE(vertex->lines[1]);
 				continue;
 			}
 			/* at this point vertex touches at least 2 squares (not in a corner) */
@@ -241,23 +243,32 @@ solve_handle_maxnumber_squares(struct solution *sol)
 			/* find if the two MAX squares share a line */
 			lin= find_shared_side(sq, sq2, &pos1, &pos2);
 			if (lin != NULL) {	// shared side: side by side squares
-				SET_LINE(lin);
+				if (STATE(lin) != LINE_ON)
+					SET_LINE(lin);
 				/* set all lines around squares except the ones touching lin */
-				for(k=2; k < sq->nsides - 1; ++k)
-					SET_LINE(sq->sides[ (pos1 + k) % sq->nsides ]);
-				for(k=2; k < sq2->nsides - 1; ++k)
-					SET_LINE(sq2->sides[ (pos2 + k) % sq2->nsides ]); 
+				for(k=2; k < sq->nsides - 1; ++k) {
+					k2= (pos1 + k) % sq->nsides;
+					if (STATE(sq->sides[k2]) != LINE_ON)
+						SET_LINE(sq->sides[k2]);
+				}
+				for(k=2; k < sq2->nsides - 1; ++k) {
+					k2= (pos2 + k) % sq2->nsides;
+					if (STATE(sq->sides[k2]) != LINE_ON)
+						SET_LINE(sq2->sides[k2]); 
+				}
 			} else {	// no shared side: diagonally opposed squares
 				/* set all lines around squares that don't touch vertex */
 				for(k=0; k < sq->nsides; ++k) {
 					if (sq->sides[k]->ends[0] == vertex ||
 					    sq->sides[k]->ends[1] == vertex) continue;
-					SET_LINE(sq->sides[k]);
+					if (STATE(sq->sides[k]) != LINE_ON)
+						SET_LINE(sq->sides[k]);
 				}
 				for(k=0; k < sq2->nsides; ++k) {
 					if (sq2->sides[k]->ends[0] == vertex ||
 					    sq2->sides[k]->ends[1] == vertex) continue;
-					SET_LINE(sq2->sides[k]);
+					if (STATE(sq2->sides[k]) != LINE_ON)
+						SET_LINE(sq2->sides[k]);
 				}
 			}
 		}
