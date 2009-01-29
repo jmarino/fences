@@ -293,6 +293,106 @@ solve_handle_busy_vertex(struct solution *sol)
 
 
 /*
+ * Follow ON line direction
+ * Return next line and new direction to continue
+ * Returns NULL if line stops
+ */
+static struct line*
+follow_line(struct line *lin, int direction, int &new_direction)
+{
+	struct line *next=NULL;
+	
+	if (direction == DIRECTION_IN) {
+		for(j=0; j < lin->nin; ++j) {
+			if (STATE(lin->in[j]) == LINE_ON) {
+				next= lin->in[j];
+				if (next->ends[0] == lin->ends[0])
+					*new_direction= DIRECTION_OUT;
+				else
+					*new_direction= DIRECTION_IN;
+				break;
+			}
+		}
+	} else {
+		for(j=0; j < lin->nout; ++j) {
+			if (STATE(lin->out[j]) == LINE_ON) {
+				next= lin->out[j];
+				if (next->ends[0] == lin->ends[1])
+					*new_direction= DIRECTION_OUT;
+				else
+					*new_direction= DIRECTION_IN;
+				break;
+			}
+		}
+	}
+	
+	return next;
+}
+
+
+/*
+ * Find two ends of a partial loop. If only separated by a line, cross it
+ */
+static int
+solve_handle_loop_bottleneck(struct solution *sol)
+{
+	int i, j;
+	int num_on;
+	struct line *end1;
+	struct line *end2;
+	struct line *next;
+	int dir1, dir2;		// direction each end is going
+	int stuck;
+	int lines_left;		// how many ON lines to still left to check
+	struct geometry *geo=sol->geo;
+	
+	/* initialize line mask */
+	lines_left= 0;
+	for(i=0; i < geo->nlines; ++i) {
+		if (STATE(geo->lines + i) == LINE_ON) {
+			sol->lin_mask= TRUE;
+			++lines_left;
+		} else {
+			sol->lin_mask= FALSE;	// mask out not-ON lines
+		}
+	}
+	
+	/* find a line on and follow it */
+	for(i=0; i < geo->nlines; ++i) {
+		if (sol->lin_mask[i] == FALSE) continue;
+		dir1= DIRECTION_IN;
+		dir2= DIRECTION_OUT; 
+		end1= end2= geo->lines + i;
+		stuck= 0;
+		while(stuck != 3) {
+			/* move end1 */
+			if (stuck & 1 == 0) {
+				next= follow_line(end1, dir1, &dir1);
+				if (next != NULL) {
+					end1= next;
+				} else stuck|= 1;
+			}
+			/* move end2 */
+			if (stuck & 2 == 0) {
+				next= follow_line(end2, dir2, &dir2);
+				if (next != NULL) {
+					end2= next;
+				} else stuck|= 2;
+			}
+			
+			//**TODO** maybe improve follow_line
+		}
+		
+		/* check if ends are within a line away */
+		
+		
+	}
+
+	return 0;
+}
+
+
+/*
  * Free solution structure
  */
 static void
@@ -337,6 +437,7 @@ solve_game(struct geometry *geo, struct game *game)
 		solve_handle_trivial_squares(sol);
 		solve_handle_trivial_vertex(sol);
 	}
+	//solve_handle_loop_bottleneck(sol);
 	
 	return sol;
 }
