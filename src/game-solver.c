@@ -455,6 +455,41 @@ solve_free_solution(struct solution *sol)
 
 
 /*
+ *
+ */
+static gboolean
+solve_check_solution(struct solution *sol)
+{
+	int i;
+	struct geometry *geo=sol->geo;
+	gboolean sol_good=TRUE;
+	
+	/* check we have one and only one loop
+	 * last run inside 'handle_loop_bootleneck' set lin_mask
+	 * if the whole loop was followed, all lines will have lin_mask FALSE */
+	for(i=0; i < geo->nlines; ++i) {
+		if (STATE(geo->lines + i) == LINE_ON) {
+			if (sol->lin_mask[i]) {
+				sol_good= FALSE;
+				break;
+			}
+		}
+	}
+	
+	/* check that all squares are happy */
+	for(i=0; i < geo->nsquares; ++i) {
+		if (NUMBER(geo->squares + i) > -1) {
+			if (sol->sq_mask[i]) {
+				sol_good= FALSE;
+				break;
+			}
+		}
+	}
+	return sol_good;
+}
+
+
+/*
  * Solve game
  */
 struct solution*
@@ -507,6 +542,14 @@ solve_game(struct geometry *geo, struct game *game)
 		score+= count;
 		printf("loopneck: count %d\n", count);
 	}
+	
+	/* check if we have a valid solution */
+	if (solve_check_solution(sol)) {
+		printf("Solution good!\n");
+	} else {
+		printf("Solution BAD!\n");
+	}
+	
 	return sol;
 }
 
