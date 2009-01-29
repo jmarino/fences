@@ -299,33 +299,39 @@ solve_handle_busy_vertex(struct solution *sol)
  * Returns NULL if line stops
  */
 static struct line*
-follow_line(struct line *lin, int direction, int &new_direction)
+follow_line(struct solution *sol, struct line *lin, int *direction)
 {
+	int j;
 	struct line *next=NULL;
 	
-	if (direction == DIRECTION_IN) {
+	if (*direction == DIRECTION_IN) {
+		/* find next line on in this direction */
 		for(j=0; j < lin->nin; ++j) {
 			if (STATE(lin->in[j]) == LINE_ON) {
 				next= lin->in[j];
+				/* new direction that continues the flow */
 				if (next->ends[0] == lin->ends[0])
-					*new_direction= DIRECTION_OUT;
+					*direction= DIRECTION_OUT;
 				else
-					*new_direction= DIRECTION_IN;
+					*direction= DIRECTION_IN;
 				break;
 			}
 		}
-	} else {
+	} else if (*direction == DIRECTION_OUT) {
+		/* find next line on in this direction */
 		for(j=0; j < lin->nout; ++j) {
 			if (STATE(lin->out[j]) == LINE_ON) {
 				next= lin->out[j];
+				/* new direction that continues the flow */
 				if (next->ends[0] == lin->ends[1])
-					*new_direction= DIRECTION_OUT;
+					*direction= DIRECTION_OUT;
 				else
-					*new_direction= DIRECTION_IN;
+					*direction= DIRECTION_IN;
 				break;
 			}
 		}
-	}
+	} else 
+		g_debug("illegal direction: %d", *direction);
 	
 	return next;
 }
@@ -367,15 +373,15 @@ solve_handle_loop_bottleneck(struct solution *sol)
 		stuck= 0;
 		while(stuck != 3) {
 			/* move end1 */
-			if (stuck & 1 == 0) {
-				next= follow_line(end1, dir1, &dir1);
+			if ((stuck & 1) == 0) {
+				next= follow_line(sol, end1, &dir1);
 				if (next != NULL) {
 					end1= next;
 				} else stuck|= 1;
 			}
 			/* move end2 */
-			if (stuck & 2 == 0) {
-				next= follow_line(end2, dir2, &dir2);
+			if ((stuck & 2) == 0) {
+				next= follow_line(sol, end2, &dir2);
 				if (next != NULL) {
 					end2= next;
 				} else stuck|= 2;
