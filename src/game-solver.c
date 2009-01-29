@@ -344,10 +344,11 @@ static int
 solve_handle_loop_bottleneck(struct solution *sol)
 {
 	int i, j;
-	int num_on;
+	int count=0;
 	struct line *end1;
 	struct line *end2;
 	struct line *next;
+	struct vertex *vertex;
 	int dir1, dir2;		// direction each end is going
 	int stuck;
 	int lines_left;		// how many ON lines to still left to check
@@ -357,10 +358,10 @@ solve_handle_loop_bottleneck(struct solution *sol)
 	lines_left= 0;
 	for(i=0; i < geo->nlines; ++i) {
 		if (STATE(geo->lines + i) == LINE_ON) {
-			sol->lin_mask= TRUE;
+			sol->lin_mask[i]= TRUE;
 			++lines_left;
 		} else {
-			sol->lin_mask= FALSE;	// mask out not-ON lines
+			sol->lin_mask[i]= FALSE;	// mask out not-ON lines
 		}
 	}
 	
@@ -377,6 +378,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 				next= follow_line(sol, end1, &dir1);
 				if (next != NULL) {
 					end1= next;
+					sol->lin_mask[next->id]= FALSE;
 				} else stuck|= 1;
 			}
 			/* move end2 */
@@ -384,18 +386,36 @@ solve_handle_loop_bottleneck(struct solution *sol)
 				next= follow_line(sol, end2, &dir2);
 				if (next != NULL) {
 					end2= next;
+					sol->lin_mask[next->id]= FALSE;
 				} else stuck|= 2;
 			}
-			
-			//**TODO** maybe improve follow_line
 		}
 		
 		/* check if ends are within a line away */
-		
-		
+		if (dir1 == DIRECTION_IN) vertex= end1->ends[0];
+		else vertex= end1->ends[1];
+		if (dir2 == DIRECTION_IN) {
+			for(j=0; j < end2->nin; ++j) {
+				if (end2->in[j]->ends[0] == vertex ||
+				    end2->in[j]->ends[1] == vertex) break;
+			}
+			if (j < end2->nin) {
+				printf("bottleneck loop found: end1 %d\n", end2->in[j]->id);
+				CROSS_LINE(end2->in[j]);
+			}
+		} else {
+			for(j=0; j < end2->nout; ++j) {
+				if (end2->out[j]->ends[0] == vertex ||
+				    end2->out[j]->ends[1] == vertex) break;
+			}
+			if (j < end2->nout) {
+				printf("bottleneck loop found: end2 %d\n", end2->out[j]->id);
+				CROSS_LINE(end2->out[j]);
+			}
+		}
 	}
 
-	return 0;
+	return count;
 }
 
 
@@ -444,7 +464,7 @@ solve_game(struct geometry *geo, struct game *game)
 		solve_handle_trivial_squares(sol);
 		solve_handle_trivial_vertex(sol);
 	}
-	//solve_handle_loop_bottleneck(sol);
+	solve_handle_loop_bottleneck(sol);
 	
 	return sol;
 }
