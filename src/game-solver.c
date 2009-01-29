@@ -118,8 +118,10 @@ solve_handle_trivial_squares(struct solution *sol)
 	struct geometry *geo=sol->geo;
 	
 	for(i=0; i < geo->nsquares; ++i) {
-		if (sol->numbers[i] == -1) continue; // only numbered squares
+		if (sol->numbers[i] == -1 || sol->sq_mask[i] == FALSE) 
+			continue; // only numbered squares
 		
+		/* count lines ON and CROSSED around square */
 		sq= geo->squares + i;
 		lines_on= lines_crossed= 0;
 		for(j=0; j < sq->nsides; ++j) {
@@ -138,6 +140,7 @@ solve_handle_trivial_squares(struct solution *sol)
 		} else {
 			/* enough lines crossed -> set ON the OFF ones */
 			if ( sq->nsides - lines_crossed == NUMBER(sq) ) {
+				sol->sq_mask[i]= FALSE;
 				for(j=0; j < sq->nsides; ++j) {
 					if (STATE(sq->sides[j]) == LINE_OFF)
 						SET_LINE(sq->sides[j]);
@@ -212,7 +215,8 @@ solve_handle_maxnumber_squares(struct solution *sol)
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
 		/* ignore squares without number or number < nsides -1 */
-		if (sol->numbers[i] != sq->nsides - 1) continue;
+		if (sol->sq_mask[i] == FALSE || sol->numbers[i] != sq->nsides - 1) 
+			continue;
 		
 		/* inspect vertices of square */
 		for(j=0; j < sq->nvertex; ++j) {
