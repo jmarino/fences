@@ -104,8 +104,8 @@ solve_handle_zero_squares(struct solution *sol)
 
 
 /*
- * Iterate over all squares to find numbered squares that have enough crossed
- * sides that can be solved
+ * Iterate over all squares to find numbered squares with enough crossed
+ * sides that their solution is trivial
  */
 static int
 solve_handle_trivial_squares(struct solution *sol)
@@ -128,14 +128,15 @@ solve_handle_trivial_squares(struct solution *sol)
 			if (STATE(sq->sides[j]) == LINE_CROSSED)
 				++lines_crossed;
 		}
-		/* if lines ON == square number cross the rest */
+		/* if (lines ON) == (square number) -> square is done cross the rest */
 		if ( lines_on == NUMBER(sq)) {
+			sol->sq_mask[i]= FALSE;
 			for(j=0; j < sq->nsides; ++j) {
 				if (STATE(sq->sides[j]) == LINE_OFF)
 					CROSS_LINE(sq->sides[j]);
 			}
 		} else {
-			/* enough lines crossed -> set any that's OFF */
+			/* enough lines crossed -> set ON the OFF ones */
 			if ( sq->nsides - lines_crossed == NUMBER(sq) ) {
 				for(j=0; j < sq->nsides; ++j) {
 					if (STATE(sq->sides[j]) == LINE_OFF)
@@ -223,6 +224,7 @@ solve_handle_maxnumber_squares(struct solution *sol)
 				continue;
 			}
 			/* at this point vertex touches at least 2 squares (not in a corner) */
+			/* find neighbor square with MAX_NUMBER */
 			for(k=0; k < vertex->nsquares; ++k) {
 				sq2= vertex->sq[k];
 				if (sq2 == sq) continue; // ignore current square
@@ -232,16 +234,16 @@ solve_handle_maxnumber_squares(struct solution *sol)
 			if (k == vertex->nsquares) // no max neighbor 
 				continue;
 			
-			/* find if the two squares share a line */
+			/* find if the two MAX squares share a line */
 			lin= find_shared_side(sq, sq2, &pos1, &pos2);
-			if (lin != NULL) {	// side by side squares
+			if (lin != NULL) {	// shared side: side by side squares
 				SET_LINE(lin);
 				/* set all lines around squares except the ones touching lin */
 				for(k=2; k < sq->nsides - 1; ++k)
 					SET_LINE(sq->sides[ (pos1 + k) % sq->nsides ]);
 				for(k=2; k < sq2->nsides - 1; ++k)
 					SET_LINE(sq2->sides[ (pos2 + k) % sq2->nsides ]); 
-			} else {		// diagonally opposed squares
+			} else {	// no shared side: diagonally opposed squares
 				/* set all lines around squares that don't touch vertex */
 				for(k=0; k < sq->nsides; ++k) {
 					if (sq->sides[k]->ends[0] == vertex ||
@@ -255,8 +257,6 @@ solve_handle_maxnumber_squares(struct solution *sol)
 				}
 			}
 		}
-		
-		 
 	}
 
 	return 0;
@@ -272,7 +272,6 @@ solve_handle_busy_vertex(struct solution *sol)
 	int i, j;
 	int num_on;
 	struct geometry *geo=sol->geo;
-	
 	
 	for(i=0; i < geo->nvertex; ++i) {
 		num_on= 0;
