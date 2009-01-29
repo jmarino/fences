@@ -95,10 +95,8 @@ solve_handle_zero_squares(struct solution *sol)
 		/* cross sides of square */
 		sol->sq_mask[i]= FALSE;	// mark square as handled
 		sq= geo->squares + i;
-		for(j=0; j < sq->nsides; ++j) {
+		for(j=0; j < sq->nsides; ++j)
 			CROSS_LINE(sq->sides[j]);
-			++count;
-		}
 	}
 	return count;
 }
@@ -211,6 +209,7 @@ solve_handle_maxnumber_squares(struct solution *sol)
 	struct vertex *vertex;
 	struct line *lin;
 	struct geometry *geo=sol->geo;
+	int count=0;
 	
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
@@ -264,7 +263,7 @@ solve_handle_maxnumber_squares(struct solution *sol)
 		}
 	}
 
-	return 0;
+	return count;
 }
 
 
@@ -277,6 +276,7 @@ solve_handle_busy_vertex(struct solution *sol)
 	int i, j;
 	int num_on;
 	struct geometry *geo=sol->geo;
+	int count=0;
 	
 	for(i=0; i < geo->nvertex; ++i) {
 		num_on= 0;
@@ -293,7 +293,7 @@ solve_handle_busy_vertex(struct solution *sol)
 		}
 	}
 
-	return 0;
+	return count;
 }
 
 
