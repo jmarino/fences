@@ -86,16 +86,17 @@ solve_handle_zero_squares(struct solution *sol)
 {
 	int i, j;
 	int count=0;
+	struct square *sq;
 	struct geometry *geo=sol->geo;
 	
 	for(i=0; i < geo->nsquares; ++i) {
-		if (sol->numbers[i] == 0) {
-			sol->sq_mask[i]= FALSE;
-			for(j=0; j < geo->squares[i].nsides; ++j) {
-				sol->states[ geo->squares[i].sides[j]->id ]= 
-					LINE_CROSSED;
-				++count;
-			}
+		if (sol->numbers[i] != 0) continue; // only care about 0 squares
+		/* cross sides of square */
+		sol->sq_mask[i]= FALSE;	// mark square as handled
+		sq= geo->squares + i;
+		for(j=0; j < sq->nsides; ++j) {
+			CROSS_LINE(sq->sides[j]);
+			++count;
 		}
 	}
 	return count;
