@@ -30,13 +30,16 @@
 /*
  * Convenience macros (they assume that 'struct solution *sol' is defined)
  */
-#define SET_LINE(lin)	sol->states[lin->id]= LINE_ON
-#define UNSET_LINE(lin)	sol->states[lin->id]= LINE_OFF
-#define CROSS_LINE(lin)	sol->states[lin->id]= LINE_CROSSED
-#define STATE(lin)	sol->states[lin->id]
-#define NUMBER(sq)	sol->numbers[sq->id]
-#define MAX_NUMBER(sq)	sol->numbers[sq->id] == (sq->nsides - 1)
+#define SET_LINE(lin)	sol->states[(lin)->id]= LINE_ON
+#define UNSET_LINE(lin)	sol->states[(lin)->id]= LINE_OFF
+#define CROSS_LINE(lin)	sol->states[(lin)->id]= LINE_CROSSED
+#define STATE(lin)	sol->states[(lin)->id]
+#define NUMBER(sq)	sol->numbers[(sq)->id]
+#define MAX_NUMBER(sq)	sol->numbers[(sq)->id] == ((sq)->nsides - 1)
 
+
+#define DIRECTION_IN	0
+#define DIRECTION_OUT	1
 
 
 struct solution {
