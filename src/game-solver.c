@@ -387,10 +387,12 @@ solve_handle_loop_bottleneck(struct solution *sol)
 		dir2= DIRECTION_OUT; 
 		end1= end2= geo->lines + i;
 		stuck= 0;
+		/* follow along end1 and end2 until they end or they meet */
 		while(stuck != 3) {
 			/* move end1 */
 			if ((stuck & 1) == 0) {
 				next= follow_line(sol, end1, &dir1);
+				if (next == end2) break;
 				if (next != NULL) {
 					end1= next;
 					sol->lin_mask[next->id]= FALSE;
@@ -399,11 +401,16 @@ solve_handle_loop_bottleneck(struct solution *sol)
 			/* move end2 */
 			if ((stuck & 2) == 0) {
 				next= follow_line(sol, end2, &dir2);
+				if (next == end1) break;
 				if (next != NULL) {
 					end2= next;
 					sol->lin_mask[next->id]= FALSE;
 				} else stuck|= 2;
 			}
+		}
+		/* while quitted unexpectedly -> we have a closed loop */
+		if (stuck != 3) {
+			return count;
 		}
 		
 		/* check if ends are within a line away */
