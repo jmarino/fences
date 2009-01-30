@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "gamedata.h"
+#include "game-solver.h"
 
 /*
  * Description:
@@ -39,23 +40,6 @@
 #define MAX_NUMBER(sq)		sol->numbers[(sq)->id] == ((sq)->nsides - 1)
 
 
-#define DIRECTION_IN	0
-#define DIRECTION_OUT	1
-
-
-struct solution {
-	struct geometry *geo;	// geometry of game
-	struct game *game;	// game state (mostly useful for square numbers)
-	int *states;		// line states (so we don't touch game->states)
-	int *numbers;		// points to game->numbers
-	gboolean *sq_mask;
-	int *lin_mask;
-};
-
-struct step {
-	int dir;
-	int taken;
-};
 
 
 

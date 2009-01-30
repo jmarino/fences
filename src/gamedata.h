@@ -26,6 +26,11 @@
 #define LINE_CROSSED		2
 
 
+/* Possible connecting directions for a line */
+#define DIRECTION_IN	0
+#define DIRECTION_OUT	1
+
+
 
 /*
  * Holds game data (square numbers and lines that are on)
