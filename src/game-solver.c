@@ -427,19 +427,6 @@ solve_handle_loop_bottleneck(struct solution *sol)
 
 
 /*
- * Free solution structure
- */
-static void
-solve_free_solution(struct solution *sol)
-{
-	g_free(sol->states);
-	g_free(sol->lin_mask);
-	g_free(sol->sq_mask);
-	g_free(sol);
-}
-
-
-/*
  *
  */
 static gboolean
@@ -475,18 +462,14 @@ solve_check_solution(struct solution *sol)
 
 
 /*
- * Solve game
+ * Return a new solution structure
  */
-struct solution*
-solve_game(struct geometry *geo, struct game *game)
+struct solution* 
+solve_create_solution_data(struct geometry *geo, struct game *game)
 {
 	struct solution *sol;
 	int i;
-	int count;
-	int score=0;
-	int old_score;
 	
-	/* init solution structure */
 	sol= (struct solution *)g_malloc(sizeof(struct solution));
 	sol->geo= geo;
 	sol->game= game;
@@ -499,6 +482,38 @@ solve_game(struct geometry *geo, struct game *game)
 		sol->states[i]= LINE_OFF;
 	for(i=0; i < geo->nsquares; ++i)
 		sol->sq_mask[i]= TRUE;
+	
+	return sol;
+}
+
+
+/*
+ * Free solution structure
+ */
+void
+solve_free_solution_data(struct solution *sol)
+{
+	g_free(sol->states);
+	g_free(sol->lin_mask);
+	g_free(sol->sq_mask);
+	g_free(sol);
+}
+
+
+/*
+ * Solve game
+ */
+struct solution*
+solve_game(struct geometry *geo, struct game *game)
+{
+	struct solution *sol;
+	int i;
+	int count;
+	int score=0;
+	int old_score;
+	
+	/* init solution structure */
+	sol= solve_create_solution_data(geo, game);
 	
 	/* These two tests only run once at the very start */
 	count= solve_handle_zero_squares(sol);
@@ -553,5 +568,5 @@ test_solve_game(struct geometry *geo, struct game *game)
 	for(i=0; i < geo->nlines; ++i)
 		game->states[i]= sol->states[i];
 	
-	solve_free_solution(sol);
+	solve_free_solution_data(sol);
 }

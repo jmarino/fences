@@ -32,4 +32,10 @@ struct solution {
 };
 
 
+/* 
+ * Functions
+ */
+void solve_free_solution_data(struct solution *sol);
+struct solution* solve_create_solution_data(struct geometry *geo, struct game *game);
+
 #endif
