@@ -297,7 +297,7 @@ solve_handle_busy_vertex(struct solution *sol)
  * Return next line and new direction to continue
  * Returns NULL if line stops
  */
-static struct line*
+struct line*
 follow_line(struct solution *sol, struct line *lin, int *direction)
 {
 	int j;

@@ -35,6 +35,7 @@ struct solution {
 /* 
  * Functions
  */
+struct line* follow_line(struct solution *sol, struct line *lin, int *direction);
 int solve_handle_zero_squares(struct solution *sol);
 int solve_handle_maxnumber_squares(struct solution *sol);
 int solve_handle_busy_vertex(struct solution *sol);
