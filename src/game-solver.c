@@ -66,7 +66,7 @@ find_shared_side(struct square *sq1, struct square *sq2, int *i, int *j)
  * Go through all squares and cross sides of squares with a 0
  * returns number of lines crossed out
  */
-static int
+int
 solve_handle_zero_squares(struct solution *sol)
 {
 	int i, j;
@@ -90,7 +90,7 @@ solve_handle_zero_squares(struct solution *sol)
  * Iterate over all squares to find numbered squares with enough crossed
  * sides that their solution is trivial
  */
-static int
+int
 solve_handle_trivial_squares(struct solution *sol)
 {
 	int i, j;
@@ -141,7 +141,7 @@ solve_handle_trivial_squares(struct solution *sol)
  * possible line available, i.e., (nlines - 2) CROSSED and 1 OFF
  * Then set remaining line
  */
-static int
+int
 solve_handle_trivial_vertex(struct solution *sol)
 {
 	int i, j;
@@ -184,7 +184,7 @@ solve_handle_trivial_vertex(struct solution *sol)
  * If another found: determine if they're side by side or diagonally and set
  * lines accordingly
  */
-static int
+int
 solve_handle_maxnumber_squares(struct solution *sol)
 {
 	int i, j, k, k2;
@@ -265,7 +265,7 @@ solve_handle_maxnumber_squares(struct solution *sol)
 /*
  * Finds vertices with 2 ON lines and crosses out the rest
  */
-static int
+int
 solve_handle_busy_vertex(struct solution *sol)
 {
 	int i, j;
@@ -339,7 +339,7 @@ follow_line(struct solution *sol, struct line *lin, int *direction)
 /*
  * Find two ends of a partial loop. If only separated by a line, cross it
  */
-static int
+int
 solve_handle_loop_bottleneck(struct solution *sol)
 {
 	int i, j;
