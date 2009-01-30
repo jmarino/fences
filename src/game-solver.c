@@ -527,7 +527,6 @@ struct solution*
 solve_game(struct geometry *geo, struct game *game)
 {
 	struct solution *sol;
-	int i;
 	int count;
 	int score=0;
 	int old_score;
@@ -577,7 +576,6 @@ solve_game(struct geometry *geo, struct game *game)
 void 
 test_solve_game(struct geometry *geo, struct game *game)
 {
-	int *squares;
 	int i;
 	struct solution *sol;
 	
