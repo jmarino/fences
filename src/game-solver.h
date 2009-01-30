@@ -18,6 +18,18 @@
 #define __INCLUDED_GAME_SOLVER_H__
 
 
+/*
+ * Convenience macros 
+ * They assume that 'struct solution *sol' and 'int count' is defined
+ */
+#define SET_LINE(lin)		{sol->states[(lin)->id]= LINE_ON; ++count;}
+#define UNSET_LINE(lin)		{sol->states[(lin)->id]= LINE_OFF; ++count;}
+#define CROSS_LINE(lin)		{sol->states[(lin)->id]= LINE_CROSSED; ++count;}
+#define STATE(lin)		sol->states[(lin)->id]
+#define NUMBER(sq)		sol->numbers[(sq)->id]
+#define MAX_NUMBER(sq)		sol->numbers[(sq)->id] == ((sq)->nsides - 1)
+
+
 
 /*
  * Contains detail about game solution
