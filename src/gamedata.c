@@ -114,13 +114,21 @@ generate_example_game(struct geometry *geo)
 		-1, 3, 2, 2, 1, 2,-1,
 		-1,-1, 2, 2,-1, 1,-1,
 		-1,-1,-1, 2, 2, 2,-1};
-	
+	int hard[7*7]={
+		 3,-1, 2,-1,-1,-1,-1,
+		-1,-1, 2, 1,-1,-1, 3,
+		-1,-1, 3,-1, 2,-1,-1,
+		 2,-1, 0, 1, 2,-1, 3,
+		 3,-1, 0, 2,-1, 1,-1,
+		-1,-1, 3,-1,-1, 3,-1,
+		-1, 2,-1,-1,-1, 1, 3};
 	/* Create empty game data that fits geo */
 	game= create_empty_gamedata(geo);
 	
 	/* set number inside square */
 	for(i=0; i < geo->nsquares; ++i) {
 		game->numbers[i]= squaredata[i];
+		//game->numbers[i]= hard[i];
 	}
 	
 	/* measure smallest square with a number (used to determine font size) */
