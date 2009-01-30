@@ -383,6 +383,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 	/* find a line on and follow it */
 	for(i=0; i < geo->nlines; ++i) {
 		if (sol->lin_mask[i] == FALSE) continue;
+		sol->lin_mask[i]= FALSE;
 		dir1= DIRECTION_IN;
 		dir2= DIRECTION_OUT; 
 		end1= end2= geo->lines + i;
