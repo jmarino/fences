@@ -372,7 +372,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 	/* initialize line mask */
 	lines_left= 0;
 	for(i=0; i < geo->nlines; ++i) {
-		if (STATE(geo->lines + i) == LINE_ON) {
+		if (sol->states[i] == LINE_ON) {
 			sol->lin_mask[i]= TRUE;
 			++lines_left;
 		} else {
@@ -469,7 +469,7 @@ solve_check_solution(struct solution *sol)
 	 * last run inside 'handle_loop_bootleneck' set lin_mask
 	 * if the whole loop was followed, all lines will have lin_mask FALSE */
 	for(i=0; i < geo->nlines; ++i) {
-		if (STATE(geo->lines + i) == LINE_ON) {
+		if (sol->states[i] == LINE_ON) {
 			if (sol->lin_mask[i]) {
 				sol_good= FALSE;
 				break;
@@ -479,7 +479,7 @@ solve_check_solution(struct solution *sol)
 	
 	/* check that all squares are happy */
 	for(i=0; i < geo->nsquares; ++i) {
-		if (NUMBER(geo->squares + i) > -1) {
+		if (sol->numbers[i] > -1) {
 			if (sol->sq_mask[i]) {
 				sol_good= FALSE;
 				break;
