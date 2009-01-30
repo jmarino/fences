@@ -110,6 +110,10 @@ window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 		test_solve_game(board.geo, board.game);
 		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
 	}
+	if (event->keyval == GDK_f) {
+		brute_force_solve(board.geo, board.game);
+		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
+	}
 	//(void)g_timeout_add(200, (GSourceFunc)timer_function, drawarea);
 	
 	return FALSE;

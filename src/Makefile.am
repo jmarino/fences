@@ -29,7 +29,8 @@ fences_SOURCES = \
 	penrose-tile.c penrose-tile.h \
 	square-tile.c square-tile.h \
 	build-loop.c build-loop.h \
-	game-solver.c game-solver.h
+	game-solver.c game-solver.h \
+	brute-force.c brute-force.h
 
 fences_LDFLAGS = 
 
