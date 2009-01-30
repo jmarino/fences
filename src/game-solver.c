@@ -280,6 +280,39 @@ solve_handle_busy_vertex(struct solution *sol)
 
 
 /*
+ * Follow on to next line
+ * Return next line and new direction to continue
+ * Returns NULL if next line doesn't exist
+ */
+struct line*
+goto_next_line(struct line *lin, int *direction, int which)
+{
+	struct line *next=NULL;
+	
+	if (*direction == DIRECTION_IN) {
+		if (which >= lin->nin) return NULL;
+		next= lin->in[which];
+		/* new direction that continues the flow away from lin */
+		if (next->ends[0] == lin->ends[0]) 
+			*direction= DIRECTION_OUT;
+		else 
+			*direction= DIRECTION_IN;
+	} else if (*direction == DIRECTION_OUT) {
+		if (which >= lin->nout) return NULL;
+		next= lin->out[which];
+		/* new direction that continues the flow away from lin */
+		if (next->ends[0] == lin->ends[1])
+			*direction= DIRECTION_OUT;
+		else
+			*direction= DIRECTION_IN;
+	} else 
+		g_debug("illegal direction: %d", *direction);
+	
+	return next;
+}
+
+
+/*
  * Follow ON line direction
  * Return next line and new direction to continue
  * Returns NULL if line stops
