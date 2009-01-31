@@ -75,48 +75,48 @@ brute_free_step_stack(struct stack *stack)
 
 
 /*
- * Check game data for some insconsistencies
- * Check all numbered squares and vertices
+ * Check game data for some insconsistencies at line 'lin' along 'direction'
+ * Check neighbor squares and line connections ahead
  * Return TRUE: all fine
  * Return FALSE: found problem
  */
 static gboolean
-brute_force_check_valid(struct solution *sol)
+brute_force_check_valid(struct solution *sol, struct line *lin, int direction)
 {
 	int i, j;
 	int lines_on;
-	struct square *sq;
 	struct vertex *vertex;
-	struct geometry *geo=sol->geo;
 	
-	/* check all numbered squares for lines > (squaren num) */
-	for(i=0; i < geo->nsquares; ++i) {
+	/* check squares at both sides of line */
+	for(i=0; i < lin->nsquares ; ++i) {
 		/* only numbered squares */
-		if (sol->numbers[i] == -1) continue;
-		
-		/* count lines ON around square */
-		sq= geo->squares + i;
+		if (NUMBER(lin->sq[i]) == -1) continue;
+		/* count lines on and compare with number in square */
 		lines_on= 0;
-		for(j=0; j < sq->nsides; ++j) {
-			if (STATE(sq->sides[j]) == LINE_ON)
+		for(j=0; j < lin->sq[i]->nsides; ++j) {
+			if (STATE(lin->sq[i]->sides[j]) == LINE_ON)
 				++lines_on;
-			if (lines_on > sol->numbers[i]) return FALSE;
 		}
-		/* if (lines ON) == (square number) -> square is done cross the rest */
-		
+		if (lines_on > NUMBER(lin->sq[i])) return FALSE;
 	}
 	
-	/* check all vertices for one with more than 2 lines */
-	for(i=0; i < geo->nvertex; ++i) {
-		vertex= geo->vertex + i;
-		lines_on= 0;
-		for(j=0; j < vertex->nlines; ++j) {
-			if (STATE(vertex->lines[j]) == LINE_ON)
-				++lines_on;
-			if (lines_on > 2) return FALSE;
-		}
+	/* get vertex in the direction we're moving */
+	if (direction == DIRECTION_IN) {
+		vertex= lin->ends[0];
+	} else {
+		vertex= lin->ends[1];
 	}
-	 
+	
+	/* check number of ON lines at vertex */
+	lines_on= 0;
+	for(i=0; i < vertex->nlines; ++i) {
+		/* only numbered squares */
+		if (STATE(vertex->lines[i]) == LINE_ON) {
+			++lines_on;
+		}
+		if (lines_on > 2) return FALSE;
+	}
+	
 	return TRUE;
 }
 
@@ -241,7 +241,7 @@ brute_force(struct solution *sol)
 		/*
 		 * check if current solution has any problems 
 		 */
-		step_valid= brute_force_check_valid(sol);
+		step_valid= brute_force_check_valid(sol, current, direction);
 		if (step_valid) {
 			step_valid= brute_force_check_loop(sol, current->id);
 			if (step_valid) {
