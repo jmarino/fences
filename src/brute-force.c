@@ -28,16 +28,15 @@
 /* WARNING: 'int routes' limits number of possible line connections to 32 (or 64)
  * (seems reasonable) */
 struct step {
-	int id;
-	int new_state;
-	int old_state;
-	int direction;
+	int id;		/* id of line just added in this step */
+	int direction;	/* direction of flow on current line of this step */
 	int routes;	/* **NOTE** this is highly arch dependant */
 };
 
 /* contains stack of steps */
 struct stack {
 	struct step *step;
+	int *ini_states;
 	int pos;
 	int size;
 };
@@ -50,71 +49,81 @@ struct stack {
  * Allocate stack to record steps taken
  */
 static struct stack*
-brute_create_step_stack(int size)
+brute_create_step_stack(struct solution *sol, int size)
 {
 	struct stack *stack;
+	int i;
 	
 	stack= (struct stack*)g_malloc(sizeof(struct stack));
 	stack->step= (struct step*)g_malloc(size * sizeof(struct step));
+	stack->ini_states= (int*)g_malloc(sol->geo->nlines * sizeof(int));
 	stack->pos= 0;
 	stack->size= size;
+	
+	/* record initial states in stack */
+	for(i=0; i < sol->geo->nlines; ++i) {
+		stack->ini_states[i]= sol->states[i]; 
+	}
 	
 	return stack;
 }
 
 
 /*
- * Free stack
+ * Free step stack
  */
 static void
 brute_free_step_stack(struct stack *stack)
 {
 	g_free(stack->step);
+	g_free(stack->ini_states);
 	g_free(stack);
 }
 
 
 /*
- * Check game data for some insconsistencies at line 'lin' along 'direction'
- * Check neighbor squares and line connections ahead
+ * Check game data for inconsistencies
  * Return TRUE: all fine
  * Return FALSE: found problem
  */
 static gboolean
-brute_force_check_valid(struct solution *sol, struct line *lin, int direction)
+check_valid_game(struct solution *sol)
 {
 	int i, j;
-	int lines_on;
+	int num_on;
+	int num_off;
+	struct square *sq;
 	struct vertex *vertex;
 	
-	/* check squares at both sides of line */
-	for(i=0; i < lin->nsquares ; ++i) {
+	/* check all squares */
+	sq= sol->geo->squares;
+	for(i=0; i < sol->geo->nsquares ; ++i) {
 		/* only numbered squares */
-		if (NUMBER(lin->sq[i]) == -1) continue;
+		if (sol->numbers[i] == -1) continue;
 		/* count lines on and compare with number in square */
-		lines_on= 0;
-		for(j=0; j < lin->sq[i]->nsides; ++j) {
-			if (STATE(lin->sq[i]->sides[j]) == LINE_ON)
-				++lines_on;
+		num_on= num_off= 0;
+		for(j=0; j < sq[i].nsides; ++j) {
+			if (STATE(sq[i].sides[j]) == LINE_ON)
+				++num_on;
+			else if (STATE(sq[i].sides[j]) == LINE_OFF)
+				++num_off;
 		}
-		if (lines_on > NUMBER(lin->sq[i])) return FALSE;
+		if (num_on > sol->numbers[i]) return FALSE;
+		if (num_on + num_off < sol->numbers[i]) return FALSE;
 	}
 	
-	/* get vertex in the direction we're moving */
-	if (direction == DIRECTION_IN) {
-		vertex= lin->ends[0];
-	} else {
-		vertex= lin->ends[1];
-	}
-	
-	/* check number of ON lines at vertex */
-	lines_on= 0;
-	for(i=0; i < vertex->nlines; ++i) {
-		/* only numbered squares */
-		if (STATE(vertex->lines[i]) == LINE_ON) {
-			++lines_on;
+	/* check all vertices, look for no exit lines */
+	vertex= sol->geo->vertex;
+	for(i=0; i < sol->geo->nvertex; ++i) {
+		num_on= num_off= 0;
+		for(j=0; j < vertex->nlines; ++j) {
+			if (STATE(vertex->lines[j]) == LINE_ON)
+				++num_on;
+			else if (STATE(vertex->lines[j]) == LINE_OFF)
+				++num_off;
 		}
-		if (lines_on > 2) return FALSE;
+		if (num_on == 1 && num_off == 0) return FALSE;
+		++vertex;
 	}
 	
 	return TRUE;
@@ -122,71 +131,148 @@ brute_force_check_valid(struct solution *sol, struct line *lin, int direction)
 
 
 /*
- * Check for loops
- * Return TRUE: solution found
- * Return FALSE: problem (partial loop, or isolated loop)
+ * Check we have a single loop
+ * This assumes that the game is in a valid state, i.e., 
+ * that check_valid_game has been called previously
+ * Return TRUE: single loop found
+ * Return FALSE: problem (no loop or isolated loop)
  */
 static gboolean
-brute_force_check_loop(struct solution *sol, int id)
+check_single_loop(struct solution *sol, struct line *start)
 {
-	int i;
-	int nlines=0;
-	int direction;
-	struct line *start;
+	int i, j;
+	int nlines_on=0;
+	int direction=DIRECTION_IN;	// OUT would do too, supposed to be a loop
 	struct line *lin;
+	struct square *sq;
 	struct geometry *geo=sol->geo;
 	
-	/* reset line mask */
-	for(i=0; i < geo->nlines; ++i) {
-		if (sol->states[i] == LINE_ON) {
-			sol->lin_mask[i]= TRUE;
-			++nlines;
-		} else sol->lin_mask[i]= FALSE;
+	/* check that all numbered squares are satisfied */
+	sq= geo->squares;
+	for(i=0; i < geo->nsquares ; ++i) {
+		/* only numbered squares */
+		if (sol->numbers[i] == -1) continue;
+		/* count lines ON and compare with number in square */
+		nlines_on= 0;
+		for(j=0; j < sq[i].nsides; ++j) {
+			if (STATE(sq[i].sides[j]) == LINE_ON)
+				++nlines_on;
+		}
+		if (nlines_on != sol->numbers[i]) {
+			printf("square unhappy (%d): %d != %d\n", i, nlines_on, sol->numbers[i]); 
+			return FALSE;
+		}
 	}
 	
-	while(nlines > 0) {
-		/* find an ON line that we haven't visited yet */
-		for(i=0; i < geo->nlines; ++i) {
-			if (sol->lin_mask[i]) break;
-		}
-		g_assert(i < geo->nlines);
-		lin= start= geo->lines + i;
-		direction= DIRECTION_IN;
-		while (lin != NULL) {
-			sol->lin_mask[lin->id]= FALSE;
-			--nlines;
-			lin= follow_line(sol, lin, &direction);
-			if (lin == start) // closed loop
-				break;
-		}
-		if (lin == start) {	// closed loop
-			if (nlines > 0) return FALSE;	// loop + some lines -> bad
-			return TRUE;
-		}
+	/* count total lines ON */
+	nlines_on= 0;
+	for(i=0; i < geo->nlines; ++i) {
+		if (sol->states[i] == LINE_ON)
+			++nlines_on;
 	}
+	
+	/* go around loop until we find 'start' or an end (open loop) */
+	lin= start;
+	while (lin != NULL) {
+		lin= follow_line(sol, lin, &direction);
+		--nlines_on;
+		if (lin == start) // closed loop
+			break;
+	}
+	if (lin == start && nlines_on == 0)
+		return TRUE;
+	
 	return FALSE;
 }
 
 
 /*
- * Brute force solve
+ * Backtrack to previous step
  */
-static int
-brute_force(struct solution *sol)
+static inline void
+backtrack_step(struct solution *sol, struct stack *stack)
+{
+	/* restore old state */
+	sol->states[stack->step[stack->pos].id]= LINE_OFF;
+	
+	/* go to previous step in the stack */
+	--stack->pos;
+}
+
+
+/*
+ * Find next open route and follow it
+ */
+static gboolean
+follow_next_open_route(struct solution *sol, struct stack *stack, 
+		       struct line *current, int direction)
+{
+	struct step *step=stack->step + stack->pos;
+	struct line **line_list;
+	int nlines;
+	int route;
+	
+	/* which direction are we going */
+	if (direction == DIRECTION_IN) {
+		nlines= current->nin;
+		line_list= current->in;
+	} else {	// DIRECTION_OUT
+		nlines= current->nout;
+		line_list= current->out;
+	}
+		
+	/* find next open route */
+	for(route=0; route < nlines; ++route) {
+		if ((step->routes&(1 << route)) != 0) continue;
+		if (STATE(line_list[route]) == LINE_CROSSED) {
+			/* don't follow an already crossed line */
+			step->routes|= (1 << route);
+			continue;
+		}
+		break;
+	}
+	if (route == nlines) return FALSE;	// tried all routes
+	
+	/* follow route */
+	current= goto_next_line(current, &direction, route);
+	g_assert(current != NULL);
+		
+	/* mark current route */
+	step->routes|= (1 << route);
+	
+	/* setup next step */
+	++stack->pos;
+	g_assert(stack->pos < stack->size);
+	++step;
+	step->id= current->id;
+	step->direction= direction;
+	step->routes= 0;
+	/* set next line ON */
+	sol->states[current->id]= LINE_ON;
+	
+	return TRUE;
+}
+
+
+/*
+ * Generate a brute_forte stack for solution given in 'sol'
+ * Returns properly initialized stack ready to be used
+ * Returns NULL if closed loop found on given solution
+ *	NOTE: it does NOT check for closed loops, it returns NULL if it happens
+ *	to find a closed loop while looking for a starting point
+ */
+struct stack*
+brute_init_step_stack(struct solution *sol)
 {
 	struct geometry *geo=sol->geo;
 	struct stack *stack;
 	struct step *step;
 	struct line *current;
 	struct line *lin;
-	struct line **list;
-	int nlist;
 	int start_line=0;
 	int count=0;
 	int i;
 	int direction;
-	int num_solutions=0;
-	int step_valid;
 	
 	/* count how many lines are already on */
 	for(i=0; i < geo->nlines; ++i) {
@@ -194,11 +280,12 @@ brute_force(struct solution *sol)
 			++count;
 	}
 	if (count == 0) {
-		g_error("we need at least one line ON to start");
+		g_debug("zero lines ON. We need at least one line ON to start");
+		return NULL;
 	}
 	
 	/* create stack to record steps taken */
-	stack= brute_create_step_stack(geo->nlines - count + 1);
+	stack= brute_create_step_stack(sol, geo->nlines - count + 1);
 	
 	/* find random line where to start */
 	count= g_random_int_range(0, count);
@@ -210,156 +297,148 @@ brute_force(struct solution *sol)
 			break;
 		}
 	}
+	
 	/* choose a direction randomly */
 	if (g_random_int_range(0, 2) == 0) direction= DIRECTION_IN;
 	else direction= DIRECTION_OUT;
-
-	/* make sure we reach an open end before we start the brute force */
+	
+	/* make sure we reach an open end */
 	lin= geo->lines + start_line;
-	current= NULL;
-	while(lin != NULL && current != geo->lines + start_line) {
+	do {
 		current= lin;
 		lin= follow_line(sol, lin, &direction);
-	}
-	if (lin != NULL) {	// there's a closed loop
-		g_error("attempted to start brute force on a closed loop (line %d)", 
-			start_line);
+	} while(lin != NULL && lin != geo->lines + start_line);
+	
+	if (lin != NULL) {	
+		/* there's a closed loop in given solution (no good) */
+		brute_free_step_stack(stack);
+		return NULL;
 	}
 	
 	/* setup first step info */
-	start_line= current->id;
 	step= stack->step;
-	step->id= start_line;
-	step->old_state= LINE_ON;
-	step->new_state= LINE_ON;
+	step->id= current->id;
 	step->direction= direction;
 	step->routes= 0;
-	current= geo->lines + start_line;
 	
-	/* main loop */
-	while(1) {
-		/*
-		 * check if current solution has any problems 
-		 */
-		step_valid= brute_force_check_valid(sol, current, direction);
-		if (step_valid) {
-			step_valid= brute_force_check_loop(sol, current->id);
-			if (step_valid) {
-				/* found a solution, record it and backtrack */
-				++num_solutions;
-				
-				/* restore old state */
-				sol->states[current->id]= step->old_state;
-			
-				/* go to previous step in the stack */
-				--stack->pos;
-				if (stack->pos < 0) break;	// give up
-				step= stack->step + stack->pos;
-				current= geo->lines + step->id;
-				direction= step->direction;
-				step->routes<<= 1;
-				step->routes|= 1;
-				continue;
-			}
+	return stack;
+}
+
+
+/*
+ * Try brute force approach on given solution and stack
+ * Return TRUE: solution found (solution in sol
+ */
+gboolean
+brute_force_solve(struct solution *sol, struct stack *stack, gboolean trace_mode)
+{
+	struct geometry *geo=sol->geo;
+	struct step *step;
+	struct line *current;
+	struct line *lin;
+	struct line *next;
+	int i;
+	int direction;
+	gboolean done=FALSE;
+	int niter=0;
+	
+	while(stack->pos >= 0 && !done) {
+		if (trace_mode) done= TRUE;
+		
+		step= stack->step + stack->pos;
+		current= geo->lines + step->id;
+		direction= step->direction;
+		++niter;
+		
+		/* restore initial not-ON states (reset crossed lines) */
+		for(i=0; i < geo->nlines; ++i) {
+			if (sol->states[i] != LINE_ON)
+				sol->states[i]= stack->ini_states[i];
 		}
-		/* found problem -> backtrack */
-		if (!step_valid) {
-			/* restore old state */
-			sol->states[current->id]= step->old_state;
-			
-			/* go to previous step in the stack */
-			--stack->pos;
-			if (stack->pos < 0) break;	// give up
-			step= stack->step + stack->pos;
-			current= geo->lines + step->id;
-			direction= step->direction;
+		
+		/* cross all crossable lines */
+		(void)solve_cross_lines(sol);
+		
+		/* check validity of game */
+		if (check_valid_game(sol) == FALSE) {
+			backtrack_step(sol, stack);
 			continue;
+		}
+		
+		/* see if line connects to another one (possible loop) */
+		lin= follow_line(sol, current, &direction);
+		if (lin != NULL) {	// line connects ahead
+			/* follow last line added until loop or end */
+			next= lin;
+			while (next != NULL) {
+				lin= next;
+				next= follow_line(sol, lin, &direction);
+				if (next == current) // closed loop found
+					break;
+			}
+			/* closed loop!!! */
+			if (next == current) {
+				/* we may have a solution, check */
+				if (check_single_loop(sol, current)) {
+					/* found a solution, we're done */
+					g_message("brute_force: took %d iterations", niter);
+					return TRUE;
+				} else {
+					/* false alarm, backtrack */
+					backtrack_step(sol, stack);
+					continue;
+				}
+			} else { 
+				/* open loop, set open end to current */
+				current= lin;
+				// direction is already set
+				/* let program continue normally */
+			}
 		}
 		
 		/*
 		 * choose next line to try 
 		 */
-		if (step->direction == DIRECTION_IN) {
-			nlist= current->nin;
-			list= current->in;
-		} else {	// DIRECTION_OUT
-			nlist= current->nout;
-			list= current->out;
-		}
-		
-		/* find next open route */
-		for(i=0; i < nlist; ++i) {
-			if ((step->routes&(1 << i)) != 0) continue;
-			if (STATE(list[i]) == LINE_CROSSED) {
-				/* don't follow an already crossed line */
-				step->routes|= (1 << i);
-				continue;
-			}
-			break;
-		}
-		if (i == nlist) {	// tried all routes
-			/* restore old state */
-			sol->states[current->id]= step->old_state;
-			
-			/* go to previous step in the stack */
-			--stack->pos;
-			if (stack->pos < 0) break;	// give up
-			step= stack->step + stack->pos;
-			current= geo->lines + step->id;
-			direction= step->direction;
+		if (follow_next_open_route(sol, stack, current, direction) == FALSE) {
+			/* no more open routes here */
+			backtrack_step(sol, stack);
 			continue;
 		}
-		/* follow route */
-		current= goto_next_line(current, &direction, i);
-		g_assert(current != NULL);
-		
-		/* mark current route */
-		step->routes|= (1 << i);
-		
-		/* setup next step */
-		++stack->pos;
-		g_assert(stack->pos < stack->size);
-		step= stack->step + stack->pos;
-		step->id= current->id;
-		step->old_state= sol->states[current->id];
-		step->new_state= LINE_ON;
-		step->direction= direction;
-		step->routes= 0;
-		/* set next line ON */
-		sol->states[current->id]= LINE_ON;
 	}
-	brute_free_step_stack(stack);
 	
-	return num_solutions;
+	return FALSE;
 }
 
 
+/*
+ * Test brute force
+ */
 int
-brute_force_solve(struct geometry *geo, struct game *game)
+brute_force_test(struct geometry *geo, struct game *game)
 {
-	struct solution *sol;
-	int nsolution;
+	static struct solution *sol;
 	int i;
+	static gboolean first=TRUE;
+	static struct stack *stack=NULL;
 	
-	/* create empty solution structure */
-	sol= solve_create_solution_data(geo, game);
+	/* Solve as much as we can */
+	if (first) {
+		sol= solve_game(geo, game);
+		first= FALSE;
+		
+		/* setup initial stack */
+		stack= brute_init_step_stack(sol);
+	}
 	
-	/* Run a set of trivial steps to get a head start */
-	(void)solve_handle_zero_squares(sol);
-	(void)solve_handle_maxnumber_squares(sol);
-	(void)solve_handle_busy_vertex(sol);
-	(void)solve_handle_trivial_squares(sol);
-	(void)solve_handle_trivial_vertex(sol);
-	(void)solve_handle_busy_vertex(sol);
+	if (stack != NULL) {
+		/* start brute force approach */
+		brute_force_solve(sol, stack, FALSE);	// TRUE= one step at a time
+	}
 	
-	/* start brute force approach */
-	nsolution= brute_force(sol);
-
-	printf("brute force: %d solutions\n", nsolution);
 	
+	/* copy solution on game state */	
 	for(i=0; i < geo->nlines; ++i)
 		game->states[i]= sol->states[i];
-	
 	
 	return 0;
 }

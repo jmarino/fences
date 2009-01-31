@@ -18,5 +18,9 @@
 #define __INCLUDED_BRUTE_FORCE_H__
 
 
+gboolean brute_force_solve(struct solution *sol, struct stack *stack, 
+			   gboolean trace_mode);
+int brute_force_test(struct geometry *geo, struct game *game);
+
 
 #endif
