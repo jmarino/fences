@@ -127,8 +127,8 @@ generate_example_game(struct geometry *geo)
 	
 	/* set number inside square */
 	for(i=0; i < geo->nsquares; ++i) {
-		game->numbers[i]= squaredata[i];
-		//game->numbers[i]= hard[i];
+		//game->numbers[i]= squaredata[i];
+		game->numbers[i]= hard[i];
 	}
 	
 	/* measure smallest square with a number (used to determine font size) */
