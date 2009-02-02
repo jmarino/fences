@@ -21,26 +21,7 @@
 
 #include "gamedata.h"
 #include "game-solver.h"
-
-
-
-/* contains data to record each step taken (useful to backtrack) */
-/* WARNING: 'int routes' limits number of possible line connections to 32 (or 64)
- * (seems reasonable) */
-struct step {
-	int id;		/* id of line just added in this step */
-	int direction;	/* direction of flow on current line of this step */
-	int routes;	/* **NOTE** this is highly arch dependant */
-};
-
-/* contains stack of steps */
-struct stack {
-	struct step *step;
-	int *ini_states;
-	int pos;
-	int size;
-};
-
+#include "brute-force.h"
 
 
 
