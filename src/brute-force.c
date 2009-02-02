@@ -342,9 +342,7 @@ brute_force_solve(struct solution *sol, struct stack *stack, gboolean trace_mode
 	gboolean done=FALSE;
 	int niter=0;
 	
-	while(stack->pos >= 0 && !done) {
-		if (trace_mode) done= TRUE;
-		
+	while(stack->pos >= 0) {
 		step= stack->step + stack->pos;
 		current= geo->lines + step->id;
 		direction= step->direction;
@@ -358,6 +356,12 @@ brute_force_solve(struct solution *sol, struct stack *stack, gboolean trace_mode
 		
 		/* cross all crossable lines */
 		(void)solve_cross_lines(sol);
+		
+		/* trace mode stop */
+		if (trace_mode) {
+			if (done) break;
+			done= TRUE;
+		}
 		
 		/* check validity of game */
 		if (check_valid_game(sol) == FALSE) {
