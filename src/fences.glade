@@ -14,15 +14,15 @@
           <widget class="GtkMenuBar" id="menubar">
             <property name="visible">True</property>
             <child>
-              <widget class="GtkMenuItem" id="menuitem1">
+              <widget class="GtkMenuItem" id="Game_menu">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">_File</property>
+                <property name="label" translatable="yes">_Game</property>
                 <property name="use_underline">True</property>
                 <child>
                   <widget class="GtkMenu" id="menu1">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkImageMenuItem" id="imagemenuitem1">
+                      <widget class="GtkImageMenuItem" id="Game_New_menuitem">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">gtk-new</property>
                         <property name="use_underline">True</property>
@@ -30,7 +30,7 @@
                       </widget>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="imagemenuitem2">
+                      <widget class="GtkImageMenuItem" id="Game_Open_menuitem">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">gtk-open</property>
                         <property name="use_underline">True</property>
@@ -38,7 +38,7 @@
                       </widget>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="imagemenuitem3">
+                      <widget class="GtkImageMenuItem" id="Game_Save_menuitem">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">gtk-save</property>
                         <property name="use_underline">True</property>
@@ -59,7 +59,7 @@
                       </widget>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="imagemenuitem5">
+                      <widget class="GtkImageMenuItem" id="Game_Quit_menuitem">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">gtk-quit</property>
                         <property name="use_underline">True</property>
