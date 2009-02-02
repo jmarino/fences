@@ -111,7 +111,11 @@ create_window (void)
 			      GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK);
 	g_signal_connect (G_OBJECT (drawarea), "button_release_event", 
 			  G_CALLBACK (drawarea_mouseclicked), drawarea);
-	
+
+	g_signal_connect(gtk_builder_get_object (builder, "Game_Quit_menuitem"),
+			 "activate", gtk_main_quit, NULL);
+		
+	/* done with builder */
 	g_object_unref (G_OBJECT (builder));
 
 	/* Ensure drawing area has aspect ratio of 1 */
