@@ -58,6 +58,6 @@ int solve_handle_loop_bottleneck(struct solution *sol);
 int solve_cross_lines(struct solution *sol);
 void solve_free_solution_data(struct solution *sol);
 struct solution* solve_create_solution_data(struct geometry *geo, struct game *game);
-struct solution* solve_game(struct geometry *geo, struct game *game);
+struct solution* solve_game(struct geometry *geo, struct game *game, int *score);
 
 #endif

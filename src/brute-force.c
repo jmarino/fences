@@ -405,10 +405,11 @@ brute_force_test(struct geometry *geo, struct game *game)
 	int i;
 	static gboolean first=TRUE;
 	static struct stack *stack=NULL;
+	int score;
 	
 	/* Solve as much as we can */
 	if (first) {
-		sol= solve_game(geo, game);
+		sol= solve_game(geo, game, &score);
 		first= FALSE;
 		
 		/* setup initial stack */
