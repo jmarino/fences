@@ -55,6 +55,7 @@ int solve_handle_busy_vertex(struct solution *sol);
 int solve_handle_trivial_squares(struct solution *sol);
 int solve_handle_trivial_vertex(struct solution *sol);
 int solve_handle_loop_bottleneck(struct solution *sol);
+int solve_cross_lines(struct solution *sol);
 void solve_free_solution_data(struct solution *sol);
 struct solution* solve_create_solution_data(struct geometry *geo, struct game *game);
 

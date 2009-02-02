@@ -280,6 +280,54 @@ solve_handle_busy_vertex(struct solution *sol)
 
 
 /*
+ * Go through all vertices and cross out lines that can be crossed out
+ * Repeat process until no more lines are crossed out
+ */
+int
+solve_cross_lines(struct solution *sol)
+{
+	int i, j;
+	int num_on;
+	int num_off;
+	int pos=0;
+	struct vertex *vertex;
+	struct geometry *geo=sol->geo;
+	int count=0;
+	int old_count=-1;
+	
+	while (old_count != count) {
+		old_count= count;
+		/* go through all vertices */
+		vertex= geo->vertex;
+		for(i=0; i < geo->nvertex; ++i) {
+			num_on= num_off= 0;
+			/* count lines on and off */
+			for(j=0; j < vertex->nlines; ++j) {
+				if (STATE(vertex->lines[j]) == LINE_ON)
+					++num_on;
+				else if (STATE(vertex->lines[j]) == LINE_OFF) {
+					pos= j;
+					++num_off;
+				}
+			}
+			/* check count */
+			if (num_on == 2) {	/* vertex busy */
+				for(j=0; j < vertex->nlines; ++j) {
+					if (STATE(vertex->lines[j]) == LINE_OFF)
+						CROSS_LINE(vertex->lines[j]);
+				}
+			} else if (num_on == 0 && num_off == 1) { /* no exit */
+				CROSS_LINE(vertex->lines[pos]);
+			}
+			++vertex;
+		}
+	}
+	
+	return count;
+}
+
+
+/*
  * Follow on to next line
  * Return next line and new direction to continue
  * Returns NULL if next line doesn't exist
