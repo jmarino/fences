@@ -474,7 +474,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 				if (end2->in[j]->ends[0] == vertex ||
 				    end2->in[j]->ends[1] == vertex) break;
 			}
-			if (j < end2->nin) {
+			if (j < end2->nin && STATE(end2->in[j]) != LINE_CROSSED) {
 				printf("bottleneck loop found: end1 %d\n", end2->in[j]->id);
 				CROSS_LINE(end2->in[j]);
 			}
@@ -483,7 +483,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 				if (end2->out[j]->ends[0] == vertex ||
 				    end2->out[j]->ends[1] == vertex) break;
 			}
-			if (j < end2->nout) {
+			if (j < end2->nout && STATE(end2->out[j]) != LINE_CROSSED) {
 				printf("bottleneck loop found: end2 %d\n", end2->out[j]->id);
 				CROSS_LINE(end2->out[j]);
 			}
