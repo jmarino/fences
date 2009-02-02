@@ -136,7 +136,7 @@ is_square_available(struct square *sq, struct loop *loop, int index)
  * Build a single loop on a board
  * It sets lines in a separate loop structure
  */
-struct loop*
+static struct loop*
 build_loop(const struct geometry *geo)
 {
 	int i, j;
@@ -251,8 +251,12 @@ build_loop(const struct geometry *geo)
 }
 
 
+/*
+ * Build new loop
+ * Return the loop in given game structure
+ */
 void
-try_loop(struct geometry *geo, struct game *game)
+build_new_loop(struct geometry *geo, struct game *game)
 {
 	struct loop *loop;
 	int i;
