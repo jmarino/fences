@@ -17,13 +17,55 @@
 #include <glib.h>
 
 #include "gamedata.h"
-
-
-struct game_state {
-	int *lin_state;	/* state of lines */
-	int *sq_num;	/* number of lines touching square */
-	int *sq_mask;	/* is number of square visible */
-};
+#include "game-solver.h"
+#include "build-loop.h"
+#include "brute-force.h"
 
 
 
+/*
+ * Build new game
+ */
+struct game*
+build_new_game(struct geometry *geo, int difficulty)
+{
+	struct game *game;
+	int i, j;
+	int nsquares;
+	int count;
+	int nlines_on;
+	int id;
+	
+	/* create empty game */
+	game= create_empty_gamedata(geo);
+	
+	/* create random loop: result is in 'game' */
+	build_new_loop(geo, game);
+	
+	/* enable random squares */
+	nsquares= (int) (geo->nsquares * 0.40);
+	for(i=0; i < nsquares; ++i) {
+		count= g_random_int_range(0, geo->nsquares - i);
+		for(id=0; id < geo->nsquares; ++id) {
+			if (game->numbers[id] == -1) {
+				--count;
+				if (count < 0) break;
+			}
+		}
+		g_debug("id: %d / %d (%d)", id, geo->nsquares, count);
+		g_assert(id < geo->nsquares);
+		/* count on lines around square 'id' */
+		nlines_on= 0;
+		for(j=0; j < geo->squares[id].nsides; ++j) {
+			if (game->states[geo->squares[id].sides[j]->id] == LINE_ON)
+				++nlines_on;
+		}
+		game->numbers[id]= nlines_on;
+	}
+	
+	/* clear lines of game */
+	//for(i=0; i < geo->nlines; ++i)
+//		game->states[i]= LINE_OFF;
+	
+	return game;
+}

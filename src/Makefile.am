@@ -30,7 +30,8 @@ fences_SOURCES = \
 	square-tile.c square-tile.h \
 	build-loop.c build-loop.h \
 	game-solver.c game-solver.h \
-	brute-force.c brute-force.h
+	brute-force.c brute-force.h \
+	build-game.c build-game.h
 
 fences_LDFLAGS = 
 
