@@ -154,9 +154,6 @@ solve_handle_trivial_vertex(struct solution *sol)
 		if (lines_on == 1 && lines_off == 1) {
 			/* vertex with one incoming and only one exit */
 			SET_LINE(vertex->lines[pos]);
-		} else if (lines_on == 0  && lines_off == 1) {
-			/* vertex with all but one crossed out */
-			CROSS_LINE(vertex->lines[pos]);
 		}
 		++vertex;
 	}
@@ -242,36 +239,6 @@ solve_handle_maxnumber_squares(struct solution *sol)
 						SET_LINE(sq2->sides[k]);
 				}
 			}
-		}
-	}
-
-	return count;
-}
-
-
-/*
- * Finds vertices with 2 ON lines and crosses out the rest
- */
-int
-solve_handle_busy_vertex(struct solution *sol)
-{
-	int i, j;
-	int num_on;
-	struct geometry *geo=sol->geo;
-	int count=0;
-	
-	for(i=0; i < geo->nvertex; ++i) {
-		num_on= 0;
-		for(j=0; j < geo->vertex[i].nlines; ++j) {
-			if (STATE(geo->vertex[i].lines[j]) == LINE_ON)
-			    ++num_on;
-		}
-		if (num_on < 2) continue;
-		if (num_on > 2) 	/* sanity check */
-			g_debug("vertex %d has %d (>2) lines ON", i, num_on);
-		for(j=0; j < geo->vertex[i].nlines; ++j) {
-			if (STATE(geo->vertex[i].lines[j]) == LINE_OFF)
-				CROSS_LINE(geo->vertex[i].lines[j]);
 		}
 	}
 
