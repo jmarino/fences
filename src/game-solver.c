@@ -373,6 +373,7 @@ follow_line(struct solution *sol, struct line *lin, int *direction)
 
 /*
  * Find two ends of a partial loop. If only separated by a line, cross it
+ * Returns length of partial loop
  */
 int
 solve_handle_loop_bottleneck(struct solution *sol)
@@ -387,6 +388,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 	int stuck;
 	int lines_left;		// how many ON lines to still left to check
 	struct geometry *geo=sol->geo;
+	int length=0;
 	
 	/* initialize line mask */
 	lines_left= 0;
@@ -407,6 +409,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 		dir2= DIRECTION_OUT; 
 		end1= end2= geo->lines + i;
 		stuck= 0;
+		length= 0;
 		/* follow along end1 and end2 until they end or they meet */
 		while(stuck != 3) {
 			/* move end1 */
@@ -416,6 +419,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 				if (next != NULL) {
 					end1= next;
 					sol->lin_mask[next->id]= FALSE;
+					++length;
 				} else stuck|= 1;
 			}
 			/* move end2 */
@@ -425,12 +429,13 @@ solve_handle_loop_bottleneck(struct solution *sol)
 				if (next != NULL) {
 					end2= next;
 					sol->lin_mask[next->id]= FALSE;
+					++length;
 				} else stuck|= 2;
 			}
 		}
 		/* while quitted unexpectedly -> we have a closed loop */
 		if (stuck != 3) {
-			return count;
+			return 0;
 		}
 		
 		/* check if ends are within a line away */
@@ -444,6 +449,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 			if (j < end2->nin && STATE(end2->in[j]) != LINE_CROSSED) {
 				printf("bottleneck loop found: end1 %d\n", end2->in[j]->id);
 				CROSS_LINE(end2->in[j]);
+				return length;
 			}
 		} else {
 			for(j=0; j < end2->nout; ++j) {
@@ -453,11 +459,12 @@ solve_handle_loop_bottleneck(struct solution *sol)
 			if (j < end2->nout && STATE(end2->out[j]) != LINE_CROSSED) {
 				printf("bottleneck loop found: end2 %d\n", end2->out[j]->id);
 				CROSS_LINE(end2->out[j]);
+				return length;
 			}
 		}
 	}
 
-	return count;
+	return 0;
 }
 
 
