@@ -50,6 +50,22 @@ find_shared_side(struct square *sq1, struct square *sq2, int *i, int *j)
 
 
 /*
+ * Check if line touches square
+ */
+static inline gboolean
+line_touches_square(struct line *lin, struct square *sq)
+{
+	if (lin->nsquares == 1) {
+		if (lin->sq[0] == sq) return TRUE;
+	} else {
+		if (lin->sq[0] == sq || 
+		    lin->sq[1] == sq) return TRUE;
+	}
+	return FALSE;
+}
+
+
+/*
  * Go through all squares and cross sides of squares with a 0
  * returns number of lines crossed out
  */
@@ -162,7 +178,7 @@ solve_handle_trivial_vertex(struct solution *sol)
 
 
 /*
- * Find squares with a number == nsides
+ * Find squares with a number == nsides - 1
  * Check around all its vertices to see if it neighbors another square 
  * with number == nsides
  * If another found: determine if they're side by side or diagonally and set
@@ -238,6 +254,169 @@ solve_handle_maxnumber_squares(struct solution *sol)
 					if (STATE(sq2->sides[k]) != LINE_ON)
 						SET_LINE(sq2->sides[k]);
 				}
+			}
+		}
+	}
+
+	return count;
+}
+
+
+/*
+ * Applies to squares with a number == nsides - 1
+ * If a square with number == (nsides - 1) has an incoming line in a corner:
+ * set lines around square opposite to that corner
+ */
+int
+solve_handle_maxnumber_incoming_line(struct solution *sol)
+{
+	int i, j, k;
+	struct square *sq;
+	struct vertex *vertex;
+	int nlines_on;
+	struct line *lin=NULL;
+	struct geometry *geo=sol->geo;
+	int count=0;
+	
+	/* iterate over all squares */
+	for(i=0; i < geo->nsquares; ++i) {
+		sq= geo->squares + i;
+		/* ignore squares without number or number < nsides -1 */
+		if (sol->numbers[i] != sq->nsides - 1 || sol->sq_mask[i] == FALSE) 
+			continue;
+		
+		/* inspect vertices of square */
+		for(j=0; j < sq->nvertex; ++j) {
+			vertex= sq->vertex[j];
+			/* check that vertex has one ON line */
+			nlines_on= 0;
+			for(k=0; k < vertex->nlines; ++k) {
+				if (STATE(vertex->lines[k]) == LINE_ON) {
+					lin= vertex->lines[k];
+					++nlines_on;
+				}
+			}
+			if (nlines_on != 1) continue;
+			/* make sure ON line is not part of square */
+			if (line_touches_square(lin, sq)) continue;
+			printf("square: %d\n", sq->id);
+			/* set lines in square not touching vertex ON */
+			for(k=0; k < sq->nsides; ++k) {
+				if (sq->sides[k]->ends[0] == vertex ||
+				    sq->sides[k]->ends[1] == vertex) continue;
+				if (STATE(sq->sides[k]) != LINE_ON)
+					SET_LINE(sq->sides[k]);
+			}
+			break;
+		}
+	}
+
+	return count;
+}
+
+
+/*
+ * Find squares with a number == nsides - 1
+ * If one corner has no exit, set both lines 
+ */
+int
+solve_handle_maxnumber_corner(struct solution *sol)
+{
+	int i, j, k;
+	struct square *sq;
+	struct vertex *vertex;
+	struct geometry *geo=sol->geo;
+	int count=0;
+	
+	/* iterate over all squares */
+	for(i=0; i < geo->nsquares; ++i) {
+		sq= geo->squares + i;
+		/* ignore squares without number or number < nsides -1 */
+		if (sol->sq_mask[i] == FALSE || sol->numbers[i] != sq->nsides - 1) 
+			continue;
+		
+		/* inspect vertices of square */
+		for(j=0; j < sq->nvertex; ++j) {
+			vertex= sq->vertex[j];
+			
+			/* check all lines not belonging to square are crossed */
+			for(k=0; k < vertex->nlines; ++k) {
+				if (line_touches_square(vertex->lines[k], sq)) 
+					continue;
+				if (STATE(vertex->lines[k]) != LINE_CROSSED)
+					break;
+			}
+			if (k < vertex->nlines) continue;
+			
+			/* check all lines not belonging to square are crossed */
+			for(k=0; k < vertex->nlines; ++k) {
+				if (line_touches_square(vertex->lines[k], sq)) {
+					if (STATE(vertex->lines[k]) != LINE_ON)
+						SET_LINE(vertex->lines[k]);
+				}
+			}
+		}
+	}
+
+	return count;
+}
+
+
+/*
+ * Find numbered squares with (number - lines_on) == 1
+ * If a vertex has one incoming line and only available lines are part of the
+ * square, cross all the rest lines of square
+ */
+int
+solve_handle_squares_net_1(struct solution *sol)
+{
+	int i, j, k;
+	struct square *sq;
+	int nlines_on;
+	struct line *lin=NULL;
+	struct vertex *vertex;
+	struct geometry *geo=sol->geo;
+	int count=0;
+	
+	/* iterate over all squares */
+	for(i=0; i < geo->nsquares; ++i) {
+		sq= geo->squares + i;
+		/* ignore squares without number or number < nsides -1 */
+		if (sol->sq_mask[i] == FALSE) 
+			continue;
+		
+		/* count lines ON around square */
+		nlines_on= 0;
+		for(j=0; j < sq->nsides; ++j) {
+			if (STATE(sq->sides[j]) == LINE_ON) 
+				++nlines_on;
+		}
+		if (NUMBER(sq) - nlines_on != 1) continue;
+		printf("square %d: one!\n", sq->id);
+		
+		/* inspect vertices of square */
+		for(j=0; j < sq->nvertex; ++j) {
+			vertex= sq->vertex[j];
+			/* check we have one incoming line ON */
+			nlines_on= 0;
+			for(k=0; k < vertex->nlines; ++k) {
+				if (STATE(vertex->lines[k]) == LINE_ON) {
+					lin= vertex->lines[k];
+					++nlines_on;
+				}
+			}
+			if (nlines_on != 1 || line_touches_square(lin, sq) == TRUE)
+				continue;
+			printf("square %d: one incoming line\n", sq->id);
+			
+			/**** TODO: need to make sure line is really incoming */
+			
+			/* cross all lines away from this vertex */
+			for(k=0; k < sq->nsides; ++k) {
+				if (sq->sides[k]->ends[0] == vertex || 
+				    sq->sides[k]->ends[1] == vertex) continue;
+				if (STATE(vertex->lines[k]) == LINE_OFF)
+					CROSS_LINE(vertex->lines[k]);
 			}
 		}
 	}
@@ -590,6 +769,14 @@ solve_game(struct geometry *geo, struct game *game, int *final_score)
 			if (count > 0)
 				dscore+= total / (double)(total + count);
 			printf("trivialver: count %d\n", count);
+			
+			count= solve_handle_maxnumber_incoming_line(sol);
+			total+= count;
+			printf("max_incoming: count %d\n", count);
+			
+			count= solve_handle_maxnumber_corner(sol);
+			total+= count;
+			printf("max_corner: count %d\n", count);
 		}
 		count= solve_handle_loop_bottleneck(sol);
 		if (count > 0) ++total;
@@ -598,6 +785,9 @@ solve_game(struct geometry *geo, struct game *game, int *final_score)
 	}
 	printf("total: %d\n", total);
 	dscore= dscore/(double)total;
+	
+	//count= solve_handle_squares_net_1(sol);
+	//printf("square_net1: count %d\n", count);
 	
 	/* check if we have a valid solution */
 	if (solve_check_solution(sol)) {
