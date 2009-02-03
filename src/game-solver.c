@@ -546,49 +546,66 @@ solve_free_solution_data(struct solution *sol)
  * Solve game
  */
 struct solution*
-solve_game(struct geometry *geo, struct game *game, int *score)
+solve_game(struct geometry *geo, struct game *game, int *final_score)
 {
 	struct solution *sol;
 	int count;
-	int old_score;
+	int old_total;
+	int total;
+	double dscore; 
 	
 	/* init solution structure */
 	sol= solve_create_solution_data(geo, game);
 	
 	/* These two tests only run once at the very start */
-	*score= 0;
+	dscore= 0.;
 	count= solve_handle_zero_squares(sol);
-	*score+= count;
 	printf("zero: count %d\n", count);
+	
 	count= solve_handle_maxnumber_squares(sol);
-	*score+= count;
+	if (count > 0)
+		dscore+= geo->nlines / (double)(geo->nlines + count);
+	total= count;
 	printf("maxnumber: count %d\n", count);
 	
-	old_score= *score - 1;
-	while(old_score != *score) {
+	old_total= total - 1;
+	while(old_total != total) {
 		/* common solving schemes */
-		while(old_score != *score) {
-			old_score= *score;
-			count= solve_handle_busy_vertex(sol);
-			*score+= count;
-			printf("busyvertex: count %d\n", count);
+		while(old_total < total) {
+			old_total= total;
+			
+			/* cross all possible lines */
+			(void)solve_cross_lines(sol);
+			
+			/* trivial squares (low difficulty) */
 			count= solve_handle_trivial_squares(sol);
-			*score+= count;
+			total+= count;
+			if (count > 0)
+				dscore+= total / (double)(total + count);
 			printf("trivialsq: count %d\n", count);
+			
+			/* trivial vertex (med difficulty) */
 			count= solve_handle_trivial_vertex(sol);
-			*score+= count;
+			total+= count;
+			if (count > 0)
+				dscore+= total / (double)(total + count);
 			printf("trivialver: count %d\n", count);
 		}
 		count= solve_handle_loop_bottleneck(sol);
-		*score+= count;
+		if (count > 0) ++total;
+		dscore+= count/(double)total;
 		printf("loopneck: count %d\n", count);
 	}
+	printf("total: %d\n", total);
+	dscore= dscore/(double)total;
 	
 	/* check if we have a valid solution */
 	if (solve_check_solution(sol)) {
-		printf("Solution good!\n");
+		printf("Solution good! (%lf)\n", dscore);
+		*final_score= (int)dscore*100;
 	} else {
-		printf("Solution BAD!\n");
+		*final_score= 1 << (sizeof(int)*8 - 2);
+		printf("Solution BAD! (%lf)\n", dscore);
 	}
 	
 	return sol;
