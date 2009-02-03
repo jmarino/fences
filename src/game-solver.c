@@ -373,6 +373,7 @@ solve_handle_squares_net_1(struct solution *sol)
 	int i, j, k;
 	struct square *sq;
 	int nlines_on;
+	int num_exits;
 	struct line *lin=NULL;
 	struct vertex *vertex;
 	struct geometry *geo=sol->geo;
@@ -392,31 +393,35 @@ solve_handle_squares_net_1(struct solution *sol)
 				++nlines_on;
 		}
 		if (NUMBER(sq) - nlines_on != 1) continue;
-		printf("square %d: one!\n", sq->id);
 		
 		/* inspect vertices of square */
 		for(j=0; j < sq->nvertex; ++j) {
 			vertex= sq->vertex[j];
 			/* check we have one incoming line ON */
 			nlines_on= 0;
+			num_exits= 0;
 			for(k=0; k < vertex->nlines; ++k) {
 				if (STATE(vertex->lines[k]) == LINE_ON) {
 					lin= vertex->lines[k];
 					++nlines_on;
+					continue;
+				}
+				/* OFF line not on square */
+				if (STATE(vertex->lines[k]) == LINE_OFF && 
+				    line_touches_square(vertex->lines[k], sq) == FALSE) {
+					++num_exits;
 				}
 			}
-			if (nlines_on != 1 || line_touches_square(lin, sq) == TRUE)
+			if (nlines_on != 1 || line_touches_square(lin, sq) == TRUE ||
+			    num_exits > 0)
 				continue;
-			printf("square %d: one incoming line\n", sq->id);
-			
-			/**** TODO: need to make sure line is really incoming */
 			
 			/* cross all lines away from this vertex */
 			for(k=0; k < sq->nsides; ++k) {
 				if (sq->sides[k]->ends[0] == vertex || 
 				    sq->sides[k]->ends[1] == vertex) continue;
-				if (STATE(vertex->lines[k]) == LINE_OFF)
-					CROSS_LINE(vertex->lines[k]);
+				if (STATE(sq->sides[k]) == LINE_OFF) 
+					CROSS_LINE(sq->sides[k]);
 			}
 		}
 	}
@@ -777,6 +782,10 @@ solve_game(struct geometry *geo, struct game *game, int *final_score)
 			count= solve_handle_maxnumber_corner(sol);
 			total+= count;
 			printf("max_corner: count %d\n", count);
+			
+			count= solve_handle_squares_net_1(sol);
+			total+= count;
+			printf("square_net1: count %d\n", count);
 		}
 		count= solve_handle_loop_bottleneck(sol);
 		if (count > 0) ++total;
