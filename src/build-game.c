@@ -22,6 +22,10 @@
 #include "brute-force.h"
 
 
+#define SQUARE_HIDDEN	0
+#define SQUARE_VISIBLE	1
+#define SQUARE_FIXED	2
+
 
 /*
  * Build new game
@@ -31,41 +35,102 @@ build_new_game(struct geometry *geo, int difficulty)
 {
 	struct game *game;
 	int i, j;
-	int nsquares;
 	int count;
-	int nlines_on;
-	int id;
+	int *loop;
+	int *numbers;		// number of lines touching each square
+	int *num_mask;		// is square number visible or disabled?
+	int nvisible;		// number of visible squares
+	int nfixed;		// number of squares fixed (can't be hidden)
+	int score;
+	int sq_id;
+	struct solution *sol;
+	int max_diff=0;
 	
 	/* create empty game */
 	game= create_empty_gamedata(geo);
 	
 	/* create random loop: result is in 'game' */
 	build_new_loop(geo, game);
+	loop= (int*)g_malloc(geo->nlines * sizeof(gboolean));
+	for(i=0; i < geo->nlines; ++i)
+		loop[i]= game->states[i];
 	
-	/* enable random squares */
-	nsquares= (int) (geo->nsquares * 0.40);
-	for(i=0; i < nsquares; ++i) {
-		count= g_random_int_range(0, geo->nsquares - i);
-		for(id=0; id < geo->nsquares; ++id) {
-			if (game->numbers[id] == -1) {
+	/* count number of lines touching all squares */
+	numbers= (int*)g_malloc(geo->nsquares * sizeof(int));
+	num_mask= (int*)g_malloc(geo->nsquares * sizeof(int));
+	for(i=0; i < geo->nsquares; ++i) {
+		/* count on lines around square 'id' */
+		numbers[i]= 0;
+		num_mask[i]= SQUARE_VISIBLE;	// all visible at the start
+		for(j=0; j < geo->squares[i].nsides; ++j) {
+			if (game->states[geo->squares[i].sides[j]->id] == LINE_ON)
+				++(numbers[i]);
+		}
+		game->numbers[i]= numbers[i];
+	}
+	nvisible= geo->nsquares;
+	nfixed= 0;
+	
+	/* HACK */
+	difficulty= 40;
+	
+	while(nvisible - nfixed > 0) {
+		/* select random square to hide */
+		count= g_random_int_range(0, nvisible - nfixed);
+		for(sq_id=0; sq_id < geo->nsquares; ++sq_id) {
+			if (num_mask[sq_id] == SQUARE_VISIBLE)
 				--count;
-				if (count < 0) break;
+			if (count < 0) break;
+		}
+		g_assert(sq_id < geo->nsquares);
+		
+		/* hide square */
+		game->numbers[sq_id]= -1;
+		
+		/* Solve current game as it is */
+		sol= solve_game(geo, game, &score);
+	
+		/* check solution */
+		for(i=0; i < geo->nlines; ++i) {
+			if (sol->states[i] == LINE_ON) {
+				if (loop[i] != LINE_ON)
+					break;
+			} else {
+				if (loop[i] == LINE_ON)
+					break;
 			}
 		}
-		g_debug("id: %d / %d (%d)", id, geo->nsquares, count);
-		g_assert(id < geo->nsquares);
-		/* count on lines around square 'id' */
-		nlines_on= 0;
-		for(j=0; j < geo->squares[id].nsides; ++j) {
-			if (game->states[geo->squares[id].sides[j]->id] == LINE_ON)
-				++nlines_on;
+		solve_free_solution_data(sol);
+		
+		/* wrong solution or wrong difficulty */
+		if (i < geo->nlines || score > difficulty) {
+			/* restore hidden square and fix it */
+			game->numbers[sq_id]= numbers[sq_id];
+			num_mask[sq_id]= SQUARE_FIXED;
+			++nfixed;
+			if (nfixed == nvisible) break;
+		} else {
+			/* mark square as hidden, unfix squares and continue */
+			num_mask[sq_id]= SQUARE_HIDDEN;
+			--nvisible;
+			nfixed= 0;
+			for (j=0; j < geo->nsquares; ++j) {
+				if (num_mask[j] == SQUARE_FIXED) 
+					num_mask[j]= SQUARE_VISIBLE;
+			}
+			max_diff= score;
 		}
-		game->numbers[id]= nlines_on;
+		
+		printf("new game (%d - %d): score %d\n", nvisible, nfixed, score);
 	}
 	
 	/* clear lines of game */
 	//for(i=0; i < geo->nlines; ++i)
 //		game->states[i]= LINE_OFF;
+	
+	g_free(loop);
+	g_free(numbers);
+	g_free(num_mask);
 	
 	return game;
 }
