@@ -734,9 +734,10 @@ solve_game(struct geometry *geo, struct game *game, int *final_score)
 {
 	struct solution *sol;
 	int count;
-	int old_total;
 	int total;
-	double dscore; 
+	double dscore;
+	int level=0;
+	double score_level[6]={1./6, 2./6, 3./6., 4./6, 5./6, 1.};
 	
 	/* init solution structure */
 	sol= solve_create_solution_data(geo, game);
@@ -748,55 +749,47 @@ solve_game(struct geometry *geo, struct game *game, int *final_score)
 	
 	count= solve_handle_maxnumber_squares(sol);
 	if (count > 0)
-		dscore+= geo->nlines / (double)(geo->nlines + count);
+		dscore= count / 7.;
 	total= count;
 	printf("maxnumber: count %d\n", count);
 	
-	old_total= total - 1;
-	while(old_total != total) {
-		/* common solving schemes */
-		while(old_total < total) {
-			old_total= total;
-			
-			/* cross all possible lines */
-			(void)solve_cross_lines(sol);
-			
-			/* trivial squares (low difficulty) */
+	while(level <= 5) {
+		
+		/* cross all possible lines */
+		(void)solve_cross_lines(sol);
+		
+		/* */
+		if (level == 0) {
 			count= solve_handle_trivial_squares(sol);
-			total+= count;
-			if (count > 0)
-				dscore+= total / (double)(total + count);
-			printf("trivialsq: count %d\n", count);
-			
-			/* trivial vertex (med difficulty) */
+		} else if (level == 1) {
 			count= solve_handle_trivial_vertex(sol);
-			total+= count;
-			if (count > 0)
-				dscore+= total / (double)(total + count);
-			printf("trivialver: count %d\n", count);
-			
+		} else if (level == 2) {
 			count= solve_handle_maxnumber_incoming_line(sol);
-			total+= count;
-			printf("max_incoming: count %d\n", count);
-			
+		} else if (level == 3) {
 			count= solve_handle_maxnumber_corner(sol);
-			total+= count;
-			printf("max_corner: count %d\n", count);
-			
+		} else if (level == 4) {
 			count= solve_handle_squares_net_1(sol);
-			total+= count;
-			printf("square_net1: count %d\n", count);
+		} else if (level == 5) {
+			count= solve_handle_loop_bottleneck(sol);
 		}
-		count= solve_handle_loop_bottleneck(sol);
-		if (count > 0) ++total;
-		dscore+= count/(double)total;
-		printf("loopneck: count %d\n", count);
+		
+		printf("level %d: count %d\n", level, count);
+		
+		if (level < 5) 
+			total+= count;
+		else
+			++total;
+		
+		if (count == 0) {
+			++level;
+		} else {
+			dscore+= count * score_level[level];
+			level= 0;
+		}
 	}
+	
 	printf("total: %d\n", total);
 	dscore= dscore/(double)total;
-	
-	//count= solve_handle_squares_net_1(sol);
-	//printf("square_net1: count %d\n", count);
 	
 	/* check if we have a valid solution */
 	if (solve_check_solution(sol)) {
