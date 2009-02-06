@@ -49,6 +49,7 @@ struct solution {
  */
 struct line* goto_next_line(struct line *lin, int *direction, int which);
 struct line* follow_line(struct solution *sol, struct line *lin, int *direction);
+gboolean solve_check_valid_game(struct solution *sol);
 int solve_handle_zero_squares(struct solution *sol);
 int solve_handle_maxnumber_squares(struct solution *sol);
 int solve_handle_busy_vertex(struct solution *sol);

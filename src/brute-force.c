@@ -63,58 +63,9 @@ brute_free_step_stack(struct stack *stack)
 
 
 /*
- * Check game data for inconsistencies
- * Return TRUE: all fine
- * Return FALSE: found problem
- */
-static gboolean
-check_valid_game(struct solution *sol)
-{
-	int i, j;
-	int num_on;
-	int num_off;
-	struct square *sq;
-	struct vertex *vertex;
-	
-	/* check all squares */
-	sq= sol->geo->squares;
-	for(i=0; i < sol->geo->nsquares ; ++i) {
-		/* only numbered squares */
-		if (sol->numbers[i] == -1) continue;
-		/* count lines on and compare with number in square */
-		num_on= num_off= 0;
-		for(j=0; j < sq[i].nsides; ++j) {
-			if (STATE(sq[i].sides[j]) == LINE_ON)
-				++num_on;
-			else if (STATE(sq[i].sides[j]) == LINE_OFF)
-				++num_off;
-		}
-		if (num_on > sol->numbers[i]) return FALSE;
-		if (num_on + num_off < sol->numbers[i]) return FALSE;
-	}
-	
-	/* check all vertices, look for no exit lines */
-	vertex= sol->geo->vertex;
-	for(i=0; i < sol->geo->nvertex; ++i) {
-		num_on= num_off= 0;
-		for(j=0; j < vertex->nlines; ++j) {
-			if (STATE(vertex->lines[j]) == LINE_ON)
-				++num_on;
-			else if (STATE(vertex->lines[j]) == LINE_OFF)
-				++num_off;
-		}
-		if (num_on == 1 && num_off == 0) return FALSE;
-		++vertex;
-	}
-	
-	return TRUE;
-}
-
-
-/*
  * Check we have a single loop
  * This assumes that the game is in a valid state, i.e., 
- * that check_valid_game has been called previously
+ * that solve_check_valid_game has been called previously
  * Return TRUE: single loop found
  * Return FALSE: problem (no loop or isolated loop)
  */
@@ -345,7 +296,7 @@ brute_force_solve(struct solution *sol, struct stack *stack, gboolean trace_mode
 		}
 		
 		/* check validity of game */
-		if (check_valid_game(sol) == FALSE) {
+		if (solve_check_valid_game(sol) == FALSE) {
 			backtrack_step(sol, stack);
 			continue;
 		}

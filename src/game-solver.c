@@ -88,6 +88,55 @@ is_vertex_cornered(struct solution *sol, struct square *sq,
 
 
 /*
+ * Check game data for inconsistencies
+ * Return TRUE: all fine
+ * Return FALSE: found problem
+ */
+gboolean
+solve_check_valid_game(struct solution *sol)
+{
+	int i, j;
+	int num_on;
+	int num_off;
+	struct square *sq;
+	struct vertex *vertex;
+	
+	/* check all squares */
+	sq= sol->geo->squares;
+	for(i=0; i < sol->geo->nsquares ; ++i) {
+		/* only numbered squares */
+		if (sol->numbers[i] == -1) continue;
+		/* count lines on and compare with number in square */
+		num_on= num_off= 0;
+		for(j=0; j < sq[i].nsides; ++j) {
+			if (STATE(sq[i].sides[j]) == LINE_ON)
+				++num_on;
+			else if (STATE(sq[i].sides[j]) == LINE_OFF)
+				++num_off;
+		}
+		if (num_on > sol->numbers[i]) return FALSE;
+		if (num_on + num_off < sol->numbers[i]) return FALSE;
+	}
+	
+	/* check all vertices, look for no exit lines */
+	vertex= sol->geo->vertex;
+	for(i=0; i < sol->geo->nvertex; ++i) {
+		num_on= num_off= 0;
+		for(j=0; j < vertex->nlines; ++j) {
+			if (STATE(vertex->lines[j]) == LINE_ON)
+				++num_on;
+			else if (STATE(vertex->lines[j]) == LINE_OFF)
+				++num_off;
+		}
+		if (num_on == 1 && num_off == 0) return FALSE;
+		++vertex;
+	}
+	
+	return TRUE;
+}
+
+
+/*
  * Go through all squares and cross sides of squares with a 0
  * returns number of lines crossed out
  */
