@@ -150,7 +150,7 @@ is_point_inside_area(struct point *point, struct point *area)
 		b= ( ((double)area[i2].x - area[i].x)*(area[i].y - center.y) -
 		     ((double)area[i2].y - area[i].y)*(area[i].x - center.x) )/denom;
 		
-		if (a > 0.0 && a < 1.0 && b > 0.0 && b < 1.0) return FALSE;
+		if (a >= 0.0 && a <= 1.0 && b >= 0.0 && b <= 1.0) return FALSE;
 	}
 	return TRUE;
 }
