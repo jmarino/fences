@@ -338,11 +338,13 @@ solve_handle_maxnumber_incoming_line(struct solution *sol)
 
 
 /*
- * Find squares with a number == nsides - 1
- * If one corner has no exit, set both lines 
+ * Find squares with (number == nsides - 1) || (number == 1)
+ * If one corner has no exit:
+ * 	- (nsides - 1) set both lines
+ * 	- (1) cross both lines
  */
 int
-solve_handle_maxnumber_corner(struct solution *sol)
+solve_handle_corner(struct solution *sol)
 {
 	int i, j, k;
 	struct square *sq;
@@ -354,25 +356,25 @@ solve_handle_maxnumber_corner(struct solution *sol)
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
 		/* ignore squares without number or number < nsides -1 */
-		if (sol->sq_mask[i] == FALSE || sol->numbers[i] != sq->nsides - 1) 
+		if (sol->sq_mask[i] == FALSE ||
+		    (sol->numbers[i] != sq->nsides - 1 && sol->numbers[i] != 1)) 
 			continue;
 		
 		/* inspect vertices of square */
 		for(j=0; j < sq->nvertex; ++j) {
 			vertex= sq->vertex[j];
 			
-			/* check all lines not belonging to square are crossed */
+			/* check vertex is a no-exit corner */
+			if (is_vertex_cornered(sol, sq, vertex) == FALSE)
+				continue;
+			/* ON or CROSS corner lines */
 			for(k=0; k < vertex->nlines; ++k) {
-				if (line_touches_square(vertex->lines[k], sq)) 
+				if (line_touches_square(vertex->lines[k], sq) == FALSE) 
 					continue;
-				if (STATE(vertex->lines[k]) != LINE_CROSSED)
-					break;
-			}
-			if (k < vertex->nlines) continue;
-			
-			/* check all lines not belonging to square are crossed */
-			for(k=0; k < vertex->nlines; ++k) {
-				if (line_touches_square(vertex->lines[k], sq)) {
+				if (sol->numbers[i] == 1) {
+					if (STATE(vertex->lines[k]) != LINE_CROSSED)
+						CROSS_LINE(vertex->lines[k]);
+				} else {
 					if (STATE(vertex->lines[k]) != LINE_ON)
 						SET_LINE(vertex->lines[k]);
 				}
@@ -788,7 +790,7 @@ solve_game(struct geometry *geo, struct game *game, int *final_score)
 		} else if (level == 2) {
 			count= solve_handle_maxnumber_incoming_line(sol);
 		} else if (level == 3) {
-			count= solve_handle_maxnumber_corner(sol);
+			count= solve_handle_corner(sol);
 		} else if (level == 4) {
 			count= solve_handle_squares_net_1(sol);
 		} else if (level == 5) {
