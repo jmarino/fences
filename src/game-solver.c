@@ -700,11 +700,9 @@ solve_check_solution(struct solution *sol)
 	
 	/* check that all squares are happy */
 	for(i=0; i < geo->nsquares; ++i) {
-		if (sol->numbers[i] > -1) {
-			if (sol->sq_mask[i]) {
-				sol_good= FALSE;
-				break;
-			}
+		if (sol->sq_mask[i]) {
+			sol_good= FALSE;
+			break;
 		}
 	}
 	return sol_good;
@@ -730,8 +728,12 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	
 	for(i=0; i < geo->nlines; ++i)
 		sol->states[i]= LINE_OFF;
-	for(i=0; i < geo->nsquares; ++i)
-		sol->sq_mask[i]= TRUE;
+	for(i=0; i < geo->nsquares; ++i) {
+		if (game->numbers[i] != -1)
+			sol->sq_mask[i]= TRUE;
+		else
+			sol->sq_mask[i]= FALSE;
+	}
 	
 	return sol;
 }
