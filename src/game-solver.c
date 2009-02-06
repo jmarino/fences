@@ -20,6 +20,7 @@
 
 #include "gamedata.h"
 #include "game-solver.h"
+#include "solve-combinations.h"
 
 /*
  * Description:
@@ -828,7 +829,7 @@ solve_game(struct geometry *geo, struct game *game, int *final_score)
 	total= count;
 	printf("maxnumber: count %d\n", count);
 	
-	while(level <= 5) {
+	while(level <= 6) {
 		
 		/* cross all possible lines */
 		(void)solve_cross_lines(sol);
@@ -846,14 +847,16 @@ solve_game(struct geometry *geo, struct game *game, int *final_score)
 			count= solve_handle_squares_net_1(sol);
 		} else if (level == 5) {
 			count= solve_handle_loop_bottleneck(sol);
+		} else if (level == 6) {
+			count= solve_try_combinations(sol);
 		}
 		
 		printf("level %d: count %d\n", level, count);
 		
-		if (level < 5) 
-			total+= count;
-		else
+		if (level == 5) 
 			++total;
+		else
+			total+= count;
 		
 		if (count == 0) {
 			++level;
