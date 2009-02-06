@@ -66,6 +66,28 @@ line_touches_square(struct line *lin, struct square *sq)
 
 
 /*
+ * Is vertex a cornered with respect to one square
+ * I.e. the vertex has no exits outside this square
+ */
+static gboolean
+is_vertex_cornered(struct solution *sol, struct square *sq, 
+		   struct vertex *vertex)
+{
+	int i;
+	
+	/* check lines coming out of vertex that don't belong to square */
+	for(i=0; i < vertex->nlines; ++i) {
+		if (line_touches_square(vertex->lines[i], sq)) 
+			continue;
+		/* if line ON or OFF, vertex not cornered */
+		if (STATE(vertex->lines[i]) != LINE_CROSSED)
+			return FALSE;
+	}
+	return TRUE;
+}
+
+
+/*
  * Go through all squares and cross sides of squares with a 0
  * returns number of lines crossed out
  */
