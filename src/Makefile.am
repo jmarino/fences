@@ -31,7 +31,8 @@ fences_SOURCES = \
 	build-loop.c build-loop.h \
 	game-solver.c game-solver.h \
 	brute-force.c brute-force.h \
-	build-game.c build-game.h
+	build-game.c build-game.h \
+	solve-combinations.c solve-combinations.h
 
 fences_LDFLAGS = 
 
