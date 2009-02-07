@@ -22,6 +22,11 @@
 #include "game-solver.h"
 #include "solve-combinations.h"
 
+
+/* number of solution levels */
+#define MAX_LEVEL	7
+
+
 /*
  * Description:
  * We're given a game state and a geometry
@@ -371,7 +376,6 @@ solve_handle_maxnumber_incoming_line(struct solution *sol)
 			if (nlines_on != 1) continue;
 			/* make sure ON line is not part of square */
 			if (line_touches_square(lin, sq)) continue;
-			printf("square: %d\n", sq->id);
 			/* set lines in square not touching vertex ON */
 			for(k=0; k < sq->nsides; ++k) {
 				if (sq->sides[k]->ends[0] == vertex ||
@@ -803,6 +807,62 @@ solve_free_solution_data(struct solution *sol)
 
 
 /*
+ * Calculate difficulty of game from level_count
+ */
+static double
+calculate_difficulty(int *level_count)
+{
+	int i;
+	double level_range[MAX_LEVEL]={0.25, 0.5, 0.75, 1.25, 1.5, 1.75, 4.0};
+	double score;
+	double total_score;
+	int total=0;
+	
+	/* count total */
+	for(i=0; i < MAX_LEVEL; ++i)
+		total+= level_count[i];
+	
+	/* calculate difficulty */
+	printf("-------------\n");
+	total_score= 0.;
+	for(i=0; i < MAX_LEVEL; ++i) {
+		if (i == 0 || i == 1) {
+			score= level_count[i]/( (double)total/2.0 );
+		} else if (i == 2) {
+			if (level_count[0] > 0)
+				score= level_count[2]/((double)level_count[0]/10.);
+			else {
+				if (level_count[2] > 0)	score= 1.;
+				else score= 0.;
+			}
+		} else if (i == 6) {
+			if (level_count[i - 1] > 0)
+				score= level_count[i]/(double)level_count[i - 1]*4;
+			else {
+				if (level_count[i] > 0)	score= 1.;
+				else score= 0.;
+			}
+		} else {
+			if (level_count[i - 1] > 0)
+				score= level_count[i]/(double)level_count[i - 1];
+			else {
+				if (level_count[i] > 0)	score= 1.;
+				else score= 0.;
+			}
+		}
+		
+		/* cap score contribution from this level */
+		if (score > 1.0) 
+			score= 1.0;
+		
+		printf("..level %d: %lf\n", i, score*level_range[i]);
+		total_score+= score * level_range[i];
+	}
+	return total_score;
+}
+
+
+/*
  * Solve game
  */
 struct solution*
@@ -811,26 +871,25 @@ solve_game(struct geometry *geo, struct game *game, int *final_score)
 	struct solution *sol;
 	int count;
 	int total;
-	double dscore;
+	double total_score;
 	int level=0;
-	double score_level[6]={1./6, 2./6, 3./6., 4./6, 5./6, 1.};
+	int level_count[MAX_LEVEL]={0, 0, 0, 0, 0, 0, 0};
+	int last_level= -1;
 	
 	/* init solution structure */
 	sol= solve_create_solution_data(geo, game);
 	
 	/* These two tests only run once at the very start */
-	dscore= 0.;
 	count= solve_handle_zero_squares(sol);
 	printf("zero: count %d\n", count);
 	
 	count= solve_handle_maxnumber_squares(sol);
-	if (count > 0)
-		dscore= count / 7.;
+	//if (count > 0)
+	//	dscore= count / (double)MAX_LEVEL;
 	total= count;
 	printf("maxnumber: count %d\n", count);
-	
-	while(level <= 6) {
-		
+	total=0;
+	while(level < MAX_LEVEL) {
 		/* cross all possible lines */
 		(void)solve_cross_lines(sol);
 		
@@ -840,42 +899,58 @@ solve_game(struct geometry *geo, struct game *game, int *final_score)
 		} else if (level == 1) {
 			count= solve_handle_trivial_vertex(sol);
 		} else if (level == 2) {
-			count= solve_handle_maxnumber_incoming_line(sol);
-		} else if (level == 3) {
 			count= solve_handle_corner(sol);
+		} else if (level == 3) {
+			count= solve_handle_maxnumber_incoming_line(sol);
 		} else if (level == 4) {
-			count= solve_handle_squares_net_1(sol);
+			count= solve_handle_loop_bottleneck(sol) != 0;
 		} else if (level == 5) {
-			count= solve_handle_loop_bottleneck(sol);
+			count= solve_handle_squares_net_1(sol);
 		} else if (level == 6) {
 			count= solve_try_combinations(sol);
 		}
 		
 		printf("level %d: count %d\n", level, count);
 		
-		if (level == 5) 
-			++total;
-		else
-			total+= count;
+		//if (level == 5 && count > 0) 
+		//	count= 1;
+		
+		total+= count;
 		
 		if (count == 0) {
 			++level;
 		} else {
-			dscore+= count * score_level[level];
+			/* ignore two bottlenecks in a row */
+			if (level == 4 && last_level == 4) 
+				count= 0;
+			
+			level_count[level]+= count;
+			last_level= level;
 			level= 0;
 		}
 	}
 	
+	int i;
+	printf("-------------\n");
+	for(i=0; i < MAX_LEVEL; ++i) {
+		printf("level %d: %d\n", i, level_count[i]);
+	}
+	printf("-------------\n");
 	printf("total: %d\n", total);
-	dscore= dscore/(double)total;
+	
+	
+	total_score= calculate_difficulty(level_count);
+	
+	//dscore= dscore/((double)total * 7.) * 100.0;
+	//dscore= 35;
 	
 	/* check if we have a valid solution */
 	if (solve_check_solution(sol)) {
-		printf("Solution good! (%lf)\n", dscore);
-		*final_score= (int)dscore*100;
+		printf("Solution good! (%lf)\n", total_score);
+		*final_score= (int)total_score;
 	} else {
 		*final_score= 1 << (sizeof(int)*8 - 2);
-		printf("Solution BAD! (%lf)\n", dscore);
+		printf("Solution BAD! (%lf)\n", total_score);
 	}
 	
 	return sol;
