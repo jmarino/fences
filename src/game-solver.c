@@ -866,12 +866,11 @@ calculate_difficulty(int *level_count)
  * Solve game
  */
 struct solution*
-solve_game(struct geometry *geo, struct game *game, int *final_score)
+solve_game(struct geometry *geo, struct game *game, double *final_score)
 {
 	struct solution *sol;
 	int count;
 	int total;
-	double total_score;
 	int level=0;
 	int level_count[MAX_LEVEL]={0, 0, 0, 0, 0, 0, 0};
 	int last_level= -1;
@@ -939,18 +938,17 @@ solve_game(struct geometry *geo, struct game *game, int *final_score)
 	printf("total: %d\n", total);
 	
 	
-	total_score= calculate_difficulty(level_count);
+	*final_score= calculate_difficulty(level_count);
 	
 	//dscore= dscore/((double)total * 7.) * 100.0;
 	//dscore= 35;
 	
 	/* check if we have a valid solution */
 	if (solve_check_solution(sol)) {
-		printf("Solution good! (%lf)\n", total_score);
-		*final_score= (int)total_score;
+		printf("Solution good! (%lf)\n", *final_score);
 	} else {
-		*final_score= 1 << (sizeof(int)*8 - 2);
-		printf("Solution BAD! (%lf)\n", total_score);
+		*final_score+= 10;
+		printf("Solution BAD! (%lf)\n", *final_score);
 	}
 	
 	return sol;
@@ -962,7 +960,7 @@ test_solve_game(struct geometry *geo, struct game *game)
 {
 	int i;
 	struct solution *sol;
-	int score;
+	double score;
 	
 	//game->numbers[0]= 3;
 	//game->numbers[35]= 3;

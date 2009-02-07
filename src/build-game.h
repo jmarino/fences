@@ -18,7 +18,7 @@
 #define __INCLUDED_BUILD_GAME_H__
 
 
-struct game* build_new_game(geometry *geo, int difficulty);
+struct game* build_new_game(geometry *geo, double difficulty);
 
 
 #endif

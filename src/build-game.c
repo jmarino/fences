@@ -31,7 +31,7 @@
  * Build new game
  */
 struct game*
-build_new_game(struct geometry *geo, int difficulty)
+build_new_game(struct geometry *geo, double difficulty)
 {
 	struct game *game;
 	int i, j;
@@ -41,10 +41,10 @@ build_new_game(struct geometry *geo, int difficulty)
 	int *num_mask;		// is square number visible or disabled?
 	int nvisible;		// number of visible squares
 	int nfixed;		// number of squares fixed (can't be hidden)
-	int score;
+	double score;
 	int sq_id;
 	struct solution *sol;
-	int max_diff=0;
+	double max_diff=0.;
 	
 	/* create empty game */
 	game= create_empty_gamedata(geo);
@@ -72,7 +72,7 @@ build_new_game(struct geometry *geo, int difficulty)
 	nfixed= 0;
 	
 	/* HACK */
-	difficulty= 40;
+	difficulty= 2.5;
 	
 	while(nvisible - nfixed > 0) {
 		/* select random square to hide */
@@ -121,7 +121,7 @@ build_new_game(struct geometry *geo, int difficulty)
 			max_diff= score;
 		}
 		
-		printf("new game (%d - %d): score %d\n", nvisible, nfixed, score);
+		printf("new game (%d - %d): score %lf\n", nvisible, nfixed, score);
 	}
 	
 	/* clear lines of game */
