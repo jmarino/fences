@@ -123,6 +123,10 @@ build_new_game(struct geometry *geo, double difficulty)
 		
 		printf("new game (%d - %d): score %lf\n", nvisible, nfixed, score);
 	}
+
+	/* Set correct difficulty */
+	score= max_diff;
+	printf("new game: score %lf\n", score);
 	
 	/* clear lines of game */
 	//for(i=0; i < geo->nlines; ++i)
