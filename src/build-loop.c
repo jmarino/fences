@@ -41,25 +41,22 @@ struct loop {
 static gboolean
 square_has_corner(struct square *sq, struct loop *loop)
 {
-	int i, j, k;
+	int i, j;
 	struct vertex *vertex;
+	struct line *lin;
 	int count;
-	gboolean skip;
 
 	for(i=0; i < sq->nvertex; ++i) {
 		vertex= sq->vertex[i];
 		count= 0;
 		for(j=0; j < vertex->nlines; ++j) {
-			/* ignore square sides */
-			skip= FALSE;
-			for(k=0; k < sq->nsides; ++k) {
-				if (sq->sides[k] == vertex->lines[j]) {
-					skip= TRUE;
-					break;
-				}
-			}
-			if (skip) continue;
-			if (loop->state[ vertex->lines[j]->id ] == LINE_ON) {
+			lin= vertex->lines[j];
+			/* ignore lines that belong to square 'sq' */
+			if (lin->sq[0] == sq ||
+			    (lin->nsquares == 2 && lin->sq[1] == sq))
+				continue;
+			/* count lines ON for vertex */
+			if (loop->state[ lin->id ] == LINE_ON) {
 				if (count == 1) return TRUE;
 				++count;
 			}
@@ -108,10 +105,7 @@ is_square_available(struct square *sq, struct loop *loop, int index)
 	/* check all sides in square are available */
 	for(i=0; i < sq->nsides; ++i) {
 		if (!loop->mask[ sq->sides[i]->id ])
-			break;
-	}
-	if (i < sq->nsides) {
-		return FALSE;
+			return FALSE;
 	}
 			
 	/* one of square's vertices is a line corner -> skip */
