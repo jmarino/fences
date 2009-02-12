@@ -130,46 +130,23 @@ is_square_available(struct square *sq, struct loop *loop, int index)
  * Build a single loop on a board
  * It sets lines in a separate loop structure
  */
-static struct loop*
-build_loop(const struct geometry *geo)
+static void
+build_loop(struct loop *loop, gboolean trace)
 {
 	int i, j;
 	int index=0;
 	int count;
-	static struct loop *loop=NULL;
 	struct square *sq;
 	struct line *lin;
 	int prev_navailable=0;
 	int stuck=0;
 	int num_stuck=0;
-
-	/* alloc and init loop structure */
-	loop= (struct loop*)g_malloc(sizeof(struct loop));
-	loop->geo= (struct geometry *)geo;
-	loop->state= (int*)g_malloc(geo->nlines*sizeof(int));
-	loop->nlines= 0;
-	for(i=0; i < geo->nlines; ++i)
-		loop->state[i]= LINE_OFF;
-
-	/* allocate loop->mask: indicates lines available to be changed */
-	loop->mask= (gboolean*)g_malloc(geo->nlines*sizeof(gboolean));
-	for(i=0; i < geo->nlines; ++i)
-		loop->mask[i]= TRUE;
-	loop->navailable= 0;
-	
-	/* select a ramdom square to start the loop */
-	sq= geo->squares +  g_random_int_range(0, geo->nsquares);
-	for(i=0; i < sq->nsides; ++i) {
-		loop->state[sq->sides[i]->id]= LINE_ON;
-	}
-	loop->nlines= sq->nsides;
-	loop->navailable= sq->nsides;
 	
 	/* extend current loop */
 	while(num_stuck < 3) {
 		/* pick random line out of 'loop->navailable' */
 		count= g_random_int_range(0, loop->navailable);
-		for(i=0; i < geo->nlines; ++i) {
+		for(i=0; i < loop->geo->nlines; ++i) {
 			if (loop->state[i] == LINE_ON &&
 			    loop->mask[i]) --count;
 			if (count < 0) {
@@ -177,7 +154,7 @@ build_loop(const struct geometry *geo)
 				break;
 			}
 		}
-		lin= geo->lines + index;
+		lin= loop->geo->lines + index;
 
 		/* 1st check to see if lin is suitable (necessary but not sufficient) */
 		/*    ->  line has 2 squares associated */
@@ -232,36 +209,94 @@ build_loop(const struct geometry *geo)
 			++num_stuck;
 			/* make every line available again */
 			loop->navailable= 0;
-			for(i=0; i < geo->nlines; ++i) {
+			for(i=0; i < loop->geo->nlines; ++i) {
 				loop->mask[i]= TRUE;
 				if (loop->state[i] == LINE_ON)
 					++loop->navailable;
 			}
 		}
+		if (trace) break;
 	}
-	g_free(loop->mask);
+}
+
+
+/*
+ * Create and initialize new loop structure
+ */
+static struct loop*
+initialize_loop(struct geometry *geo)
+{
+	struct loop *loop;
+	struct square *sq;
+	int i;
 	
+	/* alloc and init loop structure */
+	loop= (struct loop*)g_malloc(sizeof(struct loop));
+	loop->geo= (struct geometry *)geo;
+	loop->state= (int*)g_malloc(geo->nlines*sizeof(int));
+	loop->nlines= 0;
+	for(i=0; i < geo->nlines; ++i)
+		loop->state[i]= LINE_OFF;
+
+	/* allocate loop->mask: indicates lines available to be changed */
+	loop->mask= (gboolean*)g_malloc(geo->nlines*sizeof(gboolean));
+	for(i=0; i < geo->nlines; ++i) {
+		if (geo->lines[i].nsquares == 1)
+			loop->mask[i]= FALSE;
+		else
+			loop->mask[i]= TRUE;
+	}
+	loop->navailable= 0;
+	
+	/* select a ramdom square to start the loop */
+	sq= geo->squares +  g_random_int_range(0, geo->nsquares);
+	for(i=0; i < sq->nsides; ++i) {
+		loop->state[sq->sides[i]->id]= LINE_ON;
+	}
+	loop->nlines= sq->nsides;
+	loop->navailable= sq->nsides;
+
 	return loop;
+}
+
+
+/*
+ * Free memory used by loop
+ */
+static void
+destroy_loop(struct loop *loop)
+{
+	g_free(loop->mask);
+	g_free(loop->state);
+	g_free(loop);
 }
 
 
 /*
  * Build new loop
  * Return the loop in given game structure
+ * It allows trace mode
  */
 void
-build_new_loop(struct geometry *geo, struct game *game)
+build_new_loop(struct geometry *geo, struct game *game, gboolean trace)
 {
-	struct loop *loop;
 	int i;
+	static struct loop *loop;
+	static gboolean first_time=TRUE;
+
+	if (first_time) {
+		loop= initialize_loop(geo);
+		first_time= FALSE;
+	}
 	
-	loop= build_loop(geo);
+	build_loop(loop, trace);
 	
 	/* copy loop on to game data */
 	for(i=0; i < geo->nlines; ++i) {
 		game->states[i]= loop->state[i];
 	}
-	
-	g_free(loop->state);
-	g_free(loop);
+
+	if (!trace) {
+		destroy_loop(loop);
+	}
 }

@@ -50,7 +50,7 @@ build_new_game(struct geometry *geo, double difficulty)
 	game= create_empty_gamedata(geo);
 	
 	/* create random loop: result is in 'game' */
-	build_new_loop(geo, game);
+	build_new_loop(geo, game, FALSE);
 	loop= (int*)g_malloc(geo->nlines * sizeof(gboolean));
 	for(i=0; i < geo->nlines; ++i)
 		loop[i]= game->states[i];
