@@ -579,7 +579,7 @@ build_penrose_board(void)
 	int i;
 	const int num_unfolds=6;
 
-	/* starting shape */
+	/* Create the seed */
 	romb= (struct romb*)g_malloc(sizeof(struct romb));
 	romb->type= FAT_ROMB;
 	romb->side= board.game_size/RATIO * 2.005;
@@ -588,21 +588,9 @@ build_penrose_board(void)
 	romb->pos.y= board.board_margin + 
 		(board.game_size - romb->side*RATIO)/2.;
 	/* shift down by: old_side/2 + new_side + old_side */
-	//romb->pos.y+= romb->side/pow(RATIO, num_unfolds)*(RATIO/2 + RATIO + 1);
+        romb->pos.y+= romb->side/pow(RATIO, num_unfolds)*(RATIO/2 + RATIO + 1);
 	
-	if (0) {
-	romb->type= THIN_ROMB;
-	romb->side= board.game_size/(2*cos(D2R(18)));// * 2.25;
-	romb->angle= D2R(0); //D2R(180);
-	romb->pos.x= board.board_margin +
-		/*(board.board_size - board.board_margin) - */
-		(board.game_size - romb->side*2*cos(D2R(18)))/2.;
-	romb->pos.y= board.board_size/2.;
-	//romb->pos.y-= romb->side/pow(RATIO, num_unfolds) * ( 1. + sin(D2R(18)) );
-	}
-
-	/* create initial list of shapes (just a big one) */
-	penrose= g_slist_prepend(penrose, romb);
+	penrose= g_slist_prepend(NULL, romb);
 	
 	/* unfold list of shapes */
 	penrose= penrose_unfold(penrose, 0.);
