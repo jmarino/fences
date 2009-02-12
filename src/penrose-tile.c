@@ -597,7 +597,7 @@ build_penrose_board(void)
 	penrose= penrose_unfold(penrose, 0.);
 	for(i=2; i < num_unfolds - 1; ++i) 
 		penrose= penrose_unfold(penrose, board.game_size*2.);
-	penrose= penrose_unfold(penrose, board.game_size/1.8);
+	penrose= penrose_unfold(penrose, board.game_size/1.9);
 	
 	/* draw to file */
 	//draw_penrose_tile(penrose);
