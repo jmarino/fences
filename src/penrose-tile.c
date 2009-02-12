@@ -568,7 +568,7 @@ penrose_tile_to_geometry(GSList *penrose)
 
 
 /*
- * Build a penrose tiling by 
+ * Build a penrose tiling by unfolding two sets of rombs
  */ 
 struct geometry*
 build_penrose_board(void)
