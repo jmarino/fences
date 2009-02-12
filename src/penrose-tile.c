@@ -568,36 +568,59 @@ penrose_tile_to_geometry(GSList *penrose)
 
 
 /*
+ * Define seed to generate penrose tile
+ * We use seed that generates krazydad's tile with 4 unfoldings:
+ * 	5 fat rombs forming a star, with star tip pointing down
+ * Input 'side' is size of initial rombs size
+ */
+static GSList*
+create_tile_seed(double side)
+{
+	GSList *penrose=NULL;
+	struct romb *romb;
+	int i;
+	int angle=90;	// angle of star tip romb
+
+	for(i=0; i < 5; ++i) {
+		romb= (struct romb*)g_malloc(sizeof(struct romb));
+		romb->type= FAT_ROMB;
+		romb->side= side;
+		romb->angle= D2R(angle);
+		romb->pos.x= board.board_size/2.;
+		romb->pos.y= board.board_size/2.;
+		penrose= g_slist_prepend(penrose, romb);
+		angle= (angle + 72)%360;
+	}
+	
+	return penrose;
+}
+
+
+/*
  * Build a penrose tiling by unfolding two sets of rombs
  */ 
 struct geometry*
 build_penrose_board(void)
 {
 	GSList *penrose=NULL;
-	struct romb *romb;
 	struct geometry *geo;
-	int i;
-	const int num_unfolds=6;
+	double side;
 
-	/* Create the seed */
-	romb= (struct romb*)g_malloc(sizeof(struct romb));
-	romb->type= FAT_ROMB;
-	romb->side= board.game_size/RATIO * 2.005;
-	romb->angle= D2R(90);
-	romb->pos.x= board.board_size/2.;
-	romb->pos.y= board.board_margin + 
-		(board.game_size - romb->side*RATIO)/2.;
-	/* shift down by: old_side/2 + new_side + old_side */
-        romb->pos.y+= romb->side/pow(RATIO, num_unfolds)*(RATIO/2 + RATIO + 1);
+	/*
+	 * radius of penrose tiling must be game_size/2
+	 * 	game_size/2 = side*(3*RATIO + 2 + 2*sin(18))
+	 */
+	side= board.game_size/2.0;
+	side/= 3.*RATIO + 2. + 2.*sin(D2R(18));
 	
-	penrose= g_slist_prepend(NULL, romb);
-	
+	/* Create the seed (increase size to account for 4 foldings) */
+	penrose= create_tile_seed(side*pow(RATIO, 4));
+
 	/* unfold list of shapes */
-	penrose= penrose_unfold(penrose, 0.);
-	penrose= penrose_unfold(penrose, 0.);
-	for(i=2; i < num_unfolds - 1; ++i) 
-		penrose= penrose_unfold(penrose, board.game_size*2.);
-	penrose= penrose_unfold(penrose, board.game_size/1.9);
+	penrose= penrose_unfold(penrose, board.game_size);
+	penrose= penrose_unfold(penrose, board.game_size);
+	penrose= penrose_unfold(penrose, board.game_size/1.5);
+	penrose= penrose_unfold(penrose, board.game_size/2.0);
 	
 	/* draw to file */
 	//draw_penrose_tile(penrose);
