@@ -255,6 +255,41 @@ geometry_define_line_infarea(struct geometry *geo)
 
 
 /*
+ * Measure smallest width and height of all squares
+ */
+static void
+geometry_measure_squares(struct geometry *geo)
+{
+	struct square *sq;
+	int i, j, j2;
+	double sqw, sqh, tmp;
+	
+	/* go around all squares to measure smallest w and h */
+	sq= geo->squares;
+	for(i=0; i<geo->nsquares; ++i) {
+		sqw= sqh= 0.;
+		for(j=0; j < sq->nvertex; ++j) {
+			j2= (j + 1) % sq->nvertex;
+			tmp= fabs(sq->vertex[j]->pos.x - 
+				  sq->vertex[j2]->pos.x);
+			if (tmp > sqw) sqw= tmp;
+			tmp= fabs(sq->vertex[j]->pos.y - 
+				  sq->vertex[j2]->pos.y);
+			if (tmp > sqh) sqh= tmp;
+		}
+		if (i == 0) {
+			geo->sq_width= sqw;
+			geo->sq_height= sqh;
+		} else {
+			if (sqw < geo->sq_width) geo->sq_width= sqw;
+			if (sqh < geo->sq_height) geo->sq_height= sqh;
+		}
+		++sq;
+	}
+}
+
+
+/*
  * Create new geometry
  */
 struct geometry*
@@ -333,4 +368,7 @@ geometry_connect_elements(struct geometry *geo)
 	
 	/* define area of influence of each line */
 	geometry_define_line_infarea(geo);
+	
+	/* measure minimum square dimensions */
+	geometry_measure_squares(geo);
 }

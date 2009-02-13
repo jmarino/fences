@@ -28,39 +28,6 @@ struct board board;
 
 
 
-/*
- * Measure smallest width and height of a square with a number in it
- * Used to decide what font size to use
- */
-void
-find_smallest_numbered_square(struct geometry *geo, struct game *game)
-{
-	struct square *sq;
-	int i, j, j2;
-	double sqw, sqh, tmp;
-	
-	/* go around all squares to measure smallest w and h */
-	geo->sq_width= board.board_size;
-	geo->sq_height= board.board_size;
-	sq= geo->squares;
-	for(i=0; i<geo->nsquares; ++i) {
-		if (game->numbers[sq->id] != -1) {		// square has a number
-			sqw= sqh= 0.;
-			for(j=0; j < sq->nvertex; ++j) {
-				j2= (j + 1) % sq->nvertex;
-				tmp= fabs(sq->vertex[j]->pos.x - 
-					 sq->vertex[j2]->pos.x);
-				if (tmp > sqw) sqw= tmp;
-				tmp= fabs(sq->vertex[j]->pos.y - 
-					 sq->vertex[j2]->pos.y);
-				if (tmp > sqh) sqh= tmp;
-			}
-			if (sqw < geo->sq_width) geo->sq_width= sqw;
-			if (sqh < geo->sq_height) geo->sq_height= sqh;
-		}
-		++sq;
-	}
-}
 
 
 /*
@@ -174,9 +141,6 @@ generate_example_game(struct geometry *geo)
 		//game->numbers[i]= hard15[i];
 		game->numbers[i]= wiki[i];
 	}
-	
-	/* measure smallest square with a number (used to determine font size) */
-	find_smallest_numbered_square(geo, game);
 	
 	// test line states
 	game->states[0]= LINE_ON;
