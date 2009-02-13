@@ -16,9 +16,6 @@
 
 #include <glib.h>
 
-/***TODO*** inclusion of gamedata.h should not be necessary */
-#include "gamedata.h"
-
 #include "geometry.h"
 
 
@@ -28,8 +25,6 @@
 #define SQUARE_GAME_SIZE	(SQUARE_BOARD_SIZE - 2*SQUARE_BOARD_MARGIN)
 
 
-/* defined in gamedata.c */
-extern struct board board;
 
 /*
  * Connect sides of square

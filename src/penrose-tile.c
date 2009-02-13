@@ -19,9 +19,6 @@
 #include <math.h>
 #include <cairo.h>
 
-/***TODO*** inclusion of gamedata.h should not be necessary */
-#include "gamedata.h" 
-
 #include "geometry.h"
 
 
@@ -29,9 +26,6 @@
 #define PENROSE_BOARD_SIZE	100.
 #define PENROSE_BOARD_MARGIN	5.
 #define PENROSE_GAME_SIZE	(PENROSE_BOARD_SIZE - 2*PENROSE_BOARD_MARGIN)
-
-
-extern struct board board;
 
 
 /* Two types of rombs */
