@@ -73,7 +73,7 @@ generate_example_game(struct geometry *geo)
 	int i;
 	const int dim=7;		// num of squares per side
 	struct game *game;
-	int squaredata[dim*dim]={
+	int squaredata[7*7]={
 		-1,-1,-1,-1,-1,-1,-1,
 		-1,-1,-1, 3, 2,-1, 2,
 		-1, 3,-1, 1,-1,-1,-1,
