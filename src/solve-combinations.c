@@ -43,11 +43,13 @@ number_combinations(int n, int k)
 	/* k! */
 	fac= k;
 	for(i=k-1; i > 1; --i) fac*= i;
+	if (fac == 0) fac= 1;
 	result/= fac;
 	
 	/* (n - k)! */
 	fac= n - k;
 	for(i=n - k - 1; i > 1; --i) fac*= i;
+	if (fac == 0) fac= 1;
 	
 	return result/fac;
 }
