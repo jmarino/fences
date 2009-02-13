@@ -85,6 +85,13 @@ struct geometry {
 	struct line *lines;
 	double sq_width;
 	double sq_height;
+	double on_line_width;		// width of ON line
+	double off_line_width;		// width of OFF line
+	double cross_line_width;	// width of CROSSED line
+	double cross_radius;		// cross size
+	double board_size;		// size of board
+	double board_margin;		// size of margins
+	double game_size;		// size of game area (board_size-2*board_margin)
 };
 
 

@@ -305,6 +305,15 @@ geometry_create_new(int nsquares, int nvertex, int nlines)
 	geo->squares= (struct square*)g_malloc(geo->nsquares*sizeof(struct square));
 	geo->vertex= (struct vertex*)g_malloc(geo->nvertex*sizeof(struct vertex));
 	geo->lines= (struct line*)g_malloc(geo->nlines*sizeof(struct line));
+	geo->sq_width= 0.;
+	geo->sq_height= 0.;
+	geo->on_line_width= 0.;
+	geo->off_line_width= 0.;
+	geo->cross_line_width= 0.;
+	geo->cross_radius= 0.;
+	geo->board_size= 0.;
+	geo->board_margin= 0.;
+	geo->game_size= 0.;
 	
 	return geo;
 }
