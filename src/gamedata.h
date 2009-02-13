@@ -54,9 +54,6 @@ struct tile_cache {
 struct board {
 	struct geometry *geo;	// geometry info of lines, squares & vertices
 	struct game *game;	// game data (line states and square numbers)
-	double board_size;	// Size of gameboard field (game + margin)
-	double board_margin;	// margin around actual game area
-	double game_size;		// Size of game area (board_size-2*board_margin)
 	double width_pxscale;	// Width board-to-pixel scale
 	double height_pxscale;	// Height board-to-pixel scale
 	struct tile_cache *tile_cache; // tile to line cache	

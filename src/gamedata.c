@@ -165,9 +165,9 @@ void
 initialize_board(void)
 {
 	/* Setup coordinate size of board */
-	board.board_size= 1;//11000;
-	board.board_margin= 0.05;//500;
-	board.game_size= board.board_size - 2*board.board_margin; //10000
+	//board.board_size= 1;//11000;
+	//board.board_margin= 0.05;//500;
+	//board.game_size= board.board_size - 2*board.board_margin; //10000
 	board.tile_cache= NULL;
 
 	/* make up example game */

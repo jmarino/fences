@@ -71,7 +71,7 @@ setup_tile_cache(void)
 	cache= (struct tile_cache*)g_malloc(sizeof(struct tile_cache));
 	cache->ntiles_side= NUM_TILES_PER_SIDE;
 	cache->ntiles= cache->ntiles_side * cache->ntiles_side;
-	cache->tile_size= board.board_size / cache->ntiles_side;
+	cache->tile_size= board.geo->board_size / cache->ntiles_side;
 	board.tile_cache= cache;
 	
 	/* Initialize line status vector */

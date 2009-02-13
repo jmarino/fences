@@ -26,13 +26,13 @@
 extern struct board board;
 
 
-#define ON_LINE_WIDTH		2.5/500.0*board.board_size
-#define OFF_LINE_WIDTH		0.5/500.0*board.board_size
-#define DASH_OFFSET		10/500.0*board.board_size
-#define DASH_LENGTH		2.25/500.0*board.board_size
-#define CROSS_LINE_WIDTH	1./500.0*board.board_size
-#define CROSS_RADIUS		5.5/500.0*board.board_size
-#define DOT_RADIUS		3.5/500.0*board.board_size
+#define ON_LINE_WIDTH		2.5/500.0*board.geo->board_size
+#define OFF_LINE_WIDTH		0.5/500.0*board.geo->board_size
+#define DASH_OFFSET		10/500.0*board.geo->board_size
+#define DASH_LENGTH		2.25/500.0*board.geo->board_size
+#define CROSS_LINE_WIDTH	1./500.0*board.geo->board_size
+#define CROSS_RADIUS		5.5/500.0*board.geo->board_size
+#define DOT_RADIUS		3.5/500.0*board.geo->board_size
 
 
 
@@ -140,14 +140,14 @@ draw_bounds(cairo_t *cr)
 {
 	/* debug: draw dot in the middle of board */
 	cairo_set_source_rgba(cr, 0, 1., 0, 0.2);
-	cairo_arc(cr, board.board_size/2., board.board_size/2., DOT_RADIUS, 
+	cairo_arc(cr, board.geo->board_size/2., board.geo->board_size/2., DOT_RADIUS, 
 		  0, 2 * M_PI);
 	cairo_fill(cr);
 	
 	/* debug: draw circle showing clipping */
 	cairo_set_line_width (cr, OFF_LINE_WIDTH);
 	cairo_set_source_rgba(cr, 0, 1., 0, 0.4);
-	cairo_arc(cr, board.board_size/2., board.board_size/2., board.game_size/2., 
+	cairo_arc(cr, board.geo->board_size/2., board.geo->board_size/2., board.geo->game_size/2., 
 		  0, 2 * M_PI);
 	cairo_stroke(cr);
 }
@@ -219,8 +219,8 @@ draw_board(cairo_t *cr, int width, int height)
 	cairo_paint(cr);
 	
 	/* set scale so we draw in board_size space */
-	cairo_scale (cr, width/(double)board.board_size, 
-		     height/(double)board.board_size);
+	cairo_scale (cr, width/(double)geo->board_size, 
+		     height/(double)geo->board_size);
 
 	// debug
 	//draw_tiles(cr);
@@ -298,9 +298,9 @@ draw_board(cairo_t *cr, int width, int height)
 	
 	/* Text in squares */
 	/* calibrate font */
-	cairo_set_font_size(cr, board.board_size/100.);
+	cairo_set_font_size(cr, board.geo->board_size/100.);
 	cairo_text_extents(cr, nums[0], &extent[0]);
-	font_scale= board.board_size/100./extent[0].height;
+	font_scale= board.geo->board_size/100./extent[0].height;
 	
 	cairo_set_font_size(cr, geo->sq_height*font_scale/2.);
 	for(i=0; i < 4; ++i) 

@@ -22,6 +22,12 @@
 #include "geometry.h"
 
 
+/* prefered board dimensions for square tile */
+#define SQUARE_BOARD_SIZE	100.
+#define SQUARE_BOARD_MARGIN	5.
+#define SQUARE_GAME_SIZE	(SQUARE_BOARD_SIZE - 2*SQUARE_BOARD_MARGIN)
+
+
 /* defined in gamedata.c */
 extern struct board board;
 
@@ -76,14 +82,14 @@ build_square_board(const int dim)
 	/* initialize vertices */
 	ver= geo->vertex;
 	for(j=0; j < dim + 1; ++j) {
-		ypos= ((double)board.game_size)/dim*j + board.board_margin;
+		ypos= ((double)SQUARE_GAME_SIZE)/dim*j + SQUARE_BOARD_MARGIN;
 		for(i=0; i < dim + 1; ++i) {
 			ver->id= j*(dim + 1) + i;
 			ver->nlines= 0;		// value will be set in 'join_lines'
 			ver->lines= NULL;
 			ver->nsquares= 0;
 			ver->sq= NULL;
-			ver->pos.x= ((double)board.game_size)/dim*i + board.board_margin;
+			ver->pos.x= ((double)SQUARE_GAME_SIZE)/dim*i + SQUARE_BOARD_MARGIN;
 			ver->pos.y= ypos;
 			++ver;
 		}

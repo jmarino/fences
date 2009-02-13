@@ -25,6 +25,12 @@
 #include "geometry.h"
 
 
+/* prefered board dimensions for penrose tile */
+#define PENROSE_BOARD_SIZE	100.
+#define PENROSE_BOARD_MARGIN	5.
+#define PENROSE_GAME_SIZE	(PENROSE_BOARD_SIZE - 2*PENROSE_BOARD_MARGIN)
+
+
 extern struct board board;
 
 
@@ -287,6 +293,7 @@ trim_outside_rombs(GSList *penrose, double radius)
 	struct point vertex[4];
 	double dist;
 	int i;
+	double center=PENROSE_BOARD_SIZE/2.;
 	
 	current= penrose;
 	while(current != NULL) {
@@ -295,8 +302,8 @@ trim_outside_rombs(GSList *penrose, double radius)
 		get_romb_vertices(romb, vertex);
 		next= g_slist_next(current);
 		for(i=0; i < 4; ++i) {
-			vertex[i].x-= board.board_size/2.;
-			vertex[i].y-= board.board_size/2.;
+			vertex[i].x-= center;
+			vertex[i].y-= center;
 			dist= sqrt(vertex[i].x*vertex[i].x + vertex[i].y*vertex[i].y);
 			if (dist > radius) {
 				g_free(current->data);
@@ -492,9 +499,12 @@ penrose_tile_to_geometry(GSList *penrose)
 	int nsquares;
 	
 	/* create new geometry (nsquares, nvertex, nlines) */
+	/* NOTE: oversize nvertex and nlines. Will adjust below */
 	nsquares= g_slist_length(penrose);
 	geo= geometry_create_new(nsquares, nsquares*4, nsquares*4);
-	/* NOTE: oversize nvertex and nlines. Will adjust below */
+	geo->board_size= PENROSE_BOARD_SIZE;
+	geo->board_margin= PENROSE_BOARD_MARGIN;
+	geo->game_size= geo->board_size - 2*geo->board_margin;
 	
 	/* Compile vertices (and count how many) */
 	list= penrose;
@@ -586,8 +596,8 @@ create_tile_seed(double side)
 		romb->type= FAT_ROMB;
 		romb->side= side;
 		romb->angle= D2R(angle);
-		romb->pos.x= board.board_size/2.;
-		romb->pos.y= board.board_size/2.;
+		romb->pos.x= PENROSE_BOARD_SIZE/2.;
+		romb->pos.y= PENROSE_BOARD_SIZE/2.;
 		penrose= g_slist_prepend(penrose, romb);
 		angle= (angle + 72)%360;
 	}
@@ -610,17 +620,17 @@ build_penrose_board(void)
 	 * radius of penrose tiling must be game_size/2
 	 * 	game_size/2 = side*(3*RATIO + 2 + 2*sin(18))
 	 */
-	side= board.game_size/2.0;
+	side= PENROSE_GAME_SIZE/2.0;
 	side/= 3.*RATIO + 2. + 2.*sin(D2R(18));
 	
 	/* Create the seed (increase size to account for 4 foldings) */
 	penrose= create_tile_seed(side*pow(RATIO, 4));
 
 	/* unfold list of shapes */
-	penrose= penrose_unfold(penrose, board.game_size);
-	penrose= penrose_unfold(penrose, board.game_size);
-	penrose= penrose_unfold(penrose, board.game_size/1.5);
-	penrose= penrose_unfold(penrose, board.game_size/2.0);
+	penrose= penrose_unfold(penrose, PENROSE_GAME_SIZE);
+	penrose= penrose_unfold(penrose, PENROSE_GAME_SIZE);
+	penrose= penrose_unfold(penrose, PENROSE_GAME_SIZE/1.5);
+	penrose= penrose_unfold(penrose, PENROSE_GAME_SIZE/2.0);
 	
 	/* draw to file */
 	//draw_penrose_tile(penrose);
@@ -668,9 +678,9 @@ draw_penrose_tile(GSList *penrose)
 	
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_paint(cr);
-	cairo_scale (cr, width/(double)board.board_size, 
-		     height/(double)board.board_size);
-	cairo_set_line_width (cr, 1/500.0*board.board_size);
+	cairo_scale (cr, width/(double)PENROSE_BOARD_SIZE, 
+		     height/(double)PENROSE_BOARD_SIZE);
+	cairo_set_line_width (cr, 1/500.0*PENROSE_BOARD_SIZE);
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	
 	while(penrose != NULL) {

@@ -142,8 +142,8 @@ drawarea_configure(GtkWidget *drawarea, GdkEventConfigure *event, gpointer user_
 	//printf("configure: %d, %d\n", event->width, event->height);
 		
 	/* setup pixel scales: to go from field coords to pixels on screen */
-	board.width_pxscale= event->width/(double)board.board_size;
-	board.height_pxscale= event->height/(double)board.board_size;
+	board.width_pxscale= event->width/(double)board.geo->board_size;
+	board.height_pxscale= event->height/(double)board.geo->board_size;
 	
 	return TRUE;
 }

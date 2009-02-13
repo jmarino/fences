@@ -90,7 +90,7 @@ struct geometry {
 	double cross_line_width;	// width of CROSSED line
 	double cross_radius;		// cross size
 	double board_size;		// size of board
-	double board_margin;		// size of margins
+	double board_margin;		// size of margin around game area
 	double game_size;		// size of game area (board_size-2*board_margin)
 };
 
