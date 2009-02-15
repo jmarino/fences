@@ -73,7 +73,10 @@ build_square_board(const int dim)
 	
 	/* create new geometry (nsquares, nvertex, nlines) */
 	geo= geometry_create_new(dim*dim, (dim + 1)*(dim + 1), 2*dim*(dim + 1));
-
+	geo->board_size= SQUARE_BOARD_SIZE;
+	geo->board_margin= SQUARE_BOARD_MARGIN;
+	geo->game_size= SQUARE_GAME_SIZE;
+	
 	/* initialize vertices */
 	ver= geo->vertex;
 	for(j=0; j < dim + 1; ++j) {
