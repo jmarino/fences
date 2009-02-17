@@ -206,9 +206,6 @@ draw_board(cairo_t *cr, int width, int height)
 	struct square *sq;
 	int i, j;
 	double x, y;
-	cairo_text_extents_t extent[4];
-	const char *nums[]={"0", "1", "2", "3"};
-	double font_scale;
 	struct geometry *geo=board.geo;
 	int lines_on;	// how many ON lines a vertex has
 	struct game *game=board.game;
