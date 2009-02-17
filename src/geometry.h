@@ -89,6 +89,10 @@ struct geometry {
 	double off_line_width;		// width of OFF line
 	double cross_line_width;	// width of CROSSED line
 	double cross_radius;		// cross size
+	double font_size;		// font size to use for square numbers
+	struct point *font_box;		// extents for numbers
+	char *numbers;			// numbers in squares
+	int max_numlines;		// maximum number of lines around a square
 	double board_size;		// size of board
 	double board_margin;		// size of margin around game area
 	double game_size;		// size of game area (board_size-2*board_margin)
@@ -99,7 +103,7 @@ struct geometry {
 /*
  * Functions
  */
-struct geometry* geometry_create_new(int nsquares, int nvertex, int nlines);
+struct geometry* geometry_create_new(int nsquares, int nvertex, int nlines, int max_numlines);
 void geometry_initialize_lines(struct geometry *geo);
 void geometry_free(struct geometry *geo);
 void geometry_connect_elements(struct geometry *geo);

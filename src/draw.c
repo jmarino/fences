@@ -231,7 +231,7 @@ draw_board(cairo_t *cr, int width, int height)
 
 	/* Draw OFF lines first */
 	cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
-	cairo_set_line_width (cr, OFF_LINE_WIDTH);
+	cairo_set_line_width (cr, geo->off_line_width);
 	line= geo->lines;
 	for(i=0; i<geo->nlines; ++i) {
 		vertex1= line->ends[0];
@@ -263,7 +263,7 @@ draw_board(cairo_t *cr, int width, int height)
 		} else if (game->states[line->id] == LINE_ON) {
 			fx_setcolor(cr, line);
 			//cairo_set_source_rgb(cr, 0., 0., 1.);
-			cairo_set_line_width (cr, ON_LINE_WIDTH);
+			cairo_set_line_width (cr, geo->on_line_width);
 			cairo_move_to(cr, vertex1->pos.x, vertex1->pos.y);
 			cairo_line_to(cr, vertex2->pos.x, vertex2->pos.y);
 			cairo_stroke(cr);
@@ -297,29 +297,56 @@ draw_board(cairo_t *cr, int width, int height)
 	}
 	
 	/* Text in squares */
-	/* calibrate font */
-	cairo_set_font_size(cr, board.geo->board_size/100.);
-	cairo_text_extents(cr, nums[0], &extent[0]);
-	font_scale= board.geo->board_size/100./extent[0].height;
-	
-	cairo_set_font_size(cr, geo->sq_height*font_scale/2.);
-	for(i=0; i < 4; ++i) 
-		cairo_text_extents(cr, nums[i], &extent[i]);
 	sq= geo->squares;
+	cairo_set_font_size(cr, geo->font_size);
 	cairo_set_source_rgb(cr, 0, 0, 0);
+	printf("font_size: %lf\n", geo->font_size);
 	
 	for(i=0; i<geo->nsquares; ++i) {
 		number= game->numbers[sq->id];
 		if (number != -1) {	// square has a number
-			cairo_move_to(cr, sq->center.x - extent[number].width/2, 
-				      sq->center.y + extent[number].height/2);
-			cairo_show_text (cr, nums[number]);
+			cairo_move_to(cr, sq->center.x - geo->font_box[number].x/2, 
+				      sq->center.y + geo->font_box[number].y/2);
+			cairo_show_text (cr, geo->numbers + 2*number);
 		}
 		++sq;
 	}
 }
 
 
+/*
+ * Get a measure of font size
+ */
+void
+draw_measure_font(struct geometry *geo)
+{
+	cairo_surface_t *surf;
+	cairo_t *cr;
+	cairo_text_extents_t extent;
+	int i;
+	
+	/* create temporary surface and context */
+	surf= cairo_image_surface_create(CAIRO_FORMAT_RGB24, 100, 100);
+	cr= cairo_create (surf);
+	cairo_scale (cr, 100.0/geo->board_size, 100.0/geo->board_size);
+	
+	/* measure font */
+	cairo_set_font_size(cr, geo->board_size/100.);
+	cairo_text_extents(cr, geo->numbers + 0, &extent);
+	printf("nums: %s\n", geo->numbers);
+	geo->font_size= geo->sq_height * (geo->board_size/100./extent.height);
+	
+	cairo_set_font_size(cr, geo->font_size);
+	for(i=0; i < geo->max_numlines; ++i) {
+		cairo_text_extents(cr, geo->numbers + i*2, &extent);
+		geo->font_box[i].x= extent.width;
+		geo->font_box[i].y= extent.height;
+	}
+	
+	/* destroy temporary surface and context */
+	cairo_destroy(cr);
+	cairo_surface_destroy(surf);
+}
 
 
 /*

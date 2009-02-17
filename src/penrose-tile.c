@@ -495,7 +495,7 @@ penrose_tile_to_geometry(GSList *penrose)
 	/* create new geometry (nsquares, nvertex, nlines) */
 	/* NOTE: oversize nvertex and nlines. Will adjust below */
 	nsquares= g_slist_length(penrose);
-	geo= geometry_create_new(nsquares, nsquares*4, nsquares*4);
+	geo= geometry_create_new(nsquares, nsquares*4, nsquares*4, 4);
 	geo->board_size= PENROSE_BOARD_SIZE;
 	geo->board_margin= PENROSE_BOARD_MARGIN;
 	geo->game_size= geo->board_size - 2*geo->board_margin;
@@ -601,6 +601,18 @@ create_tile_seed(double side)
 
 
 /*
+ * Calculate sizes of drawing details
+ */
+static void
+penrose_calculate_sizes(struct geometry *geo)
+{
+	geo->on_line_width= geo->board_size/500.;
+	geo->off_line_width= geo->board_size/1000.;
+	draw_measure_font(geo);
+}
+			
+
+/*
  * Build a penrose tiling by unfolding two sets of rombs
  */ 
 struct geometry*
@@ -637,6 +649,9 @@ build_penrose_board(void)
 	
 	/* finalize geometry data: tie everything together */
 	geometry_connect_elements(geo);
+	
+	/* define sizes of drawing bits */
+	penrose_calculate_sizes(geo);
 	
 	/* debug: draw to file */
 	//draw_penrose_tile(penrose);

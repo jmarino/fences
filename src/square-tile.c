@@ -58,6 +58,21 @@ connect_lines_to_square(struct square *sq)
 
 
 /*
+ * Calculate sizes of drawing details
+ */
+static void
+square_calculate_sizes(struct geometry *geo, int dim)
+{
+	geo->on_line_width= geo->game_size/dim/15.0;
+	geo->off_line_width= geo->board_size/1000.;
+	if (geo->on_line_width < 2*geo->off_line_width) 
+		geo->on_line_width= 2*geo->off_line_width;
+	
+	draw_measure_font(geo);
+}
+
+
+/*
  * Build square tile geometry data
  * Square grid of dim x dim dimensions
  */
@@ -72,7 +87,7 @@ build_square_board(const int dim)
 	int id;
 	
 	/* create new geometry (nsquares, nvertex, nlines) */
-	geo= geometry_create_new(dim*dim, (dim + 1)*(dim + 1), 2*dim*(dim + 1));
+	geo= geometry_create_new(dim*dim, (dim + 1)*(dim + 1), 2*dim*(dim + 1), 4);
 	geo->board_size= SQUARE_BOARD_SIZE;
 	geo->board_margin= SQUARE_BOARD_MARGIN;
 	geo->game_size= SQUARE_GAME_SIZE;
@@ -142,6 +157,9 @@ build_square_board(const int dim)
 
 	/* finalize geometry data: tie everything together */
 	geometry_connect_elements(geo);
-
+	
+	/* define sizes of drawing bits */
+	square_calculate_sizes(geo, dim);
+	
 	return geo;
 }
