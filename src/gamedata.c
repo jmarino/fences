@@ -136,10 +136,10 @@ generate_example_game(struct geometry *geo)
 	/* set number inside square */
 	for(i=0; i < geo->nsquares; ++i) {
 		//game->numbers[i]= squaredata[i];
-		//game->numbers[i]= hard[i];
+		game->numbers[i]= hard[i];
 		//game->numbers[i]= easy15[i];
 		//game->numbers[i]= hard15[i];
-		game->numbers[i]= wiki[i];
+		//game->numbers[i]= wiki[i];
 	}
 	
 	// test line states
@@ -171,13 +171,18 @@ initialize_board(void)
 	board.tile_cache= NULL;
 
 	/* make up example game */
+	//board.geo= build_square_board(7);
 	//board.geo= build_square_board(15);
 	board.geo= build_square_board(6);
-	board.game= generate_example_game(board.geo);
+	//board.game= generate_example_game(board.geo);
 	//board.geo= build_square_board(17);
 	//board.geo= build_penrose_board();
-	//board.game= create_empty_gamedata(board.geo);
-
+	
 	/* generate tile cache for lines */
 	setup_tile_cache();
+	
+	/* empty gamedata */
+	board.game= create_empty_gamedata(board.geo);
+	board.game->numbers[10]= 3;
+	printf("nlines: %d\nnsquares: %d\n", board.geo->nlines, board.geo->nsquares);
 }

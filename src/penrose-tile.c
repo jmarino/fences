@@ -24,7 +24,7 @@
 
 /* prefered board dimensions for penrose tile */
 #define PENROSE_BOARD_SIZE	100.
-#define PENROSE_BOARD_MARGIN	5.
+#define PENROSE_BOARD_MARGIN	2.
 #define PENROSE_GAME_SIZE	(PENROSE_BOARD_SIZE - 2*PENROSE_BOARD_MARGIN)
 
 
