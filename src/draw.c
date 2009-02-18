@@ -312,37 +312,35 @@ draw_board(cairo_t *cr, int width, int height)
 
 
 /*
- * Get a measure of font size
+ * Calculate extents (width & height) of all possible square numbers
+ * This has to be done after every window resize because the accuracy of
+ * the extents depends on the pixel size.
  */
 void
-draw_measure_font(struct geometry *geo)
+draw_measure_font(GtkWidget *drawarea, int width, int height,
+		  struct geometry *geo)
 {
-	cairo_surface_t *surf;
+	int i;
 	cairo_t *cr;
 	cairo_text_extents_t extent;
-	int i;
-	
-	/* create temporary surface and context */
-	surf= cairo_image_surface_create(CAIRO_FORMAT_RGB24, 100, 100);
-	cr= cairo_create (surf);
-	cairo_scale (cr, 100.0/geo->board_size, 100.0/geo->board_size);
-	
-	/* measure font */
-	cairo_set_font_size(cr, geo->board_size/100.);
+
+	/* set up temporary cairo context */
+	cr= gdk_cairo_create (drawarea->window); 
+	cairo_scale (cr, width/geo->board_size, height/geo->board_size);
+
+	/* scale font size so number 0 fits in sq_height/2. */
+	cairo_set_font_size(cr, geo->board_size/2.);
 	cairo_text_extents(cr, geo->numbers + 0, &extent);
-	printf("nums: %s\n", geo->numbers);
-	geo->font_size= geo->sq_height * (geo->board_size/100./extent.height);
-	
+	geo->font_size= (geo->sq_height/2.) * (geo->board_size/2./extent.height);
+
+	/* measure extent boxes for all numbers at the new font size */
 	cairo_set_font_size(cr, geo->font_size);
 	for(i=0; i < geo->max_numlines; ++i) {
 		cairo_text_extents(cr, geo->numbers + i*2, &extent);
 		geo->font_box[i].x= extent.width;
 		geo->font_box[i].y= extent.height;
 	}
-	
-	/* destroy temporary surface and context */
-	cairo_destroy(cr);
-	cairo_surface_destroy(surf);
+	cairo_destroy (cr);
 }
 
 

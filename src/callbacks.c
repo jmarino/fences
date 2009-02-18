@@ -144,6 +144,13 @@ drawarea_configure(GtkWidget *drawarea, GdkEventConfigure *event, gpointer user_
 	/* setup pixel scales: to go from field coords to pixels on screen */
 	board.width_pxscale= event->width/(double)board.geo->board_size;
 	board.height_pxscale= event->height/(double)board.geo->board_size;
+
+	/*
+	 * Recalculate font size and extent boxes of square numbers
+	 * This has to be done after every window resize because the
+	 * accuracy of the measurements depends on the pixel size.
+	 */
+	draw_measure_font(drawarea, event->width, event->height, board.geo);
 	
 	return TRUE;
 }

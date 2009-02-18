@@ -19,7 +19,7 @@
 
 
 void draw_board(cairo_t *cr, int width, int height);
-void draw_measure_font(struct geometry *geo);
+void draw_measure_font(GtkWidget *drawarea, int width, int height, struct geometry *geo);
 void draw_benchmark(GtkWidget *drawarea);
 
 #endif

@@ -608,7 +608,6 @@ penrose_calculate_sizes(struct geometry *geo)
 {
 	geo->on_line_width= geo->board_size/500.;
 	geo->off_line_width= geo->board_size/1000.;
-	draw_measure_font(geo);
 }
 			
 

@@ -67,8 +67,6 @@ square_calculate_sizes(struct geometry *geo, int dim)
 	geo->off_line_width= geo->board_size/1000.;
 	if (geo->on_line_width < 2*geo->off_line_width) 
 		geo->on_line_width= 2*geo->off_line_width;
-	
-	draw_measure_font(geo);
 }
 
 
