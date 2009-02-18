@@ -325,6 +325,8 @@ geometry_create_new(int nsquares, int nvertex, int nlines, int max_numlines)
 	geo->off_line_width= 0.;
 	geo->cross_line_width= 0.;
 	geo->cross_radius= 0.;
+	geo->font_size= 0.;
+	geo->font_scale= 1.;
 	geo->max_numlines= max_numlines;
 	geo->board_size= 0.;
 	geo->board_margin= 0.;

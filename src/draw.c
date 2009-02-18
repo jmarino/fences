@@ -332,6 +332,8 @@ draw_measure_font(GtkWidget *drawarea, int width, int height,
 	cairo_set_font_size(cr, geo->board_size/2.);
 	cairo_text_extents(cr, geo->numbers + 0, &extent);
 	geo->font_size= (geo->sq_height/2.) * (geo->board_size/2./extent.height);
+	/* further scale font to fit current tile type */
+	geo->font_size*= geo->font_scale;
 
 	/* measure extent boxes for all numbers at the new font size */
 	cairo_set_font_size(cr, geo->font_size);
