@@ -90,7 +90,7 @@ struct geometry {
 	double cross_line_width;	// width of CROSSED line
 	double cross_radius;		// cross size
 	double font_size;		// font size to use for square numbers
-	struct point *font_box;		// extents for numbers
+	struct point *numpos;		// position hints for numbers
 	char *numbers;			// numbers in squares
 	int max_numlines;		// maximum number of lines around a square
 	double board_size;		// size of board

@@ -315,7 +315,7 @@ geometry_create_new(int nsquares, int nvertex, int nlines, int max_numlines)
 	geo->squares= (struct square*)g_malloc(geo->nsquares*sizeof(struct square));
 	geo->vertex= (struct vertex*)g_malloc(geo->nvertex*sizeof(struct vertex));
 	geo->lines= (struct line*)g_malloc(geo->nlines*sizeof(struct line));
-	geo->font_box= (struct point *)g_malloc(max_numlines*sizeof(struct point));
+	geo->numpos= (struct point *)g_malloc(max_numlines*sizeof(struct point));
 	geo->numbers= (char *)g_malloc(2*max_numlines*sizeof(char));
 	for(i=0; i < max_numlines; ++i)
 		snprintf(geo->numbers + 2*i, 2, "%1d", i);
@@ -378,7 +378,7 @@ geometry_destroy(struct geometry *geo)
 	g_free(geo->vertex);
 	g_free(geo->lines);
 	g_free(geo->numbers);
-	g_free(geo->font_box);
+	g_free(geo->numpos);
 	g_free(geo);
 }
 

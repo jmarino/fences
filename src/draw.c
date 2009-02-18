@@ -302,8 +302,8 @@ draw_board(cairo_t *cr, int width, int height)
 	for(i=0; i<geo->nsquares; ++i) {
 		number= game->numbers[sq->id];
 		if (number != -1) {	// square has a number
-			cairo_move_to(cr, sq->center.x - geo->font_box[number].x/2, 
-				      sq->center.y + geo->font_box[number].y/2);
+			cairo_move_to(cr, sq->center.x - geo->numpos[number].x,
+				      sq->center.y + geo->numpos[number].y);
 			cairo_show_text (cr, geo->numbers + 2*number);
 		}
 		++sq;
@@ -337,8 +337,9 @@ draw_measure_font(GtkWidget *drawarea, int width, int height,
 	cairo_set_font_size(cr, geo->font_size);
 	for(i=0; i < geo->max_numlines; ++i) {
 		cairo_text_extents(cr, geo->numbers + i*2, &extent);
-		geo->font_box[i].x= extent.width;
-		geo->font_box[i].y= extent.height;
+		geo->numpos[i].x= extent.width/2. + extent.x_bearing;
+		geo->numpos[i].y= extent.height/2. -
+			(extent.height + extent.y_bearing);
 	}
 	cairo_destroy (cr);
 }
