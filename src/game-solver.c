@@ -323,6 +323,15 @@ solve_handle_maxnumber_squares(struct solution *sol)
 					if (STATE(sq->sides[k2]) != LINE_ON)
 						SET_LINE(sq2->sides[k2]); 
 				}
+				/* cross any lines from vertex that are not part of sq or sq2 */
+				for(k=0; k < vertex->nlines; ++k) {
+					if (line_touches_square(vertex->lines[k], sq) ||
+					    line_touches_square(vertex->lines[k], sq2))
+						continue;
+					if (STATE(vertex->lines[k]) != LINE_CROSSED)
+						CROSS_LINE(vertex->lines[k]);
+					    
+				}
 			} else {	// no shared side: diagonally opposed squares
 				/* set all lines around squares that don't touch vertex */
 				for(k=0; k < sq->nsides; ++k) {
