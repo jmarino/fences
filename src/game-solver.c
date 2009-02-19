@@ -799,28 +799,42 @@ solve_check_solution(struct solution *sol)
 {
 	int i;
 	struct geometry *geo=sol->geo;
-	gboolean sol_good=TRUE;
-	
-	/* check we have one and only one loop
-	 * last run inside 'handle_loop_bootleneck' set lin_mask
-	 * if the whole loop was followed, all lines will have lin_mask FALSE */
-	for(i=0; i < geo->nlines; ++i) {
-		if (sol->states[i] == LINE_ON) {
-			if (sol->lin_mask[i]) {
-				sol_good= FALSE;
-				break;
-			}
-		}
-	}
-	
+	struct line *lin;
+	struct line *start=NULL;
+	int direction=DIRECTION_IN;
+	int nlines_total=0;
+	int nlines_loop=0;
+
 	/* check that all numbered squares are happy */
 	for(i=0; i < geo->nsquares; ++i) {
-		if (sol->numbers[i] != -1 && sol->sq_handled[i] == FALSE) {
-			sol_good= FALSE;
-			break;
+		if (sol->numbers[i] != -1 && sol->sq_handled[i] == FALSE)
+			return FALSE;
+	}
+
+	/* count how many lines are ON, keep the first one found */
+	for(i=0; i < geo->nlines; ++i) {
+		if (sol->states[i] == LINE_ON) {
+			if (nlines_total == 0)
+				start= geo->lines + i;
+			++nlines_total;			
 		}
 	}
-	return sol_good;
+	if (nlines_total == 0) return FALSE;
+
+	/* follow loop starting at 'start' */
+	lin= start;
+	while(lin != NULL) {
+		++nlines_loop;
+		lin= follow_line(sol, lin, &direction);
+		if (lin == start) 	// closed the loop
+			break;
+	}
+	if (lin == NULL) return FALSE;
+
+	/* check number of lines total is == to lines in loop */
+	if (nlines_loop != nlines_total) return FALSE;
+	
+	return TRUE;
 }
 
 
