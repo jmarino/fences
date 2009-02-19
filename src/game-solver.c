@@ -849,7 +849,7 @@ calculate_difficulty(int *level_count)
 		total+= level_count[i];
 	
 	/* calculate difficulty */
-	printf("-------------\n");
+	//printf("-------------\n");
 	total_score= 0.;
 	for(i=0; i < MAX_LEVEL; ++i) {
 		if (i == 0 || i == 1) {
@@ -881,7 +881,7 @@ calculate_difficulty(int *level_count)
 		if (score > 1.0) 
 			score= 1.0;
 		
-		printf("..level %d: %lf\n", i, score*level_range[i]);
+		//printf("..level %d: %lf\n", i, score*level_range[i]);
 		total_score+= score * level_range[i];
 	}
 	return total_score;
