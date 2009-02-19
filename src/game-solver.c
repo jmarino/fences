@@ -94,7 +94,15 @@ is_vertex_cornered(struct solution *sol, struct square *sq,
 
 
 /*
- * Check game data for inconsistencies
+ * Check game data for inconsistencies:
+ * Numbered square:
+ *  - Number of lines on around square <= number
+ *  - Must have enough lines OFF to possibly satisy square number
+ * Non-numbered square:
+ *  - **TODO** number ON must be < number of sides in square
+ * Vertices:
+ *  - Vertex with one ON must have at least one OFF
+ *  - **TODO** Vertex with more than two ON lines
  * Return TRUE: all fine
  * Return FALSE: found problem
  */
