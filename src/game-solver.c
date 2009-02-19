@@ -896,8 +896,7 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 {
 	struct solution *sol;
 	int count;
-	int total;
-	int level=0;
+	int level=-1;
 	int level_count[MAX_LEVEL]={0, 0, 0, 0, 0, 0, 0};
 	int last_level= -1;
 	
@@ -909,20 +908,17 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 	printf("zero: count %d\n", count);
 	
 	count= solve_handle_maxnumber_squares(sol);
-	//if (count > 0)
-	//	dscore= count / (double)MAX_LEVEL;
-	total= count;
 	printf("maxnumber: count %d\n", count);
-	total=0;
+
 	while(level < MAX_LEVEL) {
-		/* cross all possible lines */
-		(void)solve_cross_lines(sol);
-		
 		/* */
-		if (level == 0) {
-			count= solve_handle_trivial_squares(sol);
-		} else if (level == 1) {
+		if (level == -1) {
+			(void)solve_cross_lines(sol);
+			count= 0;
+		} else if (level == 0) {
 			count= solve_handle_trivial_vertex(sol);
+		} else if (level == 1) {
+			count= solve_handle_trivial_squares(sol);
 		} else if (level == 2) {
 			count= solve_handle_corner(sol);
 		} else if (level == 3) {
@@ -936,12 +932,7 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 		}
 		
 		printf("level %d: count %d\n", level, count);
-		
-		//if (level == 5 && count > 0) 
-		//	count= 1;
-		
-		total+= count;
-		
+				
 		if (count == 0) {
 			++level;
 		} else {
@@ -949,9 +940,10 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 			if (level == 4 && last_level == 4) 
 				count= 0;
 			
+			g_assert(level >= 0);
 			level_count[level]+= count;
 			last_level= level;
-			level= 0;
+			level= -1;
 		}
 	}
 	
@@ -961,13 +953,8 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 		printf("level %d: %d\n", i, level_count[i]);
 	}
 	printf("-------------\n");
-	printf("total: %d\n", total);
-	
 	
 	*final_score= calculate_difficulty(level_count);
-	
-	//dscore= dscore/((double)total * 7.) * 100.0;
-	//dscore= 35;
 	
 	/* check if we have a valid solution */
 	if (solve_check_solution(sol)) {
