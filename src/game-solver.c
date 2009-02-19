@@ -984,3 +984,96 @@ test_solve_game(struct geometry *geo, struct game *game)
 	
 	solve_free_solution_data(sol);
 }
+
+
+/*
+ * Trace through solution
+ */
+void
+test_solve_game_trace(struct geometry *geo, struct game *game)
+{
+	int i;
+	static struct solution *sol;
+	static gboolean first=TRUE;
+	double final_score;
+	
+	int count=0;
+	static int level=-3;
+	static int level_count[MAX_LEVEL]={0, 0, 0, 0, 0, 0, 0};
+	static int last_level= -1;
+
+	if (first) {
+		/* init solution structure */
+		sol= solve_create_solution_data(geo, game);
+		first= FALSE;
+	}	
+
+	while(level < MAX_LEVEL) {
+		if (level == -3) {
+			count= solve_handle_zero_squares(sol);
+			count= 0;
+		} else if (level == -2) {
+			count= solve_handle_maxnumber_squares(sol);
+			count= 0;
+		} else if (level == -1) {
+			/* cross all possible lines */
+			(void)solve_cross_lines(sol);
+			count= 0;
+		} else if (level == 0) {
+			count= solve_handle_trivial_vertex(sol);
+		} else if (level == 1) {
+			count= solve_handle_trivial_squares(sol);
+		} else if (level == 2) {
+			count= solve_handle_corner(sol);
+		} else if (level == 3) {
+			count= solve_handle_maxnumber_incoming_line(sol);
+		} else if (level == 4) {
+			count= solve_handle_loop_bottleneck(sol) != 0;
+		} else if (level == 5) {
+			count= solve_handle_squares_net_1(sol);
+		} else if (level == 6) {
+			count= solve_try_combinations(sol);
+		}
+		
+		printf("level %d: %d\t", level, count);
+		
+		if (count == 0) {
+			++level;
+		} else {
+			g_assert(level >= 0);
+			/* ignore two bottlenecks in a row */
+			if (level == 4 && last_level == 4) 
+				count= 0;
+			
+			level_count[level]+= count;
+			last_level= level;
+			level= -1;
+		}
+		break;
+	}
+	
+	final_score= calculate_difficulty(level_count);
+	
+	printf("["); 
+	for(i=0; i < MAX_LEVEL; ++i) {
+		printf("(%d):%d", i, level_count[i]);
+		if (i < MAX_LEVEL - 1) printf("\t");
+	}
+	printf("] --> %5.2lf\n", final_score);
+
+	
+
+	/* record solution */
+	for(i=0; i < geo->nlines; ++i)
+		game->states[i]= sol->states[i];
+
+	if (solve_check_solution(sol)) {
+		printf("**Solution found! (%lf)\n", final_score);
+		printf("-------------\n");
+		for(i=0; i < MAX_LEVEL; ++i)
+			printf("level %d: %d\n", i, level_count[i]);
+		printf("-------------\n");
+	}
+	
+	//solve_free_solution_data(sol);
+}
