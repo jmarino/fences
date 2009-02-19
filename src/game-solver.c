@@ -515,6 +515,8 @@ solve_handle_squares_net_1(struct solution *sol)
  * Find vertices with only 0 ON and 1 OFF, no exit -> cross it.
  * Repeat process until no more lines are crossed out.
  * Find squares with enough lines ON, cross out any OFF lines around it.
+ * **NOTE: this function should only modify 'sol->states' field, so it can be
+ * used with solve strategies that do temporary changes.
  */
 int
 solve_cross_lines(struct solution *sol)
@@ -571,7 +573,6 @@ solve_cross_lines(struct solution *sol)
 		}
 		if (num_on != NUMBER(sq)) continue; // not ready, continue
 		/* square is complete, cross any OFF left */
-		sol->sq_mask[i]= FALSE;
 		for(j=0; j < sq->nsides; ++j) {
 			if (STATE(sq->sides[j]) == LINE_OFF)
 				CROSS_LINE(sq->sides[j]);
