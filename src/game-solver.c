@@ -24,7 +24,7 @@
 
 
 /* number of solution levels */
-#define MAX_LEVEL	7
+#define MAX_LEVEL	6
 
 
 /*
@@ -841,7 +841,7 @@ calculate_difficulty(int *level_count)
 {
 	int i;
 	//double level_range[MAX_LEVEL]={0.25, 0.5, 0.75, 1.25, 1.5, 1.75, 4.0};
-	double level_range[MAX_LEVEL]={0.25, 0.25, 1.5, 2.0, 0.5, 2.5, 3.0};
+	double level_range[MAX_LEVEL]={0.25, 1.5, 2.0, 0.5, 2.5, 3.0};
 	double score;
 	double total_score;
 	int total=0;
@@ -854,16 +854,9 @@ calculate_difficulty(int *level_count)
 	//printf("-------------\n");
 	total_score= 0.;
 	for(i=0; i < MAX_LEVEL; ++i) {
-		if (i == 0 || i == 1) {
+		if (i == 0) {
 			score= level_count[i]/( (double)total/2.0 );
-		} else if (i == 2) {
-			if (level_count[0] > 0)
-				score= level_count[2]/((double)level_count[0]/10.);
-			else {
-				if (level_count[2] > 0)	score= 1.;
-				else score= 0.;
-			}
-		} else if (i == 6) {
+		} else if (i == 5) {
 			if (level_count[i - 1] > 0)
 				score= level_count[i]/(double)level_count[i - 1]*4;
 			else {
@@ -899,7 +892,7 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 	struct solution *sol;
 	int count;
 	int level=-1;
-	int level_count[MAX_LEVEL]={0, 0, 0, 0, 0, 0, 0};
+	int level_count[MAX_LEVEL]={0, 0, 0, 0, 0, 0};
 	int last_level= -1;
 	
 	/* init solution structure */
@@ -919,17 +912,16 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 			count= 0;
 		} else if (level == 0) {
 			count= solve_handle_trivial_vertex(sol);
+			count+= solve_handle_trivial_squares(sol);
 		} else if (level == 1) {
-			count= solve_handle_trivial_squares(sol);
-		} else if (level == 2) {
 			count= solve_handle_corner(sol);
-		} else if (level == 3) {
+		} else if (level == 2) {
 			count= solve_handle_maxnumber_incoming_line(sol);
-		} else if (level == 4) {
+		} else if (level == 3) {
 			count= solve_handle_loop_bottleneck(sol) != 0;
-		} else if (level == 5) {
+		} else if (level == 4) {
 			count= solve_handle_squares_net_1(sol);
-		} else if (level == 6) {
+		} else if (level == 5) {
 			count= solve_try_combinations(sol);
 		}
 		
@@ -1001,7 +993,7 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 	
 	int count=0;
 	static int level=-3;
-	static int level_count[MAX_LEVEL]={0, 0, 0, 0, 0, 0, 0};
+	static int level_count[MAX_LEVEL]={0, 0, 0, 0, 0, 0};
 	static int last_level= -1;
 
 	if (first) {
@@ -1023,17 +1015,16 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 			count= 0;
 		} else if (level == 0) {
 			count= solve_handle_trivial_vertex(sol);
+			count+= solve_handle_trivial_squares(sol);
 		} else if (level == 1) {
-			count= solve_handle_trivial_squares(sol);
-		} else if (level == 2) {
 			count= solve_handle_corner(sol);
-		} else if (level == 3) {
+		} else if (level == 2) {
 			count= solve_handle_maxnumber_incoming_line(sol);
-		} else if (level == 4) {
+		} else if (level == 3) {
 			count= solve_handle_loop_bottleneck(sol) != 0;
-		} else if (level == 5) {
+		} else if (level == 4) {
 			count= solve_handle_squares_net_1(sol);
-		} else if (level == 6) {
+		} else if (level == 5) {
 			count= solve_try_combinations(sol);
 		}
 		
