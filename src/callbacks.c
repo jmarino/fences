@@ -106,8 +106,12 @@ window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 		build_new_loop(board.geo, board.game, TRUE);
 		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
 	}
-	if (event->keyval == GDK_s) {
+	if (event->keyval == GDK_S) {
 		test_solve_game(board.geo, board.game);
+		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
+	}
+	if (event->keyval == GDK_s) {
+		test_solve_game_trace(board.geo, board.game);
 		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
 	}
 	if (event->keyval == GDK_f) {
