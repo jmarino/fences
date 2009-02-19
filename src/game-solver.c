@@ -863,7 +863,7 @@ calculate_difficulty(int *level_count)
 {
 	int i;
 	//double level_range[MAX_LEVEL]={0.25, 0.5, 0.75, 1.25, 1.5, 1.75, 4.0};
-	double level_range[MAX_LEVEL]={0.25, 1.5, 2.0, 0.5, 2.5, 3.0};
+	double level_range[MAX_LEVEL]={0.25, 1.5, 2.0, 0.75, 2.5, 3.0};
 	double score;
 	double total_score;
 	int total=0;
