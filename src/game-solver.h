@@ -39,7 +39,7 @@ struct solution {
 	struct game *game;	// game state (mostly useful for square numbers)
 	int *states;		// line states (so we don't touch game->states)
 	int *numbers;		// points to game->numbers
-	gboolean *sq_mask;
+	gboolean *sq_handled;	// has square been handled?
 	int *lin_mask;
 };
 

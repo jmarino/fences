@@ -165,7 +165,7 @@ solve_handle_zero_squares(struct solution *sol)
 	for(i=0; i < geo->nsquares; ++i) {
 		if (sol->numbers[i] != 0) continue; // only care about 0 squares
 		/* cross sides of square */
-		sol->sq_mask[i]= FALSE;	// mark square as handled
+		sol->sq_handled[i]= TRUE;	// mark square as handled
 		sq= geo->squares + i;
 		for(j=0; j < sq->nsides; ++j)
 			CROSS_LINE(sq->sides[j]);
@@ -191,7 +191,7 @@ solve_handle_trivial_squares(struct solution *sol)
 	
 	for(i=0; i < geo->nsquares; ++i) {
 		/* only unhandled squares */
-		if (sol->sq_mask[i] == FALSE) 
+		if (sol->sq_handled[i]) 
 			continue;
 		
 		/* count lines ON and CROSSED around square */
@@ -206,12 +206,12 @@ solve_handle_trivial_squares(struct solution *sol)
 		}
 		/* square has all lines either ON or CROSSED -> handled */
 		if (lines_on + lines_crossed == sq->nsides) {
-			sol->sq_mask[i]= FALSE;
+			sol->sq_handled[i]= TRUE;
 			continue;
 		}
 		/* enough lines crossed? -> set ON the OFF ones */
 		if ( sq->nsides - lines_crossed == NUMBER(sq) ) {
-			sol->sq_mask[i]= FALSE;
+			sol->sq_handled[i]= TRUE;
 			for(j=0; j < sq->nsides; ++j) {
 				if (STATE(sq->sides[j]) == LINE_OFF)
 					SET_LINE(sq->sides[j]);
@@ -282,7 +282,7 @@ solve_handle_maxnumber_squares(struct solution *sol)
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
 		/* ignore handled squares or with number != sides - 1 */
-		if (sol->sq_mask[i] == FALSE || sol->numbers[i] != sq->nsides - 1) 
+		if (sol->sq_handled[i] || sol->numbers[i] != sq->nsides - 1) 
 			continue;
 		
 		/* inspect vertices of square */
@@ -378,7 +378,7 @@ solve_handle_maxnumber_incoming_line(struct solution *sol)
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
 		/* ignore squares without number or number < nsides -1 */
-		if (sol->numbers[i] != sq->nsides - 1 || sol->sq_mask[i] == FALSE) 
+		if (sol->numbers[i] != sq->nsides - 1 || sol->sq_handled[i]) 
 			continue;
 		
 		/* inspect vertices of square */
@@ -439,7 +439,7 @@ solve_handle_corner(struct solution *sol)
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
 		/* ignore handled squares, unnumbered squares or number != nsides -1 */
-		if (sol->sq_mask[i] == FALSE || 
+		if (sol->sq_handled[i] || 
 		    (sol->numbers[i] != sq->nsides - 1 && sol->numbers[i] != 1)) 
 			continue;
 		
@@ -490,7 +490,7 @@ solve_handle_squares_net_1(struct solution *sol)
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
 		/* ignore handled squares and unnumbered squares */
-		if (sol->sq_mask[i] == FALSE || sol->numbers[i] == -1) 
+		if (sol->sq_handled[i] || sol->numbers[i] == -1) 
 			continue;
 		
 		/* count lines ON around square */
@@ -590,7 +590,7 @@ solve_cross_lines(struct solution *sol)
 	/* go through all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		/* only unhandled squares */
-		if (sol->sq_mask[i] == FALSE) continue;
+		if (sol->sq_handled[i]) continue;
 			
 		/* count lines ON around square */
 		sq= geo->squares + i;
@@ -815,7 +815,7 @@ solve_check_solution(struct solution *sol)
 	
 	/* check that all numbered squares are happy */
 	for(i=0; i < geo->nsquares; ++i) {
-		if (sol->numbers[i] != -1 && sol->sq_mask[i]) {
+		if (sol->numbers[i] != -1 && sol->sq_handled[i] == FALSE) {
 			sol_good= FALSE;
 			break;
 		}
@@ -839,12 +839,12 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	sol->numbers= game->numbers;
 	sol->states= (int *)g_malloc(geo->nlines*sizeof(int));
 	sol->lin_mask= (int *)g_malloc(geo->nlines*sizeof(int));
-	sol->sq_mask= (gboolean *)g_malloc(geo->nsquares*sizeof(gboolean));
+	sol->sq_handled= (gboolean *)g_malloc(geo->nsquares*sizeof(gboolean));
 	
 	for(i=0; i < geo->nlines; ++i)
 		sol->states[i]= LINE_OFF;
 	for(i=0; i < geo->nsquares; ++i) {
-		sol->sq_mask[i]= TRUE;
+		sol->sq_handled[i]= FALSE;
 	}
 	
 	return sol;
@@ -859,7 +859,7 @@ solve_free_solution_data(struct solution *sol)
 {
 	g_free(sol->states);
 	g_free(sol->lin_mask);
-	g_free(sol->sq_mask);
+	g_free(sol->sq_handled);
 	g_free(sol);
 }
 
