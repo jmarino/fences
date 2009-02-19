@@ -175,7 +175,6 @@ solve_handle_trivial_squares(struct solution *sol)
 {
 	int i, j;
 	int count=0;
-	int lines_on;
 	int lines_crossed;
 	struct square *sq;
 	struct geometry *geo=sol->geo;
@@ -186,31 +185,19 @@ solve_handle_trivial_squares(struct solution *sol)
 		
 		/* count lines ON and CROSSED around square */
 		sq= geo->squares + i;
-		lines_on= lines_crossed= 0;
+		lines_crossed= 0;
 		for(j=0; j < sq->nsides; ++j) {
-			if (STATE(sq->sides[j]) == LINE_ON)
-				++lines_on;
 			if (STATE(sq->sides[j]) == LINE_CROSSED)
 				++lines_crossed;
 		}
-		/* if (lines ON) == (square number) -> square is done cross the rest */
-		if ( lines_on == NUMBER(sq)) {
+		/* enough lines crossed -> set ON the OFF ones */
+		if ( sq->nsides - lines_crossed == NUMBER(sq) ) {
 			sol->sq_mask[i]= FALSE;
 			for(j=0; j < sq->nsides; ++j) {
 				if (STATE(sq->sides[j]) == LINE_OFF)
-					CROSS_LINE(sq->sides[j]);
+					SET_LINE(sq->sides[j]);
 			}
-		} else {
-			/* enough lines crossed -> set ON the OFF ones */
-			if ( sq->nsides - lines_crossed == NUMBER(sq) ) {
-				sol->sq_mask[i]= FALSE;
-				for(j=0; j < sq->nsides; ++j) {
-					if (STATE(sq->sides[j]) == LINE_OFF)
-						SET_LINE(sq->sides[j]);
-				}
-			}
-		}
-		
+		}		
 	}
 	return count;
 }
@@ -523,8 +510,11 @@ solve_handle_squares_net_1(struct solution *sol)
 
 
 /*
- * Go through all vertices and cross out lines that can be crossed out
- * Repeat process until no more lines are crossed out
+ * Cross out trivial lines.
+ * Find vertices with 2 lines ON, vertex busy -> cross any OFF line left.
+ * Find vertices with only 0 ON and 1 OFF, no exit -> cross it.
+ * Repeat process until no more lines are crossed out.
+ * Find squares with enough lines ON, cross out any OFF lines around it.
  */
 int
 solve_cross_lines(struct solution *sol)
@@ -534,6 +524,7 @@ solve_cross_lines(struct solution *sol)
 	int num_off;
 	int pos=0;
 	struct vertex *vertex;
+	struct square *sq;
 	struct geometry *geo=sol->geo;
 	int count=0;
 	int old_count=-1;
@@ -563,6 +554,27 @@ solve_cross_lines(struct solution *sol)
 				CROSS_LINE(vertex->lines[pos]);
 			}
 			++vertex;
+		}
+	}
+	
+	/* go through all squares */
+	for(i=0; i < geo->nsquares; ++i) {
+		/* only numbered unhandled squares */
+		if (sol->sq_mask[i] == FALSE) continue;
+			
+		/* count lines ON around square */
+		sq= geo->squares + i;
+		num_on= 0;
+		for(j=0; j < sq->nsides; ++j) {
+			if (STATE(sq->sides[j]) == LINE_ON)
+				++num_on;
+		}
+		if (num_on != NUMBER(sq)) continue; // not ready, continue
+		/* square is complete, cross any OFF left */
+		sol->sq_mask[i]= FALSE;
+		for(j=0; j < sq->nsides; ++j) {
+			if (STATE(sq->sides[j]) == LINE_OFF)
+				CROSS_LINE(sq->sides[j]);
 		}
 	}
 	
