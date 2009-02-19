@@ -80,26 +80,31 @@ set_combination(struct solution *sol, struct square *sq, int n, int k, int comb)
 	spaces= comb/n;
 
 	/* find first available line */
-	while(STATE(sq->sides[nline]) != LINE_OFF) nline= (nline + 1) % sq->nsides;
+	while(STATE(sq->sides[nline]) != LINE_OFF) 
+		nline= (nline + 1) % sq->nsides;
 	
 	/* jump start lines */
 	for(i=0; i < start; ++i) {
-		while(STATE(sq->sides[nline]) != LINE_OFF) nline= (nline + 1) % sq->nsides;
+		while(STATE(sq->sides[nline]) != LINE_OFF) 
+			nline= (nline + 1) % sq->nsides;
 		nline= (nline + 1) % sq->nsides;
 	}
 	
 	/* set k lines on */
 	for(i=0; i < k; ++i) {
 		/* find next available line and set it */
-		while(STATE(sq->sides[nline]) != LINE_OFF) nline= (nline + 1) % sq->nsides;
+		while(STATE(sq->sides[nline]) != LINE_OFF) 
+			nline= (nline + 1) % sq->nsides;
 		sol->states[sq->sides[nline]->id]= LINE_ON;
 		lines_mask|= 1 << nline;
 		nline= (nline + 1) % sq->nsides;
-		while(STATE(sq->sides[nline]) != LINE_OFF) nline= (nline + 1) % sq->nsides;
+		while(STATE(sq->sides[nline]) != LINE_OFF) 
+			nline= (nline + 1) % sq->nsides;
 		
 		/* jump spaces */
 		for(j=0; j < spaces; ++j) {
-			while(STATE(sq->sides[nline]) != LINE_OFF) nline= (nline + 1) % sq->nsides;
+			while(STATE(sq->sides[nline]) != LINE_OFF) 
+				nline= (nline + 1) % sq->nsides;
 			nline= (nline + 1) % sq->nsides;
 		}
 	}
