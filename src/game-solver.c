@@ -341,8 +341,12 @@ solve_handle_maxnumber_squares(struct solution *sol)
 
 /*
  * Applies to squares with a number == nsides - 1
- * If a square with number == (nsides - 1) has an incoming line in a corner:
- * set lines around square opposite to that corner
+ * If a square with number == (nsides - 1) has an incoming line in a vertex,
+ * the line must go around the square and exit through a vertex one line away
+ * from the current vertex. This translates into:
+ *  - set ON all lines around square that don't touch this vertex
+ *  - line must go in to square, can't create a corner. Thus, cross any line
+ *    going out from vertex that does not go into square
  */
 int
 solve_handle_maxnumber_incoming_line(struct solution *sol)
@@ -376,6 +380,16 @@ solve_handle_maxnumber_incoming_line(struct solution *sol)
 			if (nlines_on != 1) continue;
 			/* make sure ON line is not part of square */
 			if (line_touches_square(lin, sq)) continue;
+
+			/* cross lines going out from vertex that don't
+			 * touch square */
+			for(k=0; k < vertex->nlines; ++k) {
+				if (STATE(vertex->lines[k]) == LINE_OFF &&
+				    !line_touches_square(vertex->lines[k], sq)) {
+					CROSS_LINE(vertex->lines[k]);
+				}
+			}
+			
 			/* set lines in square not touching vertex ON */
 			for(k=0; k < sq->nsides; ++k) {
 				if (sq->sides[k]->ends[0] == vertex ||
