@@ -141,7 +141,7 @@ solve_try_combinations(struct solution *sol)
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		/* ignore handled squares or squares with no number */
-		if (sol->sq_mask[i] == FALSE)
+		if (sol->sq_mask[i] == FALSE || sol->numbers[i] == -1)
 			continue;
 		
 		sq= geo->squares + i;
