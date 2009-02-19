@@ -175,9 +175,9 @@ solve_handle_zero_squares(struct solution *sol)
 
 
 /*
- * Iterate over all squares to find numbered squares with enough crossed
- * sides that their solution is trivial.
- * Find not-numbered squares with all but one ON, and cross the only not ON.
+ * Iterate over all unhandled squares to find:
+ *  - Numbered squares with enough crossed sides that a solution is trivial.
+ *  - Any square with all lines either ON or CROSSED -> mark it handled.
  */
 int
 solve_handle_trivial_squares(struct solution *sol)
@@ -190,8 +190,9 @@ solve_handle_trivial_squares(struct solution *sol)
 	struct geometry *geo=sol->geo;
 	
 	for(i=0; i < geo->nsquares; ++i) {
-		if (sol->numbers[i] == -1 || sol->sq_mask[i] == FALSE) 
-			continue; // only numbered squares
+		/* only unhandled squares */
+		if (sol->sq_mask[i] == FALSE) 
+			continue;
 		
 		/* count lines ON and CROSSED around square */
 		sq= geo->squares + i;
@@ -203,19 +204,12 @@ solve_handle_trivial_squares(struct solution *sol)
 			else if (STATE(sq->sides[j]) == LINE_ON)
 				++lines_on;
 		}
-		/* empty square */
-		if (sol->numbers[i] == -1) {
-			/* all ON but one, must leave it open */
-			if (lines_on == sq->nsides - 1) {
-				sol->sq_mask[i]= FALSE;
-				for(j=0; j < sq->nsides; ++j) {
-					if (STATE(sq->sides[j]) == LINE_OFF)
-						CROSS_LINE(sq->sides[j]);
-				}
-			}
-			continue; // nothing else to be done for empty squares
+		/* square has all lines either ON or CROSSED -> handled */
+		if (lines_on + lines_crossed == sq->nsides) {
+			sol->sq_mask[i]= FALSE;
+			continue;
 		}
-		/* enough lines crossed -> set ON the OFF ones */
+		/* enough lines crossed? -> set ON the OFF ones */
 		if ( sq->nsides - lines_crossed == NUMBER(sq) ) {
 			sol->sq_mask[i]= FALSE;
 			for(j=0; j < sq->nsides; ++j) {
