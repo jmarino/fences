@@ -190,6 +190,7 @@ solve_try_combinations(struct solution *sol)
 		if (j > 0) {
 			(void)solve_cross_lines(sol);
 			memcpy(good_states, sol->states, geo->nlines*sizeof(int));
+			break; //only do one
 		}
 	}
 	
