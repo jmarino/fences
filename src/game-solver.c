@@ -897,7 +897,7 @@ calculate_difficulty(int *level_count)
 		total+= level_count[i];
 	
 	/* calculate difficulty */
-	//printf("-------------\n");
+	printf("-------------\n");
 	total_score= 0.;
 	for(i=0; i < MAX_LEVEL; ++i) {
 		if (i == 0) {
@@ -922,9 +922,11 @@ calculate_difficulty(int *level_count)
 		if (score > 1.0) 
 			score= 1.0;
 		
-		//printf("..level %d: %lf\n", i, score*level_range[i]);
+		printf("..level %d: (%3d @ %4.2lf) %lf\n", i,
+		       level_count[i], level_range[i], score*level_range[i]);
 		total_score+= score * level_range[i];
 	}
+	
 	return total_score;
 }
 
@@ -986,13 +988,6 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 			level= -1;
 		}
 	}
-	
-	int i;
-	printf("-------------\n");
-	for(i=0; i < MAX_LEVEL; ++i) {
-		printf("level %d: %d\n", i, level_count[i]);
-	}
-	printf("-------------\n");
 	
 	*final_score= calculate_difficulty(level_count);
 	
@@ -1108,10 +1103,6 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 
 	if (solve_check_solution(sol)) {
 		printf("**Solution found! (%lf)\n", final_score);
-		printf("-------------\n");
-		for(i=0; i < MAX_LEVEL; ++i)
-			printf("level %d: %d\n", i, level_count[i]);
-		printf("-------------\n");
 	}
 	
 	//solve_free_solution_data(sol);
