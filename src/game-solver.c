@@ -102,7 +102,7 @@ is_vertex_cornered(struct solution *sol, struct square *sq,
  *  - **TODO** number ON must be < number of sides in square
  * Vertices:
  *  - Vertex with one ON must have at least one OFF
- *  - **TODO** Vertex with more than two ON lines
+ *  - Vertex with more than two ON lines
  * Return TRUE: all fine
  * Return FALSE: found problem
  */
@@ -132,7 +132,7 @@ solve_check_valid_game(struct solution *sol)
 		if (num_on + num_off < sol->numbers[i]) return FALSE;
 	}
 	
-	/* check all vertices, look for no exit lines */
+	/* check all vertices, look for no exit lines & more than 2 lines */
 	vertex= sol->geo->vertex;
 	for(i=0; i < sol->geo->nvertex; ++i) {
 		num_on= num_off= 0;
@@ -143,6 +143,7 @@ solve_check_valid_game(struct solution *sol)
 				++num_off;
 		}
 		if (num_on == 1 && num_off == 0) return FALSE;
+		if (num_on > 2) return FALSE;
 		++vertex;
 	}
 	
