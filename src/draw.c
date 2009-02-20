@@ -249,13 +249,13 @@ draw_board(cairo_t *cr, int width, int height)
 		vertex2= line->ends[1];
 		if (game->states[line->id] == LINE_CROSSED) { // draw cross
 			cairo_set_source_rgb(cr, 1., 0., 0.);
-			cairo_set_line_width (cr, CROSS_LINE_WIDTH);
+			cairo_set_line_width (cr, geo->cross_line_width);
 			x= (vertex1->pos.x + vertex2->pos.x)/2.;
 			y= (vertex1->pos.y + vertex2->pos.y)/2.;
-			cairo_move_to(cr, x-CROSS_RADIUS, y-CROSS_RADIUS);
-			cairo_line_to(cr, x+CROSS_RADIUS, y+CROSS_RADIUS);
-			cairo_move_to(cr, x-CROSS_RADIUS, y+CROSS_RADIUS);
-			cairo_line_to(cr, x+CROSS_RADIUS, y-CROSS_RADIUS);
+			cairo_move_to(cr, x-geo->cross_radius, y-geo->cross_radius);
+			cairo_line_to(cr, x+geo->cross_radius, y+geo->cross_radius);
+			cairo_move_to(cr, x-geo->cross_radius, y+geo->cross_radius);
+			cairo_line_to(cr, x+geo->cross_radius, y-geo->cross_radius);
 			cairo_stroke(cr);
 		} else if (game->states[line->id] == LINE_ON) {
 			fx_setcolor(cr, line);

@@ -608,6 +608,8 @@ penrose_calculate_sizes(struct geometry *geo)
 {
 	geo->on_line_width= geo->board_size/500.;
 	geo->off_line_width= geo->board_size/1000.;
+	geo->cross_line_width= geo->off_line_width*1.5;
+	geo->cross_radius= MIN(geo->sq_width, geo->sq_height)/5.;
 	geo->font_scale= 2.;
 }
 			
