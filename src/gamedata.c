@@ -89,6 +89,14 @@ generate_example_game(struct geometry *geo)
 		 3,-1, 0, 2,-1, 1,-1,
 		-1,-1, 3,-1,-1, 3,-1,
 		-1, 2,-1,-1,-1, 1, 3};
+	int hard7[7*7]={		// Really hard game
+		-1, 3, 2, 1,-1, 2,-1,
+		-1,-1, 2,-1, 1, 3, 2,
+		-1,-1, 2,-1, 3, 2,-1,
+		-1,-1,-1,-1, 1,-1,-1,
+		-1, 3,-1, 3, 2,-1, 3,
+		-1, 3, 1,-1,-1, 2,-1,
+		 2,-1,-1,-1, 2,-1, 3};
 	int wiki[6*6]={
 		-1,-1,-1,-1,0,-1,
 		 3, 3,-1,-1, 1,-1,
@@ -136,6 +144,7 @@ generate_example_game(struct geometry *geo)
 	/* set number inside square */
 	for(i=0; i < geo->nsquares; ++i) {
 		//game->numbers[i]= squaredata[i];
+		game->numbers[i]= hard7[i];
 		game->numbers[i]= hard[i];
 		//game->numbers[i]= easy15[i];
 		//game->numbers[i]= hard15[i];
