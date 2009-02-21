@@ -760,6 +760,62 @@ calculate_difficulty(int *level_count)
 
 
 /*
+ * Main solution loop
+ * max_iter: maximum number of iterations (<=0 -> no limit)
+ * max_level: maximum solving level to attempt (-1=try all)
+ * level_count: array to count level scores (if NULL don't count)
+ */
+void
+solution_loop(struct solution *sol, int max_iter, int max_level, int *level_count)
+{
+	int iter=0;
+	int level=0;
+	int last_level=0;
+	int count=0;
+	
+	if (max_level < 0) max_level= MAX_LEVEL;
+	while(level <= max_level) {
+		/* */
+		if (level == 0) {
+			(void)solve_cross_lines(sol);
+			count= solve_handle_trivial_vertex(sol);
+			count+= solve_handle_trivial_squares(sol);
+		} else if (level == 1) {
+			count= solve_handle_corner(sol);
+		} else if (level == 2) {
+			count= solve_handle_maxnumber_incoming_line(sol);
+		} else if (level == 3) {
+			count= solve_handle_loop_bottleneck(sol) != 0;
+		} else if (level == 4) {
+			count= solve_handle_squares_net_1(sol);
+		} else if (level == 5) {
+			count= solve_try_combinations(sol);
+		}
+		
+		/* if nothing found go to next level */
+		if (count == 0) {
+			++level;
+		} else {
+			if (level_count != NULL) {
+				/* ignore two bottlenecks in a row */
+				if (level == 4 && last_level == 4) 
+					count= 0;
+				
+				level_count[level]+= count;
+			}
+			last_level= level;
+			level= 0;
+			++iter;
+		}
+		
+		/* reached maximum number of iterations -> stop */
+		if (max_iter > 0 && iter >= max_iter)
+			break;
+	}
+}
+
+
+/*
  * Solve game
  */
 struct solution*

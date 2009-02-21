@@ -65,6 +65,7 @@ int solve_handle_trivial_squares(struct solution *sol);
 int solve_handle_trivial_vertex(struct solution *sol);
 int solve_handle_loop_bottleneck(struct solution *sol);
 int solve_cross_lines(struct solution *sol);
+void solution_loop(struct solution *sol, int max_iter, int max_level, int *level_count);
 struct solution* solve_game(struct geometry *geo, struct game *game, double *score);
 
 #endif
