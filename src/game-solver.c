@@ -786,11 +786,11 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 		} else if (level == 1) {
 			count= solve_handle_trivial_squares(sol);
 		} else if (level == 2) {
-			count= solve_handle_corner(sol);
+			count= solve_handle_loop_bottleneck(sol);
 		} else if (level == 3) {
-			count= solve_handle_maxnumber_incoming_line(sol);
+			count= solve_handle_corner(sol);
 		} else if (level == 4) {
-			count= solve_handle_loop_bottleneck(sol) != 0;
+			count= solve_handle_maxnumber_incoming_line(sol);
 		} else if (level == 5) {
 			count= solve_handle_squares_net_1(sol);
 		} else if (level == 6) {
