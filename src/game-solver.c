@@ -767,7 +767,7 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 {
 	struct solution *sol;
 	int count;
-	int level=-1;
+	int level=0;
 	int level_count[MAX_LEVEL]={0, 0, 0, 0, 0, 0};
 	int last_level= -1;
 	
@@ -783,10 +783,8 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 
 	while(level < MAX_LEVEL) {
 		/* */
-		if (level == -1) {
+		if (level == 0) {
 			(void)solve_cross_lines(sol);
-			count= 0;
-		} else if (level == 0) {
 			count= solve_handle_trivial_vertex(sol);
 			count+= solve_handle_trivial_squares(sol);
 		} else if (level == 1) {
@@ -813,7 +811,7 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 			g_assert(level >= 0);
 			level_count[level]+= count;
 			last_level= level;
-			level= -1;
+			level= 0;
 		}
 	}
 	
