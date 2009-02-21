@@ -664,7 +664,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 
 
 /*
- *
+ * Check state of solution to see if a valid solution has been found
  */
 static gboolean
 solve_check_solution(struct solution *sol)
