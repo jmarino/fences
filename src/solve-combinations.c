@@ -119,7 +119,7 @@ set_combination(struct solution *sol, struct square *sq, int n, int k, int comb)
  * Any line that is ON for all valid permutations, is set to ON
  */
 int
-solve_try_combinations(struct solution *sol)
+solve_try_combinations(struct solution *sol, int max_iter, int max_level)
 {
 	int i, j;
 	struct solution *sol_bak;	// backup solution
@@ -162,8 +162,8 @@ solve_try_combinations(struct solution *sol)
 			/* lines_mask only keeps lines that are always on */
 			tmp_mask= set_combination(sol, sq, nlines_off, nlines_todo, j);
 			
-			/* cross all possible lines */
-			(void)solve_cross_lines(sol);
+			/* try to solve a bit (max_iter & max_level) */
+			solution_loop(sol, max_iter, max_level, NULL);
 			
 			/* check validity of combination */
 			if (solve_check_valid_game(sol)) {

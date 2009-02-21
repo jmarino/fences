@@ -57,7 +57,7 @@ void solve_copy_solution(struct solution *dest, struct solution *src);
 struct solution *solve_duplicate_solution(struct solution *src);
 
 /* solve-combinations.c */
-int solve_try_combinations(struct solution *sol);
+int solve_try_combinations(struct solution *sol, int max_iter, int max_level);
 
 /* game-solver.c */
 int solve_handle_zero_squares(struct solution *sol);

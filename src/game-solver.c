@@ -794,7 +794,7 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 		} else if (level == 4) {
 			count= solve_handle_squares_net_1(sol);
 		} else if (level == 5) {
-			count= solve_try_combinations(sol);
+			count= solve_try_combinations(sol, 1, 0);
 		}
 		
 		/* if nothing found go to next level */
