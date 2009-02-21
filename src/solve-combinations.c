@@ -156,7 +156,7 @@ solve_try_combinations(struct solution *sol)
 		ncomb= number_combinations(nlines_off, nlines_todo);
 		
 		/* try every different combination */
-		lines_mask= -1;		// 0xFFFF
+		lines_mask= ~0;		// 0xFFFF
 		for(j=0; j < ncomb; ++j) {
 			/* enable lines for this combination */
 			/* lines_mask only keeps lines that are always on */
