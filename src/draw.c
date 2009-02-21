@@ -297,7 +297,6 @@ draw_board(cairo_t *cr, int width, int height)
 	sq= geo->squares;
 	cairo_set_font_size(cr, geo->font_size);
 	cairo_set_source_rgb(cr, 0, 0, 0);
-	printf("font_size: %lf\n", geo->font_size);
 	
 	for(i=0; i<geo->nsquares; ++i) {
 		number= game->numbers[sq->id];
