@@ -806,11 +806,7 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 			++level;
 		} else {
 			if (level_count != NULL) {
-				/* ignore two bottlenecks in a row */
-				if (level == 4 && last_level == 4) 
-					count= 0;
-				
-				level_count[level]+= count;
+				++level_count[level];
 				printf("level %d: %d\n", level, count);
 			}
 			last_level= level;
