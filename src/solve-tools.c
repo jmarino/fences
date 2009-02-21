@@ -196,3 +196,47 @@ solve_free_solution_data(struct solution *sol)
 	g_free(sol->sq_handled);
 	g_free(sol);
 }
+
+
+/*
+ * Copy solution
+ */
+void
+solve_copy_solution(struct solution *dest, struct solution *src)
+{
+	dest->geo= src->geo;
+	dest->game= src->game;
+	memcpy(dest->states, src->states, src->geo->nlines*sizeof(int));
+	dest->numbers= src->numbers;
+	memcpy(dest->sq_handled, src->sq_handled, src->geo->nsquares*sizeof(gboolean));
+	memcpy(dest->lin_mask, src->lin_mask, src->geo->nlines*sizeof(int));
+}
+
+
+/*
+ * Copy solution
+ */
+struct solution *
+solve_duplicate_solution(struct solution *src)
+{
+	struct solution *sol;
+	int lines_size;
+	int squares_size;
+	
+	g_assert(src != NULL);
+	lines_size= src->geo->nlines * sizeof(int);
+	squares_size= src->geo->nsquares * sizeof(gboolean);
+	sol= (struct solution *)g_malloc(sizeof(struct solution));
+	sol->geo= src->geo;
+	sol->game= src->game;
+	sol->numbers= src->numbers;
+	sol->states= (int *)g_malloc(lines_size);
+	sol->lin_mask= (int *)g_malloc(lines_size);
+	sol->sq_handled= (gboolean *)g_malloc(squares_size);
+	
+	memcpy(sol->states, src->states, lines_size);
+	memcpy(sol->sq_handled, src->sq_handled, squares_size);
+	memcpy(sol->lin_mask, src->lin_mask, lines_size);
+	
+	return sol;
+}
