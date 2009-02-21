@@ -47,9 +47,17 @@ struct solution {
 /* 
  * Functions
  */
+/* solve-tools.c */
+gboolean solve_check_valid_game(struct solution *sol);
 struct line* goto_next_line(struct line *lin, int *direction, int which);
 struct line* follow_line(struct solution *sol, struct line *lin, int *direction);
-gboolean solve_check_valid_game(struct solution *sol);
+struct solution* solve_create_solution_data(struct geometry *geo, struct game *game);
+void solve_free_solution_data(struct solution *sol);
+
+/* solve-combinations.c */
+int solve_try_combinations(struct solution *sol);
+
+/* game-solver.c */
 int solve_handle_zero_squares(struct solution *sol);
 int solve_handle_maxnumber_squares(struct solution *sol);
 int solve_handle_busy_vertex(struct solution *sol);
@@ -57,8 +65,6 @@ int solve_handle_trivial_squares(struct solution *sol);
 int solve_handle_trivial_vertex(struct solution *sol);
 int solve_handle_loop_bottleneck(struct solution *sol);
 int solve_cross_lines(struct solution *sol);
-void solve_free_solution_data(struct solution *sol);
-struct solution* solve_create_solution_data(struct geometry *geo, struct game *game);
 struct solution* solve_game(struct geometry *geo, struct game *game, double *score);
 
 #endif
