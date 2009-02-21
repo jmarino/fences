@@ -122,7 +122,7 @@ int
 solve_try_combinations(struct solution *sol)
 {
 	int i, j;
-	int *good_states;	// initial game states (back-up)
+	struct solution *sol_bak;	// backup solution
 	int count=0;
 	int nlines_off;
 	int nlines_todo;
@@ -132,11 +132,8 @@ solve_try_combinations(struct solution *sol)
 	struct square *sq;
 	struct geometry *geo=sol->geo;
 	
-	/* store copy of the game state */
-	good_states= (int*)g_malloc(geo->nlines * sizeof(int));
-	for(i=0; i < geo->nlines; ++i) {
-		good_states[i]= sol->states[i];
-	}
+	/* make a backup of current solution state */
+	sol_bak= solve_duplicate_solution(sol);
 	
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
@@ -173,8 +170,8 @@ solve_try_combinations(struct solution *sol)
 				lines_mask&= tmp_mask;
 			}
 			
-			/* restore initial state */
-			memcpy(sol->states, good_states, geo->nlines*sizeof(int));
+			/* restore initial solution state */
+			solve_copy_solution(sol, sol_bak);
 		}
 		
 		/* after trying all combinations see if a line was always on */
@@ -186,15 +183,16 @@ solve_try_combinations(struct solution *sol)
 			lines_mask>>= 1;
 			++j;
 		}
-		/* a line has been set, cross lines and update good_states */
+		/* a line has been set, cross lines and update solution backup copy */
 		if (j > 0) {
 			(void)solve_cross_lines(sol);
-			memcpy(good_states, sol->states, geo->nlines*sizeof(int));
+			solve_copy_solution(sol_bak, sol);
 			break; //only do one
 		}
 	}
 	
-	g_free(good_states);
+	/* free solution backup */
+	solve_free_solution_data(sol_bak);
 
 	return count;
 }
