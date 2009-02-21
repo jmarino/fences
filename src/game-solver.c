@@ -642,7 +642,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 				    end2->in[j]->ends[1] == vertex) break;
 			}
 			if (j < end2->nin && STATE(end2->in[j]) != LINE_CROSSED) {
-				printf("bottleneck loop found: end1 %d\n", end2->in[j]->id);
+				//printf("bottleneck loop found: end1 %d\n", end2->in[j]->id);
 				CROSS_LINE(end2->in[j]);
 				return length;
 			}
@@ -652,7 +652,7 @@ solve_handle_loop_bottleneck(struct solution *sol)
 				    end2->out[j]->ends[1] == vertex) break;
 			}
 			if (j < end2->nout && STATE(end2->out[j]) != LINE_CROSSED) {
-				printf("bottleneck loop found: end2 %d\n", end2->out[j]->id);
+				//printf("bottleneck loop found: end2 %d\n", end2->out[j]->id);
 				CROSS_LINE(end2->out[j]);
 				return length;
 			}
@@ -807,7 +807,7 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 		} else {
 			if (level_count != NULL) {
 				++level_count[level];
-				printf("level %d: %d\n", level, count);
+				//printf("level %d: %d\n", level, count);
 			}
 			last_level= level;
 			level= 0;
