@@ -824,9 +824,7 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 {
 	struct solution *sol;
 	int count;
-	int level=0;
 	int level_count[NUM_LEVELS]={0, 0, 0, 0, 0, 0};
-	int last_level= -1;
 	
 	/* init solution structure */
 	sol= solve_create_solution_data(geo, game);
@@ -834,43 +832,11 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 	/* These two tests only run once at the very start */
 	count= solve_handle_zero_squares(sol);
 	printf("zero: count %d\n", count);
-	
 	count= solve_handle_maxnumber_squares(sol);
 	printf("maxnumber: count %d\n", count);
 
-	while(level < NUM_LEVELS) {
-		/* */
-		if (level == 0) {
-			(void)solve_cross_lines(sol);
-			count= solve_handle_trivial_vertex(sol);
-			count+= solve_handle_trivial_squares(sol);
-		} else if (level == 1) {
-			count= solve_handle_corner(sol);
-		} else if (level == 2) {
-			count= solve_handle_maxnumber_incoming_line(sol);
-		} else if (level == 3) {
-			count= solve_handle_loop_bottleneck(sol) != 0;
-		} else if (level == 4) {
-			count= solve_handle_squares_net_1(sol);
-		} else if (level == 5) {
-			count= solve_try_combinations(sol);
-		}
-		
-		printf("level %d: count %d\n", level, count);
-				
-		if (count == 0) {
-			++level;
-		} else {
-			/* ignore two bottlenecks in a row */
-			if (level == 4 && last_level == 4) 
-				count= 0;
-			
-			g_assert(level >= 0);
-			level_count[level]+= count;
-			last_level= level;
-			level= 0;
-		}
-	}
+	/* run solution loop with no limits */
+	solution_loop(sol, -1, -1, level_count);
 	
 	*final_score= calculate_difficulty(level_count);
 	
