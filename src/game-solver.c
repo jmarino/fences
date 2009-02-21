@@ -159,7 +159,9 @@ solve_handle_trivial_squares(struct solution *sol)
 				if (STATE(sq->sides[j]) == LINE_OFF)
 					SET_LINE(sq->sides[j]);
 			}
-		}		
+		}
+		/* only allow one trivial square to be set at a time */
+		if (count > 0) return count;
 	}
 	return count;
 }
@@ -197,6 +199,8 @@ solve_handle_trivial_vertex(struct solution *sol)
 			/* vertex with one incoming and only one exit */
 			SET_LINE(vertex->lines[pos]);
 		}
+		/* only allow one trivial vertex to be set at a time */
+		if (count > 0) return count;
 		++vertex;
 	}
 	return count;
