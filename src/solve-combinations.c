@@ -183,12 +183,9 @@ solve_try_combinations(struct solution *sol)
 			lines_mask>>= 1;
 			++j;
 		}
-		/* a line has been set, cross lines and update solution backup copy */
-		if (j > 0) {
-			(void)solve_cross_lines(sol);
-			solve_copy_solution(sol_bak, sol);
-			break; //only do one
-		}
+		/* a line has been set -> we're done */
+		if (j > 0)
+			break;
 	}
 	
 	/* free solution backup */
