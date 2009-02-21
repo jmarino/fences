@@ -23,8 +23,8 @@
 
 
 /* number of solution levels */
-#define MAX_LEVEL	7
-#define NUM_LEVELS	MAX_LEVEL + 1
+#define MAX_LEVEL	8
+#define NUM_LEVELS	(MAX_LEVEL + 1)
 
 
 /*
@@ -719,7 +719,7 @@ static double
 calculate_difficulty(int *level_count)
 {
 	int i;
-	double level_range[NUM_LEVELS]={0.25, 1.5, 2.0, 0.75, 2.5, 3.0, 0., 0.};
+	double level_range[NUM_LEVELS]={0.25, 0.25, 1.5, 2.0, 0.75, 2.5, 3.0, 0., 0.};
 	double score;
 	double total_score;
 	int total=0;
@@ -734,7 +734,7 @@ calculate_difficulty(int *level_count)
 	for(i=0; i < NUM_LEVELS; ++i) {
 		if (i == 0) {
 			score= level_count[i]/( (double)total/2.0 );
-		} else if (i == 5) {
+		} else if (i == 6) {
 			if (level_count[i - 1] > 0)
 				score= level_count[i]/(double)level_count[i - 1]*4;
 			else {
@@ -783,20 +783,21 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 		if (level == 0) {
 			(void)solve_cross_lines(sol);
 			count= solve_handle_trivial_vertex(sol);
-			count+= solve_handle_trivial_squares(sol);
 		} else if (level == 1) {
-			count= solve_handle_corner(sol);
+			count= solve_handle_trivial_squares(sol);
 		} else if (level == 2) {
-			count= solve_handle_maxnumber_incoming_line(sol);
+			count= solve_handle_corner(sol);
 		} else if (level == 3) {
-			count= solve_handle_loop_bottleneck(sol) != 0;
+			count= solve_handle_maxnumber_incoming_line(sol);
 		} else if (level == 4) {
-			count= solve_handle_squares_net_1(sol);
+			count= solve_handle_loop_bottleneck(sol) != 0;
 		} else if (level == 5) {
-			count= solve_try_combinations(sol, 1, 0);
+			count= solve_handle_squares_net_1(sol);
 		} else if (level == 6) {
-			count= solve_try_combinations(sol, 2, 0);
+			count= solve_try_combinations(sol, 1, 0);
 		} else if (level == 7) {
+			count= solve_try_combinations(sol, 2, 0);
+		} else if (level == 8) {
 			count= solve_try_combinations(sol, 1, 1);
 		}
 		
@@ -832,7 +833,7 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 {
 	struct solution *sol;
 	int count;
-	int level_count[NUM_LEVELS]={0, 0, 0, 0, 0, 0, 0, 0};
+	int level_count[NUM_LEVELS]={0, 0, 0, 0, 0, 0, 0, 0, 0};
 	
 	/* init solution structure */
 	sol= solve_create_solution_data(geo, game);
@@ -891,7 +892,7 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 	
 	int count=0;
 	static int level=-2;
-	static int level_count[NUM_LEVELS]={0, 0, 0, 0, 0, 0, 0, 0};
+	static int level_count[NUM_LEVELS]={0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	if (first) {
 		/* init solution structure */
