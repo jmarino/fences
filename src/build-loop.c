@@ -69,42 +69,35 @@ square_has_corner(struct square *sq, struct loop *loop)
 
 
 /*
- * Count number of disconnected branches touch square
- * Basically it counts number of OFF -> ON transitions as it travels around
- * the square.
+ * Count number of disconnected branches around square.
+ * Basically it counts number of OFF -> ON or ON -> OFF jumps as it
+ * travels around the square.
+ * The number of branches is njumps/2.
  */
 static int
 branches_on_square(struct square *sq, struct loop *loop)
 {
 	int i;
-	int pos;
-	struct line *lin;
-	int count=0;
-	int prev_state;
+	int njumps=0;
+	int prev_on;
 
-	/* first find an off line */
+	/* count number of jumps */
+	prev_on= (loop->state[ sq->sides[sq->nsides - 1]->id ] == LINE_ON);
 	for(i=0; i < sq->nsides; ++i) {
-		if (loop->state[ sq->sides[i]->id ] != LINE_ON) break;
-	}
-	if (i == sq->nsides) {
-		g_debug("all sides set!! (sq->id: %d)", sq->id);
-		return 4;
-	}
-	g_assert(i < sq->nsides);
-
-	/* start counting OFF -> ON transitions */
-	pos= (i + 1) % sq->nsides;	// start at next line after first OFF
-	prev_state= LINE_OFF;
-	for(i=1; i < sq->nsides; ++i) {
-		lin= sq->sides[pos];
-		if (loop->state[ lin->id ] == LINE_ON &&
-		    prev_state == LINE_OFF) {
-			++count;
+		if (loop->state[ sq->sides[i]->id ] == LINE_ON) {
+			if (!prev_on) {
+				++njumps;
+				prev_on= TRUE;
+			}
+		} else {
+			if (prev_on) {
+				++njumps;
+				prev_on= FALSE;
+			}
 		}
-		prev_state= loop->state[ lin->id ];
-		pos= (pos + 1) % sq->nsides;
 	}
-	return count;
+
+	return njumps/2;
 }
 
 
