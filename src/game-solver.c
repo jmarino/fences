@@ -854,6 +854,11 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 	/* run solution loop with no limits */
 	solution_loop(sol, -1, -1, level_count);
 	
+	/* print level counts */
+	int i;
+	for(i=0; i < NUM_LEVELS; ++i)
+		printf("-Level %1d: %3d\n", i, level_count[i]);
+	
 	*final_score= calculate_difficulty(level_count, geo->nsquares);
 	
 	/* check if we have a valid solution */
@@ -920,12 +925,11 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 	
 	final_score= calculate_difficulty(level_count, geo->nsquares);
 	
-	printf("["); 
+	/* print current level counts */
 	for(i=0; i < NUM_LEVELS; ++i) {
-		printf("(%d):%d", i, level_count[i]);
-		if (i < NUM_LEVELS - 1) printf("\t");
+		printf("Level %1d: %d\n", i, level_count[i]);
 	}
-	printf("] --> %5.2lf\n", final_score);
+	printf("-----> %5.2lf <------\n", final_score);
 
 	
 
