@@ -742,7 +742,8 @@ calculate_difficulty(int *level_count, int nsquares)
 	/* handle levels 2 and up */
 	for(i=2; i <= top_level; ++i) {
 		if (i == top_level) {
-			mean= (level_count[i] + level_count[i - 1])/2.0;
+			if (level_count[i] == 0 && level_count[i - 1] == 0.0) mean= 1.0;
+			else mean= (level_count[i] + level_count[i - 1])/2.0;
 			tmp= level_count[i]/mean;
 			if (tmp > 1.0) tmp= 1.0;
 			score= 80.0 + 20.0 * tmp;	// 80% + 20% variable
@@ -751,13 +752,15 @@ calculate_difficulty(int *level_count, int nsquares)
 			score= 70.0;
 			
 			/* compare with previous: 20% at stake */
-			mean= (level_count[i] + level_count[i - 1])/2.0;
+			if (level_count[i] == 0 && level_count[i - 1] == 0.0) mean= 1.0;
+			else mean= (level_count[i] + level_count[i - 1])/2.0;
 			tmp= level_count[i]/mean;
 			if (tmp > 1.0) tmp= 1.0;
 			score+= 20.0*tmp;
 			
 			/* compare with next: 10% at stake */
-			mean= (level_count[i] + level_count[i + 1])/2.0;
+			if (level_count[i] == 0 && level_count[i + 1] == 0.0) mean= 1.0;
+			else mean= (level_count[i] + level_count[i + 1])/2.0;
 			tmp= level_count[i]/mean;
 			if (tmp > 1.0) tmp= 1.0;
 			score+= 10.0*tmp;
