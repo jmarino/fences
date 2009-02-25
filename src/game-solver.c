@@ -506,6 +506,32 @@ solve_cross_lines(struct solution *sol)
 	int count=0;
 	int old_count=-1;
 	
+	/* go through all squares */
+	for(i=0; i < geo->nsquares; ++i) {
+		/* only unhandled squares */
+		if (sol->sq_handled[i]) continue;
+			
+		/* count lines ON around square */
+		sq= geo->squares + i;
+		num_on= 0;
+		for(j=0; j < sq->nsides; ++j) {
+			if (STATE(sq->sides[j]) == LINE_ON)
+				++num_on;
+		}
+		if (sol->numbers[i] == -1) { // unnumbered squares
+			/* square has less than nsides-1 ON, ignore */
+			if (num_on != sq->nsides - 1) continue;
+		} else {	// numbered squares
+			/* square not finished, ignore */
+			if (num_on != NUMBER(sq)) continue;
+		}
+		/* square is complete, cross any OFF left */
+		for(j=0; j < sq->nsides; ++j) {
+			if (STATE(sq->sides[j]) == LINE_OFF)
+				CROSS_LINE(sq->sides[j]);
+		}
+	}
+	
 	while (old_count != count) {
 		old_count= count;
 		/* go through all vertices */
@@ -531,32 +557,6 @@ solve_cross_lines(struct solution *sol)
 				CROSS_LINE(vertex->lines[pos]);
 			}
 			++vertex;
-		}
-	}
-	
-	/* go through all squares */
-	for(i=0; i < geo->nsquares; ++i) {
-		/* only unhandled squares */
-		if (sol->sq_handled[i]) continue;
-			
-		/* count lines ON around square */
-		sq= geo->squares + i;
-		num_on= 0;
-		for(j=0; j < sq->nsides; ++j) {
-			if (STATE(sq->sides[j]) == LINE_ON)
-				++num_on;
-		}
-		if (sol->numbers[i] == -1) { // unnumbered squares
-			/* square has less than nsides-1 ON, ignore */
-			if (num_on != sq->nsides - 1) continue;
-		} else {	// numbered squares
-			/* square not finished, ignore */
-			if (num_on != NUMBER(sq)) continue;
-		}
-		/* square is complete, cross any OFF left */
-		for(j=0; j < sq->nsides; ++j) {
-			if (STATE(sq->sides[j]) == LINE_OFF)
-				CROSS_LINE(sq->sides[j]);
 		}
 	}
 	
