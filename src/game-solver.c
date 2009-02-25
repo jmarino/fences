@@ -613,6 +613,8 @@ solve_handle_loop_bottleneck(struct solution *sol)
 				if (next == end2) break;
 				if (next != NULL) {
 					end1= next;
+					if (sol->lin_mask[next->id] == FALSE)
+						return 0;
 					sol->lin_mask[next->id]= FALSE;
 					++length;
 				} else stuck|= 1;
@@ -623,6 +625,8 @@ solve_handle_loop_bottleneck(struct solution *sol)
 				if (next == end1) break;
 				if (next != NULL) {
 					end2= next;
+					if (sol->lin_mask[next->id] == FALSE)
+						return 0;
 					sol->lin_mask[next->id]= FALSE;
 					++length;
 				} else stuck|= 2;
