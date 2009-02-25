@@ -98,7 +98,7 @@ is_vertex_cornered(struct solution *sol, struct square *sq,
  * returns number of lines crossed out
  */
 int
-solve_handle_zero_squares(struct solution *sol)
+solve_zero_squares(struct solution *sol)
 {
 	int i, j;
 	int count=0;
@@ -123,7 +123,7 @@ solve_handle_zero_squares(struct solution *sol)
  *  - Any square with all lines either ON or CROSSED -> mark it handled.
  */
 int
-solve_handle_trivial_squares(struct solution *sol)
+solve_trivial_squares(struct solution *sol)
 {
 	int i, j;
 	int count=0;
@@ -173,7 +173,7 @@ solve_handle_trivial_squares(struct solution *sol)
  * Then set remaining line
  */
 int
-solve_handle_trivial_vertex(struct solution *sol)
+solve_trivial_vertex(struct solution *sol)
 {
 	int i, j;
 	int count=0;
@@ -215,7 +215,7 @@ solve_handle_trivial_vertex(struct solution *sol)
  * lines accordingly
  */
 int
-solve_handle_maxnumber_squares(struct solution *sol)
+solve_maxnumber_squares(struct solution *sol)
 {
 	int i, j, k, k2;
 	struct square *sq, *sq2=NULL;
@@ -311,7 +311,7 @@ solve_handle_maxnumber_squares(struct solution *sol)
  *    going out from vertex that does not go into square
  */
 int
-solve_handle_maxnumber_incoming_line(struct solution *sol)
+solve_maxnumber_incoming_line(struct solution *sol)
 {
 	int i, j, k;
 	struct square *sq;
@@ -374,7 +374,7 @@ solve_handle_maxnumber_incoming_line(struct solution *sol)
  * 	- (1) cross both lines
  */
 int
-solve_handle_corner(struct solution *sol)
+solve_corner(struct solution *sol)
 {
 	int i, j, k;
 	struct square *sq;
@@ -422,7 +422,7 @@ solve_handle_corner(struct solution *sol)
  * square, cross all the rest lines of square
  */
 int
-solve_handle_squares_net_1(struct solution *sol)
+solve_squares_net_1(struct solution *sol)
 {
 	int i, j, k;
 	struct square *sq;
@@ -571,7 +571,7 @@ solve_cross_lines(struct solution *sol)
  * Returns length of partial loop
  */
 int
-solve_handle_loop_bottleneck(struct solution *sol)
+solve_bottleneck(struct solution *sol)
 {
 	int i, j;
 	int count=0;
@@ -769,17 +769,17 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 		/* */
 		if (level == 0) {
 			(void)solve_cross_lines(sol);
-			count= solve_handle_trivial_vertex(sol);
+			count= solve_trivial_vertex(sol);
 		} else if (level == 1) {
-			count= solve_handle_trivial_squares(sol);
+			count= solve_trivial_squares(sol);
 		} else if (level == 2) {
-			count= solve_handle_loop_bottleneck(sol);
+			count= solve_bottleneck(sol);
 		} else if (level == 3) {
-			count= solve_handle_corner(sol);
+			count= solve_corner(sol);
 		} else if (level == 4) {
-			count= solve_handle_maxnumber_incoming_line(sol);
+			count= solve_maxnumber_incoming_line(sol);
 		} else if (level == 5) {
-			count= solve_handle_squares_net_1(sol);
+			count= solve_squares_net_1(sol);
 		} else if (level == 6) {
 			count= solve_try_combinations(sol, 2, 1);
 		} else if (level == 7) {
@@ -822,9 +822,9 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 	sol= solve_create_solution_data(geo, game);
 	
 	/* These two tests only run once at the very start */
-	count= solve_handle_zero_squares(sol);
+	count= solve_zero_squares(sol);
 	printf("zero: count %d\n", count);
-	count= solve_handle_maxnumber_squares(sol);
+	count= solve_maxnumber_squares(sol);
 	printf("maxnumber: count %d\n", count);
 
 	/* run solution loop with no limits */
@@ -889,10 +889,10 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 	}	
 
 	if (level == -2)  {
-		count= solve_handle_zero_squares(sol);
+		count= solve_zero_squares(sol);
 		++level;
 	} else if (level == -1) {
-		count= solve_handle_maxnumber_squares(sol);
+		count= solve_maxnumber_squares(sol);
 		++level;
 	} else {
 		/* run solution loop for 1 iteration */

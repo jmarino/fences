@@ -60,12 +60,11 @@ struct solution *solve_duplicate_solution(struct solution *src);
 int solve_try_combinations(struct solution *sol, int max_iter, int max_level);
 
 /* game-solver.c */
-int solve_handle_zero_squares(struct solution *sol);
-int solve_handle_maxnumber_squares(struct solution *sol);
-int solve_handle_busy_vertex(struct solution *sol);
-int solve_handle_trivial_squares(struct solution *sol);
-int solve_handle_trivial_vertex(struct solution *sol);
-int solve_handle_loop_bottleneck(struct solution *sol);
+int solve_zero_squares(struct solution *sol);
+int solve_maxnumber_squares(struct solution *sol);
+int solve_trivial_squares(struct solution *sol);
+int solve_trivial_vertex(struct solution *sol);
+int solve_bottleneck(struct solution *sol);
 int solve_cross_lines(struct solution *sol);
 void solution_loop(struct solution *sol, int max_iter, int max_level, int *level_count);
 struct solution* solve_game(struct geometry *geo, struct game *game, double *score);
