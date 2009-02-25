@@ -721,63 +721,32 @@ static double
 calculate_difficulty(int *level_count, int nsquares)
 {
 	int i;
-	double max_score[NUM_LEVELS]={1.0, 1.0, 2.0, 4.0, 5.0, 7.0, 8.0, 9.0, 10.0};
-	double weights[NUM_LEVELS]={1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0};
-	double score;
-	double total_score;
+	double max_diff[NUM_LEVELS]={1.0, 1.0, 3.0, 4.0, 5.0, 7.0, 8.0, 9.0, 10.0};
+	double weights[NUM_LEVELS]={0.5, 0.75, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+	double score=0;
+	double difficulty;
 	int top_level=0;
-	double norm;	// normalization factor
-	double tmp;
-	double mean;	// mean of neighbors
+	double step;
 	
-	/* find top level used */
+	/* find top level used and calculate levels' score*/
 	for(i=0; i < NUM_LEVELS; ++i) {
 		if (level_count[i] > 0)
 			top_level= i;
+		score+= weights[i] * level_count[i];
+		printf("(%1d) %3d (@ %4.2lf) -> %4.2lf\n", i, level_count[i], weights[i],
+		       weights[i] * level_count[i]);
 	}
-	
-	/* handle levels 0 & 1 & 2 (trivial vertex & squares) first */
-	score= (level_count[0] + level_count[1])/(double)nsquares;
-	if (score > 1.0) score= 1.0;
-	score*= weights[0];
-	norm= weights[0];
-	total_score= score;
-	
-	/* handle levels 2 and up */
-	for(i=2; i <= top_level; ++i) {
-		if (i == top_level) {
-			if (level_count[i] == 0 && level_count[i - 1] == 0) mean= 1.0;
-			else mean= (level_count[i] + level_count[i - 1])/2.0;
-			tmp= level_count[i]/mean;
-			if (tmp > 1.0) tmp= 1.0;
-			score= 80.0 + 20.0 * tmp;	// 80% + 20% variable
-		} else {
-			/* we set at least 70% + (20% prev) + (10% next) */
-			score= 70.0;
-			
-			/* compare with previous: 20% at stake */
-			if (level_count[i] == 0 && level_count[i - 1] == 0) mean= 1.0;
-			else mean= (level_count[i] + level_count[i - 1])/2.0;
-			tmp= level_count[i]/mean;
-			if (tmp > 1.0) tmp= 1.0;
-			score+= 20.0*tmp;
-			
-			/* compare with next: 10% at stake */
-			if (level_count[i] == 0 && level_count[i + 1] == 0) mean= 1.0;
-			else mean= (level_count[i] + level_count[i + 1])/2.0;
-			tmp= level_count[i]/mean;
-			if (tmp > 1.0) tmp= 1.0;
-			score+= 10.0*tmp;
-		}
-		/* un-% score and multiply by level weight */
-		score= score/100.0 * weights[i];
-		norm+= weights[i];		// keep track of total weight
-		total_score+= score;
-	}
-	tmp= max_score[top_level] - max_score[top_level - 1];
-	total_score= max_score[top_level - 1] + total_score/norm * tmp;
-	
-	return total_score;
+
+	printf("total: 0.5 * %4.2lf/%3d ", score, level_count[0]);
+	score= score/level_count[0];
+	if (score > 2.0) score= 2.0;
+	score= score/2.0;
+	printf("= %4.2lf\n", score);
+
+	step= max_diff[top_level] - max_diff[top_level - 1];
+	difficulty= max_diff[top_level - 1] + score * step;
+
+	return difficulty;
 }
 
 
