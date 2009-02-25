@@ -368,6 +368,78 @@ solve_maxnumber_incoming_line(struct solution *sol)
 
 
 /*
+ * A vertex of a square with number == nsides - 1
+ * One vertex of square doesn't have any lines ON and all other lines of
+ * square are ON.
+ * Vertex has only one possible output away from square.
+ *  - Turn exit line ON
+ */
+int
+solve_maxnumber_exit_line(struct solution *sol)
+{
+	int i, j;
+	int pos=0;
+	int pos2=0;
+	struct square *sq;
+	struct vertex *vertex;
+	int nlines_off;
+	struct geometry *geo=sol->geo;
+	int count=0;
+	
+	/* iterate over all squares */
+	for(i=0; i < geo->nsquares; ++i) {
+		sq= geo->squares + i;
+		/* ignore handled squares, without number or number < nsides -1 */
+		if (sol->numbers[i] != sq->nsides - 1 || sol->sq_handled[i])
+			continue;
+		
+		/* count lines OFF on square */
+		nlines_off= 0;
+		for(j=0; j < sq->nsides; ++j) {
+			if (STATE(sq->sides[j]) == LINE_OFF) {
+				++nlines_off;
+				pos2= pos;	// keep track of 2nd to last OFF line
+				pos= j;		// hold pos of last OFF line
+			}
+		}
+		/* must have 2 lines OFF */
+		if (nlines_off != 2) continue;
+
+		/* find shared vertex between pos and pos2 lines */
+		if (sq->sides[pos]->ends[0] == sq->sides[pos2]->ends[0] ||
+			sq->sides[pos]->ends[0] == sq->sides[pos2]->ends[1]) {
+			vertex= sq->sides[pos]->ends[0];
+		} else if (sq->sides[pos]->ends[1] == sq->sides[pos2]->ends[0] ||
+			sq->sides[pos]->ends[1] == sq->sides[pos2]->ends[1]) {
+			vertex= sq->sides[pos]->ends[1];
+		} else {
+			continue;	// no shared vertex, not a candidate
+		}
+		
+		/* count lines OFF going out from vertex and not part of square */
+		nlines_off= 0;
+		for(j=0; j < vertex->nlines; ++j) {
+			/* if any line is ON, stop right here */
+			if (STATE(vertex->lines[j]) == LINE_ON)
+				break;
+			if (STATE(vertex->lines[j]) == LINE_OFF &&
+				!line_touches_square(vertex->lines[j], sq)) {
+				++nlines_off;
+				pos= j;
+			}
+		}
+		if (j < vertex->nlines || nlines_off != 1) continue;
+
+		/* only one line OFF -> set it ON */
+		SET_LINE(vertex->lines[pos]);
+		break;
+	}
+
+	return count;
+}
+
+
+/*
  * Find squares with (number == nsides - 1) || (number == 1)
  * If one corner has no exit:
  * 	- (nsides - 1) set both lines
@@ -778,6 +850,7 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 			count= solve_corner(sol);
 		} else if (level == 4) {
 			count= solve_maxnumber_incoming_line(sol);
+			if (count == 0) count= solve_maxnumber_exit_line(sol);
 		} else if (level == 5) {
 			count= solve_squares_net_1(sol);
 		} else if (level == 6) {
