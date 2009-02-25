@@ -710,54 +710,65 @@ solve_check_solution(struct solution *sol)
 }
 
 
-
-
 /*
  * Calculate difficulty of game from level_count
  */
 static double
-calculate_difficulty(int *level_count)
+calculate_difficulty(int *level_count, int nsquares)
 {
 	int i;
-	double level_range[NUM_LEVELS]={0.25, 0.25, 1.5, 2.0, 0.75, 2.5, 3.0, 0., 0.};
+	double max_score[NUM_LEVELS]={1.0, 1.0, 2.0, 4.0, 5.0, 7.0, 8.0, 9.0, 10.0};
+	double weights[NUM_LEVELS]={1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0};
 	double score;
 	double total_score;
-	int total=0;
+	int top_level=0;
+	double norm;	// normalization factor
+	double tmp;
+	double mean;	// mean of neighbors
 	
-	/* count total */
-	for(i=0; i < NUM_LEVELS; ++i)
-		total+= level_count[i];
-	
-	/* calculate difficulty */
-	printf("-------------\n");
-	total_score= 0.;
+	/* find top level used */
 	for(i=0; i < NUM_LEVELS; ++i) {
-		if (i == 0) {
-			score= level_count[i]/( (double)total/2.0 );
-		} else if (i == 6) {
-			if (level_count[i - 1] > 0)
-				score= level_count[i]/(double)level_count[i - 1]*4;
-			else {
-				if (level_count[i] > 0)	score= 1.;
-				else score= 0.;
-			}
-		} else {
-			if (level_count[i - 1] > 0)
-				score= level_count[i]/(double)level_count[i - 1];
-			else {
-				if (level_count[i] > 0)	score= 1.;
-				else score= 0.;
-			}
-		}
-		
-		/* cap score contribution from this level */
-		if (score > 1.0) 
-			score= 1.0;
-		
-		printf("..level %d: (%3d @ %4.2lf) %lf\n", i,
-		       level_count[i], level_range[i], score*level_range[i]);
-		total_score+= score * level_range[i];
+		if (level_count[i] > 0)
+			top_level= i;
 	}
+	
+	/* handle levels 0 & 1 & 2 (trivial vertex & squares) first */
+	score= (level_count[0] + level_count[1])/(double)nsquares;
+	if (score > 1.0) score= 1.0;
+	score*= weights[0];
+	norm= weights[0];
+	total_score= score;
+	
+	/* handle levels 2 and up */
+	for(i=2; i <= top_level; ++i) {
+		if (i == top_level) {
+			mean= (level_count[i] + level_count[i - 1])/2.0;
+			tmp= level_count[i]/mean;
+			if (tmp > 1.0) tmp= 1.0;
+			score= 80.0 + 20.0 * tmp;	// 80% + 20% variable
+		} else {
+			/* we set at least 70% + (20% prev) + (10% next) */
+			score= 70.0;
+			
+			/* compare with previous: 20% at stake */
+			mean= (level_count[i] + level_count[i - 1])/2.0;
+			tmp= level_count[i]/mean;
+			if (tmp > 1.0) tmp= 1.0;
+			score+= 20.0*tmp;
+			
+			/* compare with next: 10% at stake */
+			mean= (level_count[i] + level_count[i + 1])/2.0;
+			tmp= level_count[i]/mean;
+			if (tmp > 1.0) tmp= 1.0;
+			score+= 10.0*tmp;
+		}
+		/* un-% score and multiply by level weight */
+		score= score/100.0 * weights[i];
+		norm+= weights[i];		// keep track of total weight
+		total_score+= score;
+	}
+	tmp= max_score[top_level] - max_score[top_level - 1];
+	total_score= max_score[top_level - 1] + total_score/norm * tmp;
 	
 	return total_score;
 }
@@ -843,7 +854,7 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 	/* run solution loop with no limits */
 	solution_loop(sol, -1, -1, level_count);
 	
-	*final_score= calculate_difficulty(level_count);
+	*final_score= calculate_difficulty(level_count, geo->nsquares);
 	
 	/* check if we have a valid solution */
 	if (solve_check_solution(sol)) {
@@ -907,7 +918,7 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 		solution_loop(sol, 1, -1, level_count);
 	}
 	
-	final_score= calculate_difficulty(level_count);
+	final_score= calculate_difficulty(level_count, geo->nsquares);
 	
 	printf("["); 
 	for(i=0; i < NUM_LEVELS; ++i) {
