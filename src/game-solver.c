@@ -94,6 +94,41 @@ is_vertex_cornered(struct solution *sol, struct square *sq,
 
 
 /*
+ * Find if lines are only 1 line away (used for bottleneck detection)
+ * dir1 & dir2 point towards the loose end of lines
+ * Return line connecting the two lines
+ * NULL if lines are farther away
+ */
+static struct line *
+find_line_connecting_lines(struct line *end1, int dir1, 
+			    struct line *end2, int dir2)
+{
+	struct vertex *vertex;
+	int i;
+	
+	if (dir1 == DIRECTION_IN) vertex= end1->ends[0];
+	else vertex= end1->ends[1];
+	
+	if (dir2 == DIRECTION_IN) {
+		for(i=0; i < end2->nin; ++i) {
+			if (end2->in[i]->ends[0] == vertex ||
+			    end2->in[i]->ends[1] == vertex) break;
+		}
+		if (i < end2->nin)
+			return end2->in[i];
+	} else {
+		for(i=0; i < end2->nout; ++i) {
+			if (end2->out[i]->ends[0] == vertex ||
+			    end2->out[i]->ends[1] == vertex) break;
+		}
+		if (i < end2->nout)
+			return end2->out[i];
+	}
+	return NULL;
+}
+
+
+/*
  * Go through all squares and cross sides of squares with a 0
  * returns number of lines crossed out
  */
