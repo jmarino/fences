@@ -883,11 +883,11 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 		} else if (level == 5) {
 			count= solve_squares_net_1(sol);
 		} else if (level == 6) {
-			count= solve_try_combinations(sol, 2, 1);
+			count= solve_try_combinations(sol, 0);
 		} else if (level == 7) {
-			count= solve_try_combinations(sol, -1, 2);
+			count= solve_try_combinations(sol, 1);
 		} else if (level == 8) {
-			count= solve_try_combinations(sol, -1, 4);
+			count= solve_try_combinations(sol, 2);
 		}
 		
 		/* if nothing found go to next level */

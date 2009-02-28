@@ -57,11 +57,15 @@ void solve_copy_solution(struct solution *dest, struct solution *src);
 struct solution *solve_duplicate_solution(struct solution *src);
 
 /* solve-combinations.c */
-int solve_try_combinations(struct solution *sol, int max_iter, int max_level);
+int solve_try_combinations(struct solution *sol, int level);
 
 /* game-solver.c */
 int solve_zero_squares(struct solution *sol);
 int solve_maxnumber_squares(struct solution *sol);
+int solve_maxnumber_incoming_line(struct solution *sol);
+int solve_maxnumber_exit_line(struct solution *sol);
+int solve_corner(struct solution *sol);
+int solve_squares_net_1(struct solution *sol);
 int solve_trivial_squares(struct solution *sol);
 int solve_trivial_vertex(struct solution *sol);
 int solve_bottleneck(struct solution *sol);

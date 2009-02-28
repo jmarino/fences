@@ -113,23 +113,175 @@ set_combination(struct solution *sol, struct square *sq, int n, int k, int comb)
 
 
 /*
+ * Solve combination with look-ahead level 0
+ * Try only one iteration of trivial vertex and trivial square
+ * Returns TRUE if solution found is valid
+ */
+static gboolean
+combination_solve0(struct solution *sol)
+{
+	(void)solve_cross_lines(sol);
+	(void)solve_trivial_vertex(sol);
+	(void)solve_trivial_squares(sol);
+	
+	return solve_check_valid_game(sol);
+}
+
+
+/*
+ * Solve combination with look-ahead level 1
+ * Try a couple of iterations of trivial vertex and trivial square
+ * Returns TRUE if solution found is valid
+ */
+static gboolean
+combination_solve1(struct solution *sol)
+{
+	gboolean valid=TRUE;
+	int count=1;
+	
+	while(valid && count > 0) {
+		(void)solve_cross_lines(sol);
+		count= solve_trivial_vertex(sol);
+		count+= solve_trivial_squares(sol);
+		valid= solve_check_valid_game(sol);
+	}
+	return valid;
+}
+
+
+/*
+ * Solve combination with look-ahead level 2
+ * Try something close to regular solution (checking validity at each step)
+ * Only go 5 iterations forward.
+ * Returns TRUE if solution found is valid
+ */
+static gboolean
+combination_solve2(struct solution *sol)
+{
+	gboolean valid=TRUE;
+	int count=0;
+	int level=0;
+	int iter=0;
+	
+	while(valid && level <= 5 && iter < 5) {
+		if (level == 0) {
+			(void)solve_cross_lines(sol);
+			count= solve_trivial_vertex(sol);
+		} else if (level == 1) {
+			count= solve_trivial_squares(sol);
+		} else if (level == 2) {
+			count= solve_bottleneck(sol);
+		} else if (level == 3) {
+			count= solve_corner(sol);
+		} else if (level == 4) {
+			count= solve_maxnumber_incoming_line(sol);
+			if (count == 0) count= solve_maxnumber_exit_line(sol);
+		} else if (level == 5) {
+			count= solve_squares_net_1(sol);
+		}
+		
+		/* if nothing found go to next level */
+		if (count == 0) {
+			++level;
+		} else {
+			valid= solve_check_valid_game(sol);
+			level= 0;
+			++iter;
+		}
+	}
+	
+	return valid;
+}
+
+
+/*
+ * Test all possible combinations in one square
+ * Level: how far ahead to look after trying a combination
+ * Returns number of lines succesfully modified after trying all combinations
+ */
+static int
+test_square_combinations(struct solution *sol, struct solution *sol_bak, 
+			 int sq_num, int level)
+{
+	struct square *sq;
+	int nlines_off=0;
+	int nlines_todo=0;
+	int lines_mask;		// mask of lines that are on (**HACK** 32 max lines)
+	int tmp_mask;
+	int ncomb;
+	int count=0;
+	int i;
+	gboolean valid=TRUE;
+	
+	sq= sol->geo->squares + sq_num;
+	/* count lines ON and OFF in square */
+	for(i=0; i < sq->nsides; ++i) {
+		if (STATE(sq->sides[i]) == LINE_OFF)
+			++nlines_off;
+		else if (STATE(sq->sides[i]) == LINE_ON)
+			++nlines_todo;
+	}
+	
+	/* get number of possible combinations */
+	nlines_todo= sol->numbers[sq_num] - nlines_todo;
+	ncomb= number_combinations(nlines_off, nlines_todo);
+	
+	/* try every different combination */
+	lines_mask= ~0;		// 0xFFFF
+	for(i=0; i < ncomb; ++i) {
+		/* enable lines for this combination */
+		/* lines_mask only keeps lines that are always on */
+		tmp_mask= set_combination(sol, sq, nlines_off, nlines_todo, i);
+		
+		/* try to solve a bit (limited by look-ahead level) */
+		switch(level) {
+			case 0: valid= combination_solve0(sol);
+			break;
+			case 1: valid= combination_solve1(sol);
+			break;
+			case 2: valid= combination_solve2(sol);
+			break;
+			default:
+				g_debug("wrong combinations look-ahead level (%d)", level);
+		}
+		
+		/* if solution found is valid, track line states */
+		if (valid) {
+			lines_mask&= tmp_mask;
+		}
+		
+		/* restore initial solution state */
+		solve_copy_solution(sol, sol_bak);
+	}
+	
+	/* after trying all combinations see if a line was always on */
+	i= 0;
+	while(lines_mask != 0) {
+		/* set lines in mask */
+		if (lines_mask&1) 
+			SET_LINE(sq->sides[i]);
+		lines_mask>>= 1;
+		++i;
+	}
+	
+	/* a line has been set */
+	return count;
+}
+
+
+/*
  * Try all possible combinations of lines around a numbered square
  * For each try, test the validity of the game
  * Discard permutations that produce an invalid game.
  * Any line that is ON for all valid permutations, is set to ON
+ * Level: how far ahead to look after trying a combination
  */
 int
-solve_try_combinations(struct solution *sol, int max_iter, int max_level)
+solve_try_combinations(struct solution *sol, int level)
 {
-	int i, j;
+	int i;
 	struct solution *sol_bak;	// backup solution
 	int count=0;
-	int nlines_off;
-	int nlines_todo;
-	int lines_mask;		// mask of lines that are on (**HACK** 32 max lines)
-	int tmp_mask;
-	int ncomb;
-	struct square *sq;
 	struct geometry *geo=sol->geo;
 	
 	/* make a backup of current solution state */
@@ -141,50 +293,12 @@ solve_try_combinations(struct solution *sol, int max_iter, int max_level)
 		if (sol->sq_handled[i] || sol->numbers[i] == -1)
 			continue;
 		
-		sq= geo->squares + i;
-		/* count lines ON and OFF in square */
-		nlines_todo= nlines_off= 0;
-		for(j=0; j < sq->nsides; ++j) {
-			if (STATE(sq->sides[j]) == LINE_OFF)
-				++nlines_off;
-			else if (STATE(sq->sides[j]) == LINE_ON)
-				++nlines_todo;
-		}
+		/* Test all combinations for square and see if all valid ones
+		 have a line always ON or OFF. */
+		count= test_square_combinations(sol, sol_bak, i, level);
 		
-		/* get number of possible combinations */
-		nlines_todo= sol->numbers[i] - nlines_todo;
-		ncomb= number_combinations(nlines_off, nlines_todo);
-		
-		/* try every different combination */
-		lines_mask= ~0;		// 0xFFFF
-		for(j=0; j < ncomb; ++j) {
-			/* enable lines for this combination */
-			/* lines_mask only keeps lines that are always on */
-			tmp_mask= set_combination(sol, sq, nlines_off, nlines_todo, j);
-			
-			/* try to solve a bit (max_iter & max_level) */
-			solution_loop(sol, max_iter, max_level, NULL);
-			
-			/* check validity of combination */
-			if (solve_check_valid_game(sol)) {
-				lines_mask&= tmp_mask;
-			}
-			
-			/* restore initial solution state */
-			solve_copy_solution(sol, sol_bak);
-		}
-		
-		/* after trying all combinations see if a line was always on */
-		j= 0;
-		while(lines_mask != 0) {
-			/* set lines in mask */
-			if (lines_mask&1) 
-				SET_LINE(sq->sides[j]);
-			lines_mask>>= 1;
-			++j;
-		}
-		/* a line has been set -> we're done */
-		if (j > 0)
+		/* TRUE -> a line has been set, we're done */
+		if (count > 0)
 			break;
 	}
 	
