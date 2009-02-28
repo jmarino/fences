@@ -680,24 +680,31 @@ solve_cross_lines(struct solution *sol)
 int
 solve_bottleneck(struct solution *sol)
 {
-	int i, j;
+	int i;
 	int count=0;
 	struct line *end1;
 	struct line *end2;
 	struct line *next;
-	struct vertex *vertex;
 	int dir1, dir2;		// direction each end is going
 	int stuck;
-	int lines_left;		// how many ON lines to still left to check
+	int nlines_on=0;		// total number of lines on
 	struct geometry *geo=sol->geo;
 	int length=0;
+	gboolean all_handled=TRUE;
+	
+	/* check if all numbered squares have been handled */
+	for(i=0; i < geo->nsquares; ++i) {
+		if (sol->numbers[i] != -1 && sol->sq_handled[i] == FALSE) {
+			all_handled= FALSE;
+			break;
+		}
+	}
 	
 	/* initialize line mask */
-	lines_left= 0;
 	for(i=0; i < geo->nlines; ++i) {
 		if (sol->states[i] == LINE_ON) {
 			sol->lin_mask[i]= TRUE;
-			++lines_left;
+			++nlines_on;
 		} else {
 			sol->lin_mask[i]= FALSE;	// mask out not-ON lines
 		}
@@ -711,31 +718,31 @@ solve_bottleneck(struct solution *sol)
 		dir2= DIRECTION_OUT; 
 		end1= end2= geo->lines + i;
 		stuck= 0;
-		length= 0;
+		length= -1;	// starting line is counted twice
 		/* follow along end1 and end2 until they end or they meet */
 		while(stuck != 3) {
 			/* move end1 */
 			if ((stuck & 1) == 0) {
 				next= follow_line(sol, end1, &dir1);
 				if (next == end2) break;
+				++length;
 				if (next != NULL) {
 					end1= next;
 					if (sol->lin_mask[next->id] == FALSE)
 						return 0;
 					sol->lin_mask[next->id]= FALSE;
-					++length;
 				} else stuck|= 1;
 			}
 			/* move end2 */
 			if ((stuck & 2) == 0) {
 				next= follow_line(sol, end2, &dir2);
 				if (next == end1) break;
+				++length;
 				if (next != NULL) {
 					end2= next;
 					if (sol->lin_mask[next->id] == FALSE)
 						return 0;
 					sol->lin_mask[next->id]= FALSE;
-					++length;
 				} else stuck|= 2;
 			}
 		}
@@ -745,28 +752,15 @@ solve_bottleneck(struct solution *sol)
 		}
 		
 		/* check if ends are within a line away */
-		if (dir1 == DIRECTION_IN) vertex= end1->ends[0];
-		else vertex= end1->ends[1];
-		if (dir2 == DIRECTION_IN) {
-			for(j=0; j < end2->nin; ++j) {
-				if (end2->in[j]->ends[0] == vertex ||
-				    end2->in[j]->ends[1] == vertex) break;
+		next= find_line_connecting_lines(end1, dir1, end2, dir2);
+		if (next != NULL && STATE(next) != LINE_CROSSED) {
+			/* avoid creating artificial solutions */
+			if (length == nlines_on && all_handled) {
+				return 0;
 			}
-			if (j < end2->nin && STATE(end2->in[j]) != LINE_CROSSED) {
-				//printf("bottleneck loop found: end1 %d\n", end2->in[j]->id);
-				CROSS_LINE(end2->in[j]);
-				return length;
-			}
-		} else {
-			for(j=0; j < end2->nout; ++j) {
-				if (end2->out[j]->ends[0] == vertex ||
-				    end2->out[j]->ends[1] == vertex) break;
-			}
-			if (j < end2->nout && STATE(end2->out[j]) != LINE_CROSSED) {
-				//printf("bottleneck loop found: end2 %d\n", end2->out[j]->id);
-				CROSS_LINE(end2->out[j]);
-				return length;
-			}
+			CROSS_LINE(next);
+			
+			return length;
 		}
 	}
 
