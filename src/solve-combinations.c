@@ -27,7 +27,8 @@
  * Get number of combinations
  * How many combinations (of size k) in a set of size n
  * Formula: n! / ( k! (n - k)! )
- * Example: square with number 2 --> k= 2, n= 4
+ * Simplifies to: n*(n-1)*...*(n-k+1) / k!
+ * Example: 4 side square with number 2 --> k= 2, n= 4
  */
 static int
 number_combinations(int n, int k)
@@ -36,19 +37,13 @@ number_combinations(int n, int k)
 	int fac;
 	int result;
 	
-	/* n! */
+	/* n * (n-1) * ... * (n-k+1) */
 	result= n;
-	for(i=n-1; i > 1; --i) result*= i;
+	for(i=n-1; i > n - k; --i) result*= i;
 	
 	/* k! */
 	fac= k;
 	for(i=k-1; i > 1; --i) fac*= i;
-	if (fac == 0) fac= 1;
-	result/= fac;
-	
-	/* (n - k)! */
-	fac= n - k;
-	for(i=n - k - 1; i > 1; --i) fac*= i;
 	if (fac == 0) fac= 1;
 	
 	return result/fac;
