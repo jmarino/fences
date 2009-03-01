@@ -839,13 +839,20 @@ calculate_difficulty(int *level_count, int nsquares)
 	}
 
 	printf("total: 0.5 * %4.2lf/%3d ", score, level_count[0]);
-	score= score/level_count[0];
+	if (level_count[0] > 0) {
+		score= score/level_count[0];
+	}
 	if (score > 2.0) score= 2.0;
 	score= score/2.0;
 	printf("= %4.2lf\n", score);
 
-	step= max_diff[top_level] - max_diff[top_level - 1];
-	difficulty= max_diff[top_level - 1] + score * step;
+	if (top_level == 0) {
+		/* consider unlikely case of top_level == 0 */
+		difficulty= score * max_diff[0];
+	} else {
+		step= max_diff[top_level] - max_diff[top_level - 1];
+		difficulty= max_diff[top_level - 1] + score * step;
+	}
 
 	return difficulty;
 }
