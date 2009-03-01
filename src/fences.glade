@@ -150,7 +150,7 @@
           <widget class="GtkToolbar" id="toolbar">
             <property name="visible">True</property>
             <child>
-              <widget class="GtkToolButton" id="toolbutton1">
+              <widget class="GtkToolButton" id="new_toolbutton">
                 <property name="visible">True</property>
                 <property name="stock_id">gtk-new</property>
               </widget>
@@ -159,9 +159,55 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkToolButton" id="toolbutton2">
+              <widget class="GtkToolButton" id="clear_toolbutton">
                 <property name="visible">True</property>
                 <property name="stock_id">gtk-clear</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkSeparatorToolItem" id="sep1_toolbutton">
+                <property name="visible">True</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkToolButton" id="undo_toolbutton">
+                <property name="visible">True</property>
+                <property name="stock_id">gtk-undo</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkToolButton" id="redo_toolbutton">
+                <property name="visible">True</property>
+                <property name="stock_id">gtk-redo</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkSeparatorToolItem" id="sep2_toolbutton">
+                <property name="visible">True</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkToolButton" id="hint_toolbutton">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Hint</property>
+                <property name="stock_id">gtk-dialog-info</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
