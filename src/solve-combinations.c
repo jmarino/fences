@@ -198,6 +198,8 @@ combination_solve2(struct solution *sol)
  * Test all possible combinations in one square
  * Level: how far ahead to look after trying a combination
  * Returns number of lines succesfully modified after trying all combinations
+ * NOTE: line masks are sizeof(int) bits which limits max number of lines
+ *	but no safety checks exist to ensure num of lines < sizeof(int) 
  */
 static int
 test_square_combinations(struct solution *sol, struct solution *sol_bak, 
@@ -206,7 +208,9 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 	struct square *sq;
 	int nlines_off=0;
 	int nlines_todo=0;
-	int lines_mask;		// mask of lines that are on (**HACK** 32 max lines)
+	int lines_mask;		// lines always ON in all valid combinations
+	int bad_lines;		// lines always ON in all invalid combinations
+	int all_lines=0;	// lines attempted
 	int tmp_mask;
 	int ncomb;
 	int count=0;
@@ -228,10 +232,12 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 	
 	/* try every different combination */
 	lines_mask= ~0;		// 0xFFFF
+	bad_lines= ~0;
 	for(i=0; i < ncomb; ++i) {
 		/* enable lines for this combination */
 		/* lines_mask only keeps lines that are always on */
 		tmp_mask= set_combination(sol, sq, nlines_off, nlines_todo, i);
+		all_lines|= tmp_mask;
 		
 		/* try to solve a bit (limited by look-ahead level) */
 		switch(level) {
@@ -248,19 +254,27 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 		/* if solution found is valid, track line states */
 		if (valid) {
 			lines_mask&= tmp_mask;
+			bad_lines&= ~(tmp_mask); // cross current combination out
+		} else {
+			bad_lines&= tmp_mask;	// mask with bad combination
 		}
 		
 		/* restore initial solution state */
 		solve_copy_solution(sol, sol_bak);
 	}
+	/* normalize mask of lines that are always ON in all invalid cases */
+	bad_lines&= all_lines;
 	
 	/* after trying all combinations see if a line was always on */
 	i= 0;
-	while(lines_mask != 0) {
+	while(lines_mask != 0 || bad_lines != 0) {
 		/* set lines in mask */
-		if (lines_mask&1) 
+		if (lines_mask&1) {
 			SET_LINE(sq->sides[i]);
+		} else if (bad_lines&1)
+			CROSS_LINE(sq->sides[i]);
 		lines_mask>>= 1;
+		bad_lines>>= 1;
 		++i;
 	}
 	
