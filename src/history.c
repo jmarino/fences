@@ -48,7 +48,7 @@ history_record_event(GList *history, GSList *event)
 	
 	/* if we're not at start of history list -> delete useless history */
 	head= g_list_previous(history);
-	while(head != history) {
+	while(head != NULL && head != history) {
 		history_free_event(head->data);
 		head= g_list_delete_link(head, head);
 	}
