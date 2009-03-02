@@ -34,7 +34,8 @@ fences_SOURCES = \
 	build-game.c build-game.h \
 	solve-combinations.c \
 	solve-tools.c \
-	gui.c gui.h
+	gui.c gui.h \
+	history.c history.h
 
 fences_LDFLAGS = 
 

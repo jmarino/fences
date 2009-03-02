@@ -56,7 +56,8 @@ struct board {
 	struct game *game;	// game data (line states and square numbers)
 	double width_pxscale;	// Width board-to-pixel scale
 	double height_pxscale;	// Height board-to-pixel scale
-	struct tile_cache *tile_cache; // tile to line cache	
+	struct tile_cache *tile_cache; // tile to line cache
+	GList *history;
 };
 
 
@@ -66,6 +67,7 @@ struct board {
 void find_smallest_numbered_square(struct geometry *geo, struct game *game);
 struct game* create_empty_gamedata(struct geometry *geo);
 void free_gamedata(struct game *game);
+void game_set_line(int id, int state);
 void initialize_board(void);
 
 

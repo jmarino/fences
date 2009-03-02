@@ -65,6 +65,16 @@ free_gamedata(struct game *game)
 
 
 /*
+ * Set line (id) to given state
+ */
+inline void
+game_set_line(int id, int state)
+{
+	board.game->states[id]= state;
+}
+
+
+/*
  * generate a 7x7 example game by hand
  */
 static struct game*
@@ -210,6 +220,7 @@ initialize_board(void)
 	//board.board_margin= 0.05;//500;
 	//board.game_size= board.board_size - 2*board.board_margin; //10000
 	board.tile_cache= NULL;
+	board.history= NULL;
 
 	/* make up example game */
 	board.geo= build_square_board(7);
