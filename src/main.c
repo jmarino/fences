@@ -26,8 +26,8 @@
 //#include <glade/glade.h>
 
 
-#include "callbacks.h"
 #include "gamedata.h"
+#include "gui.h"
 
 
 /*
@@ -79,59 +79,6 @@ create_window2 (void)
 }*/
 
 
-GtkWidget*
-create_window (void)
-{
-	GtkWidget *window;
-	GtkWidget *drawarea;
-	GtkBuilder *builder;
-	
-	builder = gtk_builder_new ();
-	gtk_builder_add_from_file (builder, XML_FILE, NULL);
-	
-	window = GTK_WIDGET(gtk_builder_get_object (builder, "window"));
-	/* note: connect_signals doesn't work, it needs some gmodule stuff */
-	//gtk_builder_connect_signals (builder, NULL);
-	
-	drawarea= GTK_WIDGET(gtk_builder_get_object(builder, "drawingarea"));
-	g_signal_connect(drawarea, "configure-event", G_CALLBACK(drawarea_configure), 
-			 NULL);
-	//g_signal_connect(drawarea, "check-resize", G_CALLBACK(drawarea_resize), 
-	//		 NULL);
-	g_signal_connect(drawarea, "expose_event", G_CALLBACK(board_expose), 
-			 &board);
-	g_signal_connect(window, "delete_event", gtk_main_quit, NULL);
-
-	/* capture any key pressed in the window */
-  	g_signal_connect ((gpointer) window, "key-press-event",
-			    G_CALLBACK (window_keypressed), drawarea);
-	
-	/* catch mouse clicks on game board */
-	gtk_widget_add_events(drawarea, 
-			      GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK);
-	g_signal_connect (G_OBJECT (drawarea), "button_release_event", 
-			  G_CALLBACK (drawarea_mouseclicked), drawarea);
-
-	g_signal_connect(gtk_builder_get_object (builder, "Game_Quit_menuitem"),
-			 "activate", gtk_main_quit, NULL);
-		
-	/* done with builder */
-	g_object_unref (G_OBJECT (builder));
-
-	/* Ensure drawing area has aspect ratio of 1 */
-	/*GdkGeometry geo;
-	geo.min_aspect= geo.max_aspect= 1.0;
-	gtk_window_set_geometry_hints(GTK_WINDOW(window), drawarea, &geo, 
-					GDK_HINT_ASPECT);*/
-	gtk_widget_set_size_request(drawarea, 500,500);
-	
-	/* store gamedata in window */
-	g_object_set_data(G_OBJECT(window), "drawarea", drawarea);
-	
-	return window;
-}
-
-
 int
 main (int argc, char *argv[])
 {
@@ -159,9 +106,12 @@ main (int argc, char *argv[])
 	gtk_set_locale ();
 	gtk_init (&argc, &argv);
 
-	/* create GUI from xml file */
-	window = create_window ();
+	/* create main window */
+	window= gui_setup_main_window(XML_FILE, &board);
 	gtk_widget_show (window);
+	
+	/* initialize gui */
+	gui_initialize(window, &board);
 	
 	/* start draw thread */
 	//start_draw_thread(g_object_get_data(G_OBJECT(window), "drawarea"));
