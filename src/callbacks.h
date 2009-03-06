@@ -27,5 +27,8 @@ gboolean drawarea_configure(GtkWidget *widget, GdkEventConfigure *event,
 			    gpointer user_data);
 gboolean drawarea_resize(GtkWidget *widget, gpointer user_data);
 gboolean board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data);
+void undo_toolbutton_clicked(GtkToolButton *toolbutton, gpointer data);
+void redo_toolbutton_clicked(GtkToolButton *toolbutton, gpointer data);
+
 
 #endif

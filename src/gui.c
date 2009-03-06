@@ -65,9 +65,6 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 
 	g_signal_connect(gtk_builder_get_object (builder, "Game_Quit_menuitem"),
 			 "activate", gtk_main_quit, NULL);
-		
-	/* done with builder */
-	g_object_unref (G_OBJECT (builder));
 
 	/* Ensure drawing area has aspect ratio of 1 */
 	/*GdkGeometry geo;
@@ -79,6 +76,20 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 	/* store current drawarea (maybe there'll be a netbook) in window */
 	g_object_set_data(G_OBJECT(window), "drawarea", drawarea);
 	
+	/* toolbuttons */
+	toolbutton= gtk_builder_get_object(builder, "undo_toolbutton");
+	g_object_set_data(G_OBJECT(window), "undo_toolbutton", toolbutton);
+	g_signal_connect (toolbutton, "clicked", 
+			  G_CALLBACK (undo_toolbutton_clicked), board);
+	
+	toolbutton= gtk_builder_get_object(builder, "redo_toolbutton");
+	g_object_set_data(G_OBJECT(window), "redo_toolbutton", toolbutton);
+	g_signal_connect (toolbutton, "clicked", 
+			  G_CALLBACK(redo_toolbutton_clicked), board);
+	
+	/* done with builder */
+	g_object_unref (G_OBJECT (builder));
+	
 	return window;
 }
 
@@ -89,5 +100,18 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 void
 gui_initialize(GtkWidget *window, struct board *board)
 {
+	GtkWidget *widget;
+	gboolean state;
 	
+	/* set state of undo */
+	widget= g_object_get_data(G_OBJECT(window), "undo_toolbutton");
+	if (g_list_next(board->history) != NULL) state= TRUE;
+	else state= FALSE;
+	//gtk_widget_set_sensitive (widget, state);
+	
+	/* set state of redo */
+	widget= g_object_get_data(G_OBJECT(window), "redo_toolbutton");
+	if (g_list_previous(board->history) != NULL) state= TRUE;
+	else state= FALSE;
+	//gtk_widget_set_sensitive (widget, state);
 }

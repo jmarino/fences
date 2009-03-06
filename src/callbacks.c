@@ -25,6 +25,7 @@
 #include "gamedata.h"
 #include "geometry_tools.h"
 #include "draw.h"
+#include "history.h"
 
 /* defined in gamedata.c */
 extern struct board board;
@@ -198,4 +199,24 @@ board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data)
 	cairo_destroy (cr);
 	
 	return TRUE;
+}
+
+
+/*
+ * Toolbar button undo
+ */
+void 
+undo_toolbutton_clicked(GtkToolButton *toolbutton, gpointer data)
+{
+	history_travel_history((struct board*)data, -1);
+}
+
+
+/*
+ * Toolbar button undo
+ */
+void 
+redo_toolbutton_clicked(GtkToolButton *toolbutton, gpointer data)
+{
+	history_travel_history((struct board*)data, 1);
 }

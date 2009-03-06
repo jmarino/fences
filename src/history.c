@@ -14,7 +14,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
-#include <glib.h>
+#include <gtk/gtk.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -38,6 +38,37 @@ struct line_change {
 };
 
 
+
+/**
+ * Set correct sensitiveness for undo/redo buttons
+ */
+static void
+history_set_undoredo_state(struct board *board)
+{
+	gboolean state;
+	GtkWidget *window;
+	GtkWidget *widget;
+	
+	window= g_object_get_data(G_OBJECT(board->drawarea), "window");
+	
+	/* set undo button & menu */
+	if (g_list_next(board->history) == NULL) state= FALSE;
+	else state= TRUE;
+	widget= g_object_get_data(G_OBJECT(window), "undo_toolbutton");
+	if (GTK_WIDGET_IS_SENSITIVE(widget) != state)
+		gtk_widget_set_sensitive(widget, state);
+	/**** TODO: also undo menu item ****/
+	
+	/* set redo button & menu */
+	if (g_list_previous(board->history) == NULL) state= FALSE;
+	else state= TRUE;
+	widget= g_object_get_data(G_OBJECT(window), "redo_toolbutton");
+	if (GTK_WIDGET_IS_SENSITIVE(widget) != state)
+		gtk_widget_set_sensitive(widget, state);
+	/**** TODO: also redo menu item ****/
+}
+
+
 /*
  * Record an event
  */
@@ -45,6 +76,11 @@ void
 history_record_event(struct board *board, GSList *event)
 {
 	GList *head;
+	
+	/* history empty? -> create empty stub to make undo behave */
+	if (board->history == NULL) {
+		board->history= g_list_prepend(NULL, NULL);
+	}
 	
 	/* if we're not at start of history list -> delete useless history */
 	head= g_list_first(board->history);
@@ -58,6 +94,8 @@ history_record_event(struct board *board, GSList *event)
 
 	board->history= g_list_prepend(board->history, event);
 	
+	/* set undo/redo sensitivity */
+	history_set_undoredo_state(board);
 }
 
 
@@ -155,6 +193,13 @@ history_travel_history(struct board *board, int offset)
 			history_redo_event(history->data);
 			--offset;
 		}
+	}
+	/* redraw board if necessary */
+	if (board->history != history) {
+		board->history= history;
+		/* set undo/redo sensitivity */
+		history_set_undoredo_state(board);
+		gtk_widget_queue_draw(board->drawarea);
 	}
 	
 	board->history= history;
