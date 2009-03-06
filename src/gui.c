@@ -30,6 +30,7 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 	GtkWidget *window;
 	GtkWidget *drawarea;
 	GtkBuilder *builder;
+	GObject *toolbutton;
 	
 	builder = gtk_builder_new ();
 	gtk_builder_add_from_file (builder, xml_file, NULL);
@@ -39,6 +40,11 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 	//gtk_builder_connect_signals (builder, NULL);
 	
 	drawarea= GTK_WIDGET(gtk_builder_get_object(builder, "drawingarea"));
+	/* store data in drawarea */
+	g_object_set_data(G_OBJECT(drawarea), "board", board);
+	g_object_set_data(G_OBJECT(drawarea), "window", window);
+	board->drawarea= drawarea;
+	
 	g_signal_connect(drawarea, "configure-event", G_CALLBACK(drawarea_configure), 
 			 NULL);
 	//g_signal_connect(drawarea, "check-resize", G_CALLBACK(drawarea_resize), 
@@ -70,7 +76,7 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 					GDK_HINT_ASPECT);*/
 	gtk_widget_set_size_request(drawarea, 500,500);
 	
-	/* store gamedata in window */
+	/* store current drawarea (maybe there'll be a netbook) in window */
 	g_object_set_data(G_OBJECT(window), "drawarea", drawarea);
 	
 	return window;

@@ -58,6 +58,7 @@ struct board {
 	double height_pxscale;	// Height board-to-pixel scale
 	struct tile_cache *tile_cache; // tile to line cache
 	GList *history;
+	gpointer drawarea;	// widget where board is drawn
 };
 
 

@@ -221,6 +221,7 @@ initialize_board(void)
 	//board.game_size= board.board_size - 2*board.board_margin; //10000
 	board.tile_cache= NULL;
 	board.history= NULL;
+	board.drawarea= NULL;
 
 	/* make up example game */
 	board.geo= build_square_board(7);
