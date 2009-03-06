@@ -83,9 +83,7 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 		if (old_state == *state) return TRUE;
 		
 		/* record change in history */
-		board.history= 
-			history_record_event_single(board.history, lin->id, 
-						    old_state, *state);
+		history_record_event_single(&board, lin->id, old_state, *state);
 		
 		/* schedule redraw of box containing line */
 		gtk_widget_queue_draw_area

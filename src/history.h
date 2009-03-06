@@ -22,12 +22,12 @@
  * Functions
  */
 
-GList* history_record_event(GList *history, GSList *event);
-GList* history_record_event_single(GList *history, int id, int old_state, 
-				   int new_state);
+void history_record_event(struct board *board, GSList *event);
+void history_record_event_single(struct board *board, int id, int old_state, 
+				 int new_state);
 void history_undo_event(GSList *event);
 void history_redo_event(GSList *event);
-GList* history_travel_history(GList *history, int offset);
+void history_travel_history(struct board *board, int offset);
 void history_free(GList *history);
 
 

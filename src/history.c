@@ -18,8 +18,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "history.h"
 #include "gamedata.h"
+#include "history.h"
 
 
 /*
@@ -41,22 +41,23 @@ struct line_change {
 /*
  * Record an event
  */
-GList*
-history_record_event(GList *history, GSList *event)
+void
+history_record_event(struct board *board, GSList *event)
 {
 	GList *head;
 	
 	/* if we're not at start of history list -> delete useless history */
-	head= g_list_previous(history);
-	while(head != NULL && head != history) {
+	head= g_list_first(board->history);
+	while(head != board->history) {
 		history_free_event(head->data);
 		head= g_list_delete_link(head, head);
 	}
 	
 	/* DEBUG: history should now be head of list */
-	g_assert(history == g_list_first(history));
+	g_assert(board->history == g_list_first(board->history));
+
+	board->history= g_list_prepend(board->history, event);
 	
-	return g_list_prepend(history, event);
 }
 
 
@@ -64,8 +65,8 @@ history_record_event(GList *history, GSList *event)
  * Record a "single" event in history. Single event means an event with only 
  * one change.	
  */
-GList*
-history_record_event_single(GList *history, int id, int old_state, int new_state)
+void
+history_record_event_single(struct board *board, int id, int old_state, int new_state)
 {
 	GSList *event;
 	struct line_change *change;
@@ -76,7 +77,7 @@ history_record_event_single(GList *history, int id, int old_state, int new_state
 	change->new_state= new_state;
 	event= g_slist_prepend(NULL, change);
 	
-	return history_record_event(history, event);
+	history_record_event(board, event);
 }
 
 
@@ -131,11 +132,13 @@ history_redo_event(GSList *event)
  * Revisit history
  * offset indicates which direction and how many steps to go
  */
-GList*
-history_travel_history(GList *history, int offset)
+void
+history_travel_history(struct board *board, int offset)
 {
 	GList *list;
+	GList *history=board->history;
 	
+	if (history == NULL || offset == 0) return;
 	if (offset < 0) {	// backward (undo)
 		while(offset != 0) {
 			list= g_list_next(history);
@@ -154,7 +157,7 @@ history_travel_history(GList *history, int offset)
 		}
 	}
 	
-	return history;
+	board->history= history;
 }
 
 
