@@ -30,7 +30,7 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 	GtkWidget *window;
 	GtkWidget *drawarea;
 	GtkBuilder *builder;
-	GObject *toolbutton;
+	GObject *widget;
 	
 	builder = gtk_builder_new ();
 	gtk_builder_add_from_file (builder, xml_file, NULL);
@@ -77,15 +77,23 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 	g_object_set_data(G_OBJECT(window), "drawarea", drawarea);
 	
 	/* toolbuttons */
-	toolbutton= gtk_builder_get_object(builder, "undo_toolbutton");
-	g_object_set_data(G_OBJECT(window), "undo_toolbutton", toolbutton);
-	g_signal_connect (toolbutton, "clicked", 
-			  G_CALLBACK (undo_toolbutton_clicked), board);
+	widget= gtk_builder_get_object(builder, "undo_toolbutton");
+	g_object_set_data(G_OBJECT(window), "undo_toolbutton", widget);
+	g_signal_connect (widget, "clicked", G_CALLBACK (undo_button_clicked),
+			  board);
+	widget= gtk_builder_get_object(builder, "undo_menuitem");
+	g_object_set_data(G_OBJECT(window), "undo_menuitem", widget);
+	g_signal_connect (widget, "activate", G_CALLBACK(undo_menu_clicked),
+			  board);
 	
-	toolbutton= gtk_builder_get_object(builder, "redo_toolbutton");
-	g_object_set_data(G_OBJECT(window), "redo_toolbutton", toolbutton);
-	g_signal_connect (toolbutton, "clicked", 
-			  G_CALLBACK(redo_toolbutton_clicked), board);
+	widget= gtk_builder_get_object(builder, "redo_toolbutton");
+	g_object_set_data(G_OBJECT(window), "redo_toolbutton", widget);
+	g_signal_connect (widget, "clicked", G_CALLBACK(redo_button_clicked),
+			  board);
+	widget= gtk_builder_get_object(builder, "redo_menuitem");
+	g_object_set_data(G_OBJECT(window), "redo_menuitem", widget);
+	g_signal_connect (widget, "activate", G_CALLBACK(redo_menu_clicked),
+			  board);
 	
 	/* done with builder */
 	g_object_unref (G_OBJECT (builder));
