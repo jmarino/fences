@@ -3,12 +3,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
@@ -68,13 +68,13 @@ create_window2 (void)
 {
 	GtkWidget *window;
 	GladeXML *gxml;
-	
+
 	gxml = glade_xml_new (GLADE_FILE, NULL, NULL);
-	
-	// This is important 
+
+	// This is important
 	glade_xml_signal_autoconnect (gxml);
 	window = glade_xml_get_widget (gxml, "window");
-	
+
 	return window;
 }*/
 
@@ -82,7 +82,7 @@ create_window2 (void)
 int
 main (int argc, char *argv[])
 {
- 	GtkWidget *window;
+	GtkWidget *window;
 
 
 #ifdef ENABLE_NLS
@@ -96,28 +96,28 @@ main (int argc, char *argv[])
 	gdk_threads_init();
 	/* gtk_main must be between gdk_threads_enter and gdk_threads_leave */
 	gdk_threads_enter();
-	
+
 	/* Init board */
 	initialize_board();
 
 	/* test routine to build loop */
 	//try_loop(board.geo, board.game);
-	
+
 	gtk_set_locale ();
 	gtk_init (&argc, &argv);
 
 	/* create main window */
 	window= gui_setup_main_window(XML_FILE, &board);
 	gtk_widget_show (window);
-	
+
 	/* initialize gui */
 	gui_initialize(window, &board);
-	
+
 	/* start draw thread */
 	//start_draw_thread(g_object_get_data(G_OBJECT(window), "drawarea"));
-	
+
 	gtk_main ();
 	gdk_threads_leave();
-	
+
 	return 0;
 }

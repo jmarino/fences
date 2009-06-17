@@ -3,12 +3,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
@@ -38,7 +38,7 @@ create_empty_gamedata(struct geometry *geo)
 {
 	struct game *game;
 	int i;
-	
+
 	/* allocate and initialize */
 	game= (struct game*)g_malloc(sizeof(struct game));
 	game->states= (int*)g_malloc(geo->nlines*sizeof(int));
@@ -47,7 +47,7 @@ create_empty_gamedata(struct geometry *geo)
 		game->states[i]= LINE_OFF;
 	for(i=0; i < geo->nsquares; ++i)
 		game->numbers[i]= -1;
-	
+
 	return game;
 }
 
@@ -179,10 +179,10 @@ generate_example_game(struct geometry *geo)
 		 2, 3,-1, 3, 1,-1,-1, 1,-1, 1,-1,-1,-1,-1, 2,
 		-1,-1, 1,-1, 3, 1,-1,-1,-1, 2,-1, 1,-1,-1,-1};
 
-	
+
 	/* Create empty game data that fits geo */
 	game= create_empty_gamedata(geo);
-	
+
 	/* set number inside square */
 	for(i=0; i < geo->nsquares; ++i) {
 		//game->numbers[i]= squaredata[i];
@@ -192,19 +192,19 @@ generate_example_game(struct geometry *geo)
 		//game->numbers[i]= hard15[i];
 		//game->numbers[i]= wiki[i];
 	}
-	
+
 	// test line states
 	game->states[0]= LINE_ON;
 	game->states[12]= LINE_ON;
 	game->states[15]= LINE_CROSSED;
-	
+
 	/* artificial test for FX animation */
 	/*for(i=0; i < 7; ++i) {
 		game->lines[i].state= LINE_ON;
 		game->lines[i].fx_status= 1;
 		game->lines[i].fx_frame= i;
 	}*/
-	
+
 	return game;
 }
 
@@ -229,10 +229,10 @@ initialize_board(void)
 	//board.geo= build_square_board(6);
 	//board.geo= build_square_board(17);
 	//board.geo= build_penrose_board();
-	
+
 	/* generate tile cache for lines */
 	setup_tile_cache();
-	
+
 	/* empty gamedata */
 	//board.game= create_empty_gamedata(board.geo);
 	board.game= generate_example_game(board.geo);

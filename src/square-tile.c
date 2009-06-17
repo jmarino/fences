@@ -3,12 +3,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
@@ -34,21 +34,21 @@ connect_lines_to_square(struct square *sq)
 {
 	int i, i2;
 	struct line *lin;
-	
+
 	/* iterate over all sides of square */
 	for(i=0; i < sq->nsides; ++i) {
 		i2= (i+1) % sq->nsides;
 		lin= sq->sides[i];
-		
+
 		/* multiple assignations may happen (squares sharing a line) */
 		lin->ends[0]= sq->vertex[i];
 		lin->ends[1]= sq->vertex[i2];
-		
+
 		/* add current square to list of squares touching line */
 		if (lin->nsquares == 0) {	// no squares assigned yet
 			lin->sq[0]= sq;
 			lin->nsquares= 1;
-		} else if (lin->nsquares == 1 && lin->sq[0] != sq) {	
+		} else if (lin->nsquares == 1 && lin->sq[0] != sq) {
 			// one was already assigned -> add if different
 			lin->sq[1]= sq;
 			lin->nsquares= 2;
@@ -65,7 +65,7 @@ square_calculate_sizes(struct geometry *geo, int dim)
 {
 	geo->on_line_width= geo->game_size/dim/15.0;
 	geo->off_line_width= geo->board_size/1000.;
-	if (geo->on_line_width < 2*geo->off_line_width) 
+	if (geo->on_line_width < 2*geo->off_line_width)
 		geo->on_line_width= 2*geo->off_line_width;
 	geo->cross_line_width= geo->off_line_width*2;
 	geo->cross_radius= MIN(geo->sq_width, geo->sq_height)/15.;
@@ -86,13 +86,13 @@ build_square_board(const int dim)
 	struct vertex *ver;
 	struct square *sq;
 	int id;
-	
+
 	/* create new geometry (nsquares, nvertex, nlines) */
 	geo= geometry_create_new(dim*dim, (dim + 1)*(dim + 1), 2*dim*(dim + 1), 4);
 	geo->board_size= SQUARE_BOARD_SIZE;
 	geo->board_margin= SQUARE_BOARD_MARGIN;
 	geo->game_size= SQUARE_GAME_SIZE;
-	
+
 	/* initialize vertices */
 	ver= geo->vertex;
 	for(j=0; j < dim + 1; ++j) {
@@ -108,10 +108,10 @@ build_square_board(const int dim)
 			++ver;
 		}
 	}
-	
+
 	/* initialize lines */
 	geometry_initialize_lines(geo);
-	
+
 	/* initialize squares */
 	sq= geo->squares;
 	id= 0;
@@ -125,7 +125,7 @@ build_square_board(const int dim)
 			sq->vertex[1]= geo->vertex + j*(dim+1)+i+1;	// top right
 			sq->vertex[2]= geo->vertex + (j+1)*(dim+1)+i+1;	// bot right
 			sq->vertex[3]= geo->vertex + (j+1)*(dim+1)+i;	// bot left
-			
+
 			/* calculate position of center of square */
 			sq->center.x= sq->vertex[0]->pos.x;
 			sq->center.y= sq->vertex[0]->pos.y;
@@ -135,7 +135,7 @@ build_square_board(const int dim)
 			}
 			sq->center.x= sq->center.x/(double)sq->nvertex;
 			sq->center.y= sq->center.y/(double)sq->nvertex;
-			
+
 			// set lines on edges of square
 			sq->nsides= 4;
 			sq->sides= (struct line **)g_malloc(4 * sizeof(void *));
@@ -143,14 +143,14 @@ build_square_board(const int dim)
 			sq->sides[1]= geo->lines + j*(dim+dim+1)+dim+i+1;
 			sq->sides[2]= geo->lines + (j+1)*(dim+dim+1)+i;
 			sq->sides[3]= geo->lines + j*(dim+dim+1)+dim+i;
-			
+
 			/* connect lines to square and vertices */
 			connect_lines_to_square(sq);
-			
+
 			/* ini FX status */
 			sq->fx_status= 0;
 			sq->fx_frame= 0;
-			
+
 			++sq;
 			++id;
 		}
@@ -158,9 +158,9 @@ build_square_board(const int dim)
 
 	/* finalize geometry data: tie everything together */
 	geometry_connect_elements(geo);
-	
+
 	/* define sizes of drawing bits */
 	square_calculate_sizes(geo, dim);
-	
+
 	return geo;
 }

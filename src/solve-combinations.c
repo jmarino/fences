@@ -3,12 +3,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
@@ -36,22 +36,22 @@ number_combinations(int n, int k)
 	int i;
 	int fac;
 	int result;
-	
+
 	/* n * (n-1) * ... * (n-k+1) */
 	result= n;
 	for(i=n-1; i > n - k; --i) result*= i;
-	
+
 	/* k! */
 	fac= k;
 	for(i=k-1; i > 1; --i) fac*= i;
 	if (fac == 0) fac= 1;
-	
+
 	return result/fac;
 }
 
 
 /*
- * Set combination number 'comb' 
+ * Set combination number 'comb'
  * The combinations are of 'k' size chosen out of 'n' elements
  * Returns a mask indicating which lines are on
  * Example: k= 2; n= 4
@@ -70,35 +70,35 @@ set_combination(struct solution *sol, struct square *sq, int n, int k, int comb)
 	int nline=0;
 	int spaces=0;
 	int lines_mask=0;
-	
+
 	start= comb % n;
 	spaces= comb/n;
 
 	/* find first available line */
-	while(STATE(sq->sides[nline]) != LINE_OFF) 
+	while(STATE(sq->sides[nline]) != LINE_OFF)
 		nline= (nline + 1) % sq->nsides;
-	
+
 	/* jump start lines */
 	for(i=0; i < start; ++i) {
-		while(STATE(sq->sides[nline]) != LINE_OFF) 
+		while(STATE(sq->sides[nline]) != LINE_OFF)
 			nline= (nline + 1) % sq->nsides;
 		nline= (nline + 1) % sq->nsides;
 	}
-	
+
 	/* set k lines on */
 	for(i=0; i < k; ++i) {
 		/* find next available line and set it */
-		while(STATE(sq->sides[nline]) != LINE_OFF) 
+		while(STATE(sq->sides[nline]) != LINE_OFF)
 			nline= (nline + 1) % sq->nsides;
 		sol->states[sq->sides[nline]->id]= LINE_ON;
 		lines_mask|= 1 << nline;
 		nline= (nline + 1) % sq->nsides;
-		while(STATE(sq->sides[nline]) != LINE_OFF) 
+		while(STATE(sq->sides[nline]) != LINE_OFF)
 			nline= (nline + 1) % sq->nsides;
-		
+
 		/* jump spaces */
 		for(j=0; j < spaces; ++j) {
-			while(STATE(sq->sides[nline]) != LINE_OFF) 
+			while(STATE(sq->sides[nline]) != LINE_OFF)
 				nline= (nline + 1) % sq->nsides;
 			nline= (nline + 1) % sq->nsides;
 		}
@@ -118,7 +118,7 @@ combination_solve0(struct solution *sol)
 	(void)solve_cross_lines(sol);
 	(void)solve_trivial_vertex(sol);
 	(void)solve_trivial_squares(sol);
-	
+
 	return solve_check_valid_game(sol);
 }
 
@@ -133,7 +133,7 @@ combination_solve1(struct solution *sol)
 {
 	gboolean valid=TRUE;
 	int count=1;
-	
+
 	while(valid && count > 0) {
 		(void)solve_cross_lines(sol);
 		count= solve_trivial_vertex(sol);
@@ -157,7 +157,7 @@ combination_solve2(struct solution *sol)
 	int count=0;
 	int level=0;
 	int iter=0;
-	
+
 	while(valid && level <= 5 && iter < 5) {
 		if (level == 0) {
 			(void)solve_cross_lines(sol);
@@ -174,7 +174,7 @@ combination_solve2(struct solution *sol)
 		} else if (level == 5) {
 			count= solve_squares_net_1(sol);
 		}
-		
+
 		/* if nothing found go to next level */
 		if (count == 0) {
 			++level;
@@ -184,7 +184,7 @@ combination_solve2(struct solution *sol)
 			++iter;
 		}
 	}
-	
+
 	return valid;
 }
 
@@ -194,10 +194,10 @@ combination_solve2(struct solution *sol)
  * Level: how far ahead to look after trying a combination
  * Returns number of lines succesfully modified after trying all combinations
  * NOTE: line masks are sizeof(int) bits which limits max number of lines
- *	but no safety checks exist to ensure num of lines < sizeof(int) 
+ *	but no safety checks exist to ensure num of lines < sizeof(int)
  */
 static int
-test_square_combinations(struct solution *sol, struct solution *sol_bak, 
+test_square_combinations(struct solution *sol, struct solution *sol_bak,
 			 int sq_num, int level)
 {
 	struct square *sq;
@@ -211,7 +211,7 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 	int count=0;
 	int i;
 	gboolean valid=TRUE;
-	
+
 	sq= sol->geo->squares + sq_num;
 	/* count lines ON and OFF in square */
 	for(i=0; i < sq->nsides; ++i) {
@@ -220,11 +220,11 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 		else if (STATE(sq->sides[i]) == LINE_ON)
 			++nlines_todo;
 	}
-	
+
 	/* get number of possible combinations */
 	nlines_todo= sol->numbers[sq_num] - nlines_todo;
 	ncomb= number_combinations(nlines_off, nlines_todo);
-	
+
 	/* try every different combination */
 	lines_mask= ~0;		// 0xFFFF
 	bad_lines= ~0;
@@ -233,7 +233,7 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 		/* lines_mask only keeps lines that are always on */
 		tmp_mask= set_combination(sol, sq, nlines_off, nlines_todo, i);
 		all_lines|= tmp_mask;
-		
+
 		/* try to solve a bit (limited by look-ahead level) */
 		switch(level) {
 			case 0: valid= combination_solve0(sol);
@@ -245,7 +245,7 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 			default:
 				g_debug("wrong combinations look-ahead level (%d)", level);
 		}
-		
+
 		/* if solution found is valid, track line states */
 		if (valid) {
 			lines_mask&= tmp_mask;
@@ -253,13 +253,13 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 		} else {
 			bad_lines&= tmp_mask;	// mask with bad combination
 		}
-		
+
 		/* restore initial solution state */
 		solve_copy_solution(sol, sol_bak);
 	}
 	/* normalize mask of lines that are always ON in all invalid cases */
 	bad_lines&= all_lines;
-	
+
 	/* after trying all combinations see if a line was always on */
 	i= 0;
 	while(lines_mask != 0 || bad_lines != 0) {
@@ -272,7 +272,7 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 		bad_lines>>= 1;
 		++i;
 	}
-	
+
 	/* a line has been set */
 	return count;
 }
@@ -292,25 +292,25 @@ solve_try_combinations(struct solution *sol, int level)
 	struct solution *sol_bak;	// backup solution
 	int count=0;
 	struct geometry *geo=sol->geo;
-	
+
 	/* make a backup of current solution state */
 	sol_bak= solve_duplicate_solution(sol);
-	
+
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		/* ignore handled squares or squares with no number */
 		if (sol->sq_handled[i] || sol->numbers[i] == -1)
 			continue;
-		
+
 		/* Test all combinations for square and see if all valid ones
 		 have a line always ON or OFF. */
 		count= test_square_combinations(sol, sol_bak, i, level);
-		
+
 		/* TRUE -> a line has been set, we're done */
 		if (count > 0)
 			break;
 	}
-	
+
 	/* free solution backup */
 	solve_free_solution_data(sol_bak);
 

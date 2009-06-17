@@ -3,12 +3,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
@@ -45,16 +45,16 @@ build_new_game(struct geometry *geo, double difficulty)
 	int sq_id;
 	struct solution *sol;
 	double max_diff=0.;
-	
+
 	/* create empty game */
 	game= create_empty_gamedata(geo);
-	
+
 	/* create random loop: result is in 'game' */
 	build_new_loop(geo, game, FALSE);
 	loop= (int*)g_malloc(geo->nlines * sizeof(gboolean));
 	for(i=0; i < geo->nlines; ++i)
 		loop[i]= game->states[i];
-	
+
 	/* count number of lines touching all squares */
 	numbers= (int*)g_malloc(geo->nsquares * sizeof(int));
 	num_mask= (int*)g_malloc(geo->nsquares * sizeof(int));
@@ -70,10 +70,10 @@ build_new_game(struct geometry *geo, double difficulty)
 	}
 	nvisible= geo->nsquares;
 	nfixed= 0;
-	
+
 	/* HACK */
 	difficulty= 2.5;
-	
+
 	while(nvisible - nfixed > 0) {
 		/* select random square to hide */
 		count= g_random_int_range(0, nvisible - nfixed);
@@ -83,13 +83,13 @@ build_new_game(struct geometry *geo, double difficulty)
 			if (count < 0) break;
 		}
 		g_assert(sq_id < geo->nsquares);
-		
+
 		/* hide square */
 		game->numbers[sq_id]= -1;
-		
+
 		/* Solve current game as it is */
 		sol= solve_game(geo, game, &score);
-	
+
 		/* check solution */
 		for(i=0; i < geo->nlines; ++i) {
 			if (sol->states[i] == LINE_ON) {
@@ -101,7 +101,7 @@ build_new_game(struct geometry *geo, double difficulty)
 			}
 		}
 		solve_free_solution_data(sol);
-		
+
 		/* wrong solution or wrong difficulty */
 		if (i < geo->nlines || score > difficulty) {
 			/* restore hidden square and fix it */
@@ -115,26 +115,26 @@ build_new_game(struct geometry *geo, double difficulty)
 			--nvisible;
 			nfixed= 0;
 			for (j=0; j < geo->nsquares; ++j) {
-				if (num_mask[j] == SQUARE_FIXED) 
+				if (num_mask[j] == SQUARE_FIXED)
 					num_mask[j]= SQUARE_VISIBLE;
 			}
 			max_diff= score;
 		}
-		
+
 		printf("new game (%d - %d): score %lf\n", nvisible, nfixed, score);
 	}
 
 	/* Set correct difficulty */
 	score= max_diff;
 	printf("new game: score %lf\n", score);
-	
+
 	/* clear lines of game */
 	//for(i=0; i < geo->nlines; ++i)
 //		game->states[i]= LINE_OFF;
-	
+
 	g_free(loop);
 	g_free(numbers);
 	g_free(num_mask);
-	
+
 	return game;
 }

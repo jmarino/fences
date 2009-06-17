@@ -3,12 +3,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
@@ -64,7 +64,7 @@ line_touches_square(struct line *lin, struct square *sq)
 	if (lin->nsquares == 1) {
 		if (lin->sq[0] == sq) return TRUE;
 	} else {
-		if (lin->sq[0] == sq || 
+		if (lin->sq[0] == sq ||
 		    lin->sq[1] == sq) return TRUE;
 	}
 	return FALSE;
@@ -76,14 +76,14 @@ line_touches_square(struct line *lin, struct square *sq)
  * I.e. the vertex has no exits outside this square
  */
 static gboolean
-is_vertex_cornered(struct solution *sol, struct square *sq, 
+is_vertex_cornered(struct solution *sol, struct square *sq,
 		   struct vertex *vertex)
 {
 	int i;
-	
+
 	/* check lines coming out of vertex that don't belong to square */
 	for(i=0; i < vertex->nlines; ++i) {
-		if (line_touches_square(vertex->lines[i], sq)) 
+		if (line_touches_square(vertex->lines[i], sq))
 			continue;
 		/* if line ON or OFF, vertex not cornered */
 		if (STATE(vertex->lines[i]) != LINE_CROSSED)
@@ -100,15 +100,15 @@ is_vertex_cornered(struct solution *sol, struct square *sq,
  * NULL if lines are farther away
  */
 static struct line *
-find_line_connecting_lines(struct line *end1, int dir1, 
+find_line_connecting_lines(struct line *end1, int dir1,
 			    struct line *end2, int dir2)
 {
 	struct vertex *vertex;
 	int i;
-	
+
 	if (dir1 == DIRECTION_IN) vertex= end1->ends[0];
 	else vertex= end1->ends[1];
-	
+
 	if (dir2 == DIRECTION_IN) {
 		for(i=0; i < end2->nin; ++i) {
 			if (end2->in[i]->ends[0] == vertex ||
@@ -139,7 +139,7 @@ solve_zero_squares(struct solution *sol)
 	int count=0;
 	struct square *sq;
 	struct geometry *geo=sol->geo;
-	
+
 	for(i=0; i < geo->nsquares; ++i) {
 		if (sol->numbers[i] != 0) continue; // only care about 0 squares
 		/* cross sides of square */
@@ -166,12 +166,12 @@ solve_trivial_squares(struct solution *sol)
 	int lines_crossed;
 	struct square *sq;
 	struct geometry *geo=sol->geo;
-	
+
 	for(i=0; i < geo->nsquares; ++i) {
 		/* only unhandled squares */
-		if (sol->sq_handled[i]) 
+		if (sol->sq_handled[i])
 			continue;
-		
+
 		/* count lines ON and CROSSED around square */
 		sq= geo->squares + i;
 		lines_on= 0;
@@ -217,7 +217,7 @@ solve_trivial_vertex(struct solution *sol)
 	int pos=0;
 	struct vertex *vertex;
 	struct geometry *geo=sol->geo;
-	
+
 	vertex= geo->vertex;
 	for(i=0; i < geo->nvertex; ++i) {
 		lines_on= lines_off= 0;
@@ -244,7 +244,7 @@ solve_trivial_vertex(struct solution *sol)
 
 /*
  * Find squares with a number == nsides - 1
- * Check around all its vertices to see if it neighbors another square 
+ * Check around all its vertices to see if it neighbors another square
  * with number == nsides
  * If another found: determine if they're side by side or diagonally and set
  * lines accordingly
@@ -259,14 +259,14 @@ solve_maxnumber_squares(struct solution *sol)
 	struct line *lin;
 	struct geometry *geo=sol->geo;
 	int count=0;
-	
+
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
 		/* ignore handled squares or with number != sides - 1 */
-		if (sol->sq_handled[i] || sol->numbers[i] != sq->nsides - 1) 
+		if (sol->sq_handled[i] || sol->numbers[i] != sq->nsides - 1)
 			continue;
-		
+
 		/* inspect vertices of square */
 		for(j=0; j < sq->nvertex; ++j) {
 			vertex= sq->vertex[j];
@@ -286,9 +286,9 @@ solve_maxnumber_squares(struct solution *sol)
 				if ( MAX_NUMBER(sq2) )
 					break;
 			}
-			if (k == vertex->nsquares) // no max neighbor 
+			if (k == vertex->nsquares) // no max neighbor
 				continue;
-			
+
 			/* find if the two MAX squares share a line */
 			lin= find_shared_side(sq, sq2, &pos1, &pos2);
 			if (lin != NULL) {	// shared side: side by side squares
@@ -303,7 +303,7 @@ solve_maxnumber_squares(struct solution *sol)
 				for(k=2; k < sq2->nsides - 1; ++k) {
 					k2= (pos2 + k) % sq2->nsides;
 					if (STATE(sq->sides[k2]) != LINE_ON)
-						SET_LINE(sq2->sides[k2]); 
+						SET_LINE(sq2->sides[k2]);
 				}
 				/* cross any lines from vertex that are not part of sq or sq2 */
 				for(k=0; k < vertex->nlines; ++k) {
@@ -312,7 +312,7 @@ solve_maxnumber_squares(struct solution *sol)
 						continue;
 					if (STATE(vertex->lines[k]) != LINE_CROSSED)
 						CROSS_LINE(vertex->lines[k]);
-					    
+
 				}
 			} else {	// no shared side: diagonally opposed squares
 				/* set all lines around squares that don't touch vertex */
@@ -355,14 +355,14 @@ solve_maxnumber_incoming_line(struct solution *sol)
 	struct line *lin=NULL;
 	struct geometry *geo=sol->geo;
 	int count=0;
-	
+
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
 		/* ignore squares without number or number < nsides -1 */
-		if (sol->numbers[i] != sq->nsides - 1 || sol->sq_handled[i]) 
+		if (sol->numbers[i] != sq->nsides - 1 || sol->sq_handled[i])
 			continue;
-		
+
 		/* inspect vertices of square */
 		for(j=0; j < sq->nvertex; ++j) {
 			vertex= sq->vertex[j];
@@ -386,7 +386,7 @@ solve_maxnumber_incoming_line(struct solution *sol)
 					CROSS_LINE(vertex->lines[k]);
 				}
 			}
-			
+
 			/* set lines in square not touching vertex ON */
 			for(k=0; k < sq->nsides; ++k) {
 				if (sq->sides[k]->ends[0] == vertex ||
@@ -420,14 +420,14 @@ solve_maxnumber_exit_line(struct solution *sol)
 	int nlines_off;
 	struct geometry *geo=sol->geo;
 	int count=0;
-	
+
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
 		/* ignore handled squares, without number or number < nsides -1 */
 		if (sol->numbers[i] != sq->nsides - 1 || sol->sq_handled[i])
 			continue;
-		
+
 		/* count lines OFF on square */
 		nlines_off= 0;
 		for(j=0; j < sq->nsides; ++j) {
@@ -450,7 +450,7 @@ solve_maxnumber_exit_line(struct solution *sol)
 		} else {
 			continue;	// no shared vertex, not a candidate
 		}
-		
+
 		/* count lines OFF going out from vertex and not part of square */
 		nlines_off= 0;
 		for(j=0; j < vertex->nlines; ++j) {
@@ -477,8 +477,8 @@ solve_maxnumber_exit_line(struct solution *sol)
 /*
  * Find squares with (number == nsides - 1) || (number == 1)
  * If one corner has no exit:
- * 	- (nsides - 1) set both lines
- * 	- (1) cross both lines
+ *	- (nsides - 1) set both lines
+ *	- (1) cross both lines
  */
 int
 solve_corner(struct solution *sol)
@@ -488,25 +488,25 @@ solve_corner(struct solution *sol)
 	struct vertex *vertex;
 	struct geometry *geo=sol->geo;
 	int count=0;
-	
+
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
 		/* ignore handled squares, unnumbered squares or number != nsides -1 */
-		if (sol->sq_handled[i] || 
-		    (sol->numbers[i] != sq->nsides - 1 && sol->numbers[i] != 1)) 
+		if (sol->sq_handled[i] ||
+		    (sol->numbers[i] != sq->nsides - 1 && sol->numbers[i] != 1))
 			continue;
-		
+
 		/* inspect vertices of square */
 		for(j=0; j < sq->nvertex; ++j) {
 			vertex= sq->vertex[j];
-			
+
 			/* check vertex is a no-exit corner */
 			if (is_vertex_cornered(sol, sq, vertex) == FALSE)
 				continue;
 			/* ON or CROSS corner lines */
 			for(k=0; k < vertex->nlines; ++k) {
-				if (line_touches_square(vertex->lines[k], sq) == FALSE) 
+				if (line_touches_square(vertex->lines[k], sq) == FALSE)
 					continue;
 				if (sol->numbers[i] == 1) {
 					if (STATE(vertex->lines[k]) != LINE_CROSSED)
@@ -539,22 +539,22 @@ solve_squares_net_1(struct solution *sol)
 	struct vertex *vertex;
 	struct geometry *geo=sol->geo;
 	int count=0;
-	
+
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
 		/* ignore handled squares and unnumbered squares */
-		if (sol->sq_handled[i] || sol->numbers[i] == -1) 
+		if (sol->sq_handled[i] || sol->numbers[i] == -1)
 			continue;
-		
+
 		/* count lines ON around square */
 		nlines_on= 0;
 		for(j=0; j < sq->nsides; ++j) {
-			if (STATE(sq->sides[j]) == LINE_ON) 
+			if (STATE(sq->sides[j]) == LINE_ON)
 				++nlines_on;
 		}
 		if (NUMBER(sq) - nlines_on != 1) continue;
-		
+
 		/* inspect vertices of square */
 		for(j=0; j < sq->nvertex; ++j) {
 			vertex= sq->vertex[j];
@@ -568,7 +568,7 @@ solve_squares_net_1(struct solution *sol)
 					continue;
 				}
 				/* OFF line not on square */
-				if (STATE(vertex->lines[k]) == LINE_OFF && 
+				if (STATE(vertex->lines[k]) == LINE_OFF &&
 				    line_touches_square(vertex->lines[k], sq) == FALSE) {
 					++num_exits;
 				}
@@ -576,12 +576,12 @@ solve_squares_net_1(struct solution *sol)
 			if (nlines_on != 1 || line_touches_square(lin, sq) == TRUE ||
 			    num_exits > 0)
 				continue;
-			
+
 			/* cross all lines away from this vertex */
 			for(k=0; k < sq->nsides; ++k) {
-				if (sq->sides[k]->ends[0] == vertex || 
+				if (sq->sides[k]->ends[0] == vertex ||
 				    sq->sides[k]->ends[1] == vertex) continue;
-				if (STATE(sq->sides[k]) == LINE_OFF) 
+				if (STATE(sq->sides[k]) == LINE_OFF)
 					CROSS_LINE(sq->sides[k]);
 			}
 		}
@@ -612,12 +612,12 @@ solve_cross_lines(struct solution *sol)
 	struct geometry *geo=sol->geo;
 	int count=0;
 	int old_count=-1;
-	
+
 	/* go through all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		/* only unhandled squares */
 		if (sol->sq_handled[i]) continue;
-			
+
 		/* count lines ON around square */
 		sq= geo->squares + i;
 		num_on= 0;
@@ -638,7 +638,7 @@ solve_cross_lines(struct solution *sol)
 				CROSS_LINE(sq->sides[j]);
 		}
 	}
-	
+
 	while (old_count != count) {
 		old_count= count;
 		/* go through all vertices */
@@ -666,7 +666,7 @@ solve_cross_lines(struct solution *sol)
 			++vertex;
 		}
 	}
-	
+
 	return count;
 }
 
@@ -691,7 +691,7 @@ solve_bottleneck(struct solution *sol)
 	struct geometry *geo=sol->geo;
 	int length=0;
 	gboolean all_handled=TRUE;
-	
+
 	/* check if all numbered squares have been handled */
 	for(i=0; i < geo->nsquares; ++i) {
 		if (sol->numbers[i] != -1 && sol->sq_handled[i] == FALSE) {
@@ -699,7 +699,7 @@ solve_bottleneck(struct solution *sol)
 			break;
 		}
 	}
-	
+
 	/* initialize line mask */
 	for(i=0; i < geo->nlines; ++i) {
 		if (sol->states[i] == LINE_ON) {
@@ -709,13 +709,13 @@ solve_bottleneck(struct solution *sol)
 			sol->lin_mask[i]= FALSE;	// mask out not-ON lines
 		}
 	}
-	
+
 	/* find a line on and follow it */
 	for(i=0; i < geo->nlines; ++i) {
 		if (sol->lin_mask[i] == FALSE) continue;
 		sol->lin_mask[i]= FALSE;
 		dir1= DIRECTION_IN;
-		dir2= DIRECTION_OUT; 
+		dir2= DIRECTION_OUT;
 		end1= end2= geo->lines + i;
 		stuck= 0;
 		length= -1;	// starting line is counted twice
@@ -750,7 +750,7 @@ solve_bottleneck(struct solution *sol)
 		if (stuck != 3) {
 			return 0;
 		}
-		
+
 		/* check if ends are within a line away */
 		next= find_line_connecting_lines(end1, dir1, end2, dir2);
 		if (next != NULL && STATE(next) != LINE_CROSSED) {
@@ -759,7 +759,7 @@ solve_bottleneck(struct solution *sol)
 				return 0;
 			}
 			CROSS_LINE(next);
-			
+
 			return length;
 		}
 	}
@@ -793,7 +793,7 @@ solve_check_solution(struct solution *sol)
 		if (sol->states[i] == LINE_ON) {
 			if (nlines_total == 0)
 				start= geo->lines + i;
-			++nlines_total;			
+			++nlines_total;
 		}
 	}
 	if (nlines_total == 0) return FALSE;
@@ -803,14 +803,14 @@ solve_check_solution(struct solution *sol)
 	while(lin != NULL) {
 		++nlines_loop;
 		lin= follow_line(sol, lin, &direction);
-		if (lin == start) 	// closed the loop
+		if (lin == start)	// closed the loop
 			break;
 	}
 	if (lin == NULL) return FALSE;
 
 	/* check number of lines total is == to lines in loop */
 	if (nlines_loop != nlines_total) return FALSE;
-	
+
 	return TRUE;
 }
 
@@ -828,7 +828,7 @@ calculate_difficulty(int *level_count, int nsquares)
 	double difficulty;
 	int top_level=0;
 	double step;
-	
+
 	/* find top level used and calculate levels' score*/
 	for(i=0; i < NUM_LEVELS; ++i) {
 		if (level_count[i] > 0)
@@ -871,7 +871,7 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 	int level=0;
 	int last_level=0;
 	int count=0;
-	
+
 	if (max_level < 0) max_level= MAX_LEVEL;
 	while(level <= max_level) {
 		/* */
@@ -896,7 +896,7 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 		} else if (level == 8) {
 			count= solve_try_combinations(sol, 2);
 		}
-		
+
 		/* if nothing found go to next level */
 		if (count == 0) {
 			++level;
@@ -909,7 +909,7 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 			level= 0;
 			++iter;
 		}
-		
+
 		/* reached maximum number of iterations -> stop */
 		if (max_iter > 0 && iter >= max_iter)
 			break;
@@ -926,10 +926,10 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 	struct solution *sol;
 	int count;
 	int level_count[NUM_LEVELS]={0, 0, 0, 0, 0, 0, 0, 0, 0};
-	
+
 	/* init solution structure */
 	sol= solve_create_solution_data(geo, game);
-	
+
 	/* These two tests only run once at the very start */
 	count= solve_zero_squares(sol);
 	printf("zero: count %d\n", count);
@@ -938,14 +938,14 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 
 	/* run solution loop with no limits */
 	solution_loop(sol, -1, -1, level_count);
-	
+
 	/* print level counts */
 	int i;
 	for(i=0; i < NUM_LEVELS; ++i)
 		printf("-Level %1d: %3d\n", i, level_count[i]);
-	
+
 	*final_score= calculate_difficulty(level_count, geo->nsquares);
-	
+
 	/* check if we have a valid solution */
 	if (solve_check_solution(sol)) {
 		printf("Solution good! (%lf)\n", *final_score);
@@ -953,25 +953,25 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 		*final_score+= 10;
 		printf("Solution BAD! (%lf)\n", *final_score);
 	}
-	
+
 	return sol;
 }
 
 
-void 
+void
 test_solve_game(struct geometry *geo, struct game *game)
 {
 	int i;
 	struct solution *sol;
 	double score;
-	
+
 	//game->numbers[0]= 3;
 	//game->numbers[35]= 3;
 	sol= solve_game(geo, game, &score);
-	
+
 	for(i=0; i < geo->nlines; ++i)
 		game->states[i]= sol->states[i];
-	
+
 	solve_free_solution_data(sol);
 }
 
@@ -986,7 +986,7 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 	static struct solution *sol;
 	static gboolean first=TRUE;
 	double final_score;
-	
+
 	int count=0;
 	static int level=-2;
 	static int level_count[NUM_LEVELS]={0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -995,7 +995,7 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 		/* init solution structure */
 		sol= solve_create_solution_data(geo, game);
 		first= FALSE;
-	}	
+	}
 
 	if (level == -2)  {
 		count= solve_zero_squares(sol);
@@ -1007,16 +1007,16 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 		/* run solution loop for 1 iteration */
 		solution_loop(sol, 1, -1, level_count);
 	}
-	
+
 	final_score= calculate_difficulty(level_count, geo->nsquares);
-	
+
 	/* print current level counts */
 	for(i=0; i < NUM_LEVELS; ++i) {
 		printf("Level %1d: %d\n", i, level_count[i]);
 	}
 	printf("-----> %5.2lf <------\n", final_score);
 
-	
+
 
 	/* record solution */
 	for(i=0; i < geo->nlines; ++i)
@@ -1025,6 +1025,6 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 	if (solve_check_solution(sol)) {
 		printf("**Solution found! (%lf)\n", final_score);
 	}
-	
+
 	//solve_free_solution_data(sol);
 }

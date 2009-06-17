@@ -3,12 +3,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
@@ -44,7 +44,7 @@ draw_tiles(cairo_t *cr)
 {
 	int i, j;
 	double width=board.tile_cache->tile_size;
-	
+
 	//g_message("draw_tiles");
 	cairo_set_source_rgba(cr, 0., 1., 0., 0.2);
 	cairo_set_line_width (cr, OFF_LINE_WIDTH);
@@ -65,7 +65,7 @@ draw_areainf(cairo_t *cr)
 {
 	int i, j;
 	struct line *lin;
-	
+
 	cairo_set_source_rgba(cr, 0., 1., 0., 0.2);
 	cairo_set_line_width (cr, OFF_LINE_WIDTH);
 	lin= board.geo->lines;
@@ -73,7 +73,7 @@ draw_areainf(cairo_t *cr)
 		cairo_move_to(cr, lin->inf[0].x, lin->inf[0].y);
 		for(j=1; j < 4; ++j) {
 			cairo_line_to(cr, lin->inf[j].x, lin->inf[j].y);
-			
+
 		}
 		cairo_line_to(cr, lin->inf[0].x, lin->inf[0].y);
 		++lin;
@@ -90,12 +90,12 @@ draw_square_centers(cairo_t *cr)
 {
 	int i;
 	struct square *sq;
-	
+
 	cairo_set_source_rgba(cr, 0., 1., 0., 0.2);
 	sq= board.geo->squares;
 	for(i=0; i < board.geo->nsquares; ++i) {
 		cairo_new_sub_path(cr);
-		cairo_arc (cr, sq->center.x, sq->center.y, 2*DOT_RADIUS, 
+		cairo_arc (cr, sq->center.x, sq->center.y, 2*DOT_RADIUS,
 			   0, 2 * M_PI);
 		++sq;
 	}
@@ -112,7 +112,7 @@ draw_linesquares(cairo_t *cr)
 	int i;
 	struct line *lin;
 	double x, y;
-	
+
 	cairo_set_source_rgba(cr, 0., 1., 0., 0.4);
 	cairo_set_line_width (cr, OFF_LINE_WIDTH);
 	lin= board.geo->lines;
@@ -140,14 +140,14 @@ draw_bounds(cairo_t *cr)
 {
 	/* debug: draw dot in the middle of board */
 	cairo_set_source_rgba(cr, 0, 1., 0, 0.2);
-	cairo_arc(cr, board.geo->board_size/2., board.geo->board_size/2., DOT_RADIUS, 
+	cairo_arc(cr, board.geo->board_size/2., board.geo->board_size/2., DOT_RADIUS,
 		  0, 2 * M_PI);
 	cairo_fill(cr);
-	
+
 	/* debug: draw circle showing clipping */
 	cairo_set_line_width (cr, OFF_LINE_WIDTH);
 	cairo_set_source_rgba(cr, 0, 1., 0, 0.4);
-	cairo_arc(cr, board.geo->board_size/2., board.geo->board_size/2., board.geo->game_size/2., 
+	cairo_arc(cr, board.geo->board_size/2., board.geo->board_size/2., board.geo->game_size/2.,
 		  0, 2 * M_PI);
 	cairo_stroke(cr);
 }
@@ -164,9 +164,9 @@ fx_setcolor(cairo_t *cr, struct line *line)
 			cairo_set_source_rgb(cr, 0., 0., 1.);
 		break;
 		case 1://FX_LOOP:
-			cairo_set_source_rgb(cr,  
+			cairo_set_source_rgb(cr,
 					     0.2 + 0.8*sin(line->fx_frame/20.0*M_PI),
-					     0., 1.); 
+					     0., 1.);
 		break;
 		default:
 			g_debug("line %d, unknown FX: %d", line->id, line->fx_status);
@@ -181,7 +181,7 @@ static void
 fx_nextframe(struct line *line)
 {
 	switch(line->fx_status) {
-		case 0: //FX_OFF 
+		case 0: //FX_OFF
 			return;
 		break;
 		case 1://FX_LOOP:
@@ -210,13 +210,13 @@ draw_board(cairo_t *cr, int width, int height)
 	int lines_on;	// how many ON lines a vertex has
 	struct game *game=board.game;
 	int number;
-	
+
 	/* white background */
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_paint(cr);
-	
+
 	/* set scale so we draw in board_size space */
-	cairo_scale (cr, width/(double)geo->board_size, 
+	cairo_scale (cr, width/(double)geo->board_size,
 		     height/(double)geo->board_size);
 
 	// debug
@@ -233,14 +233,14 @@ draw_board(cairo_t *cr, int width, int height)
 	for(i=0; i<geo->nlines; ++i) {
 		vertex1= line->ends[0];
 		vertex2= line->ends[1];
-		if (game->states[line->id] != LINE_ON) {	
+		if (game->states[line->id] != LINE_ON) {
 			cairo_move_to(cr, vertex1->pos.x, vertex1->pos.y);
 			cairo_line_to(cr, vertex2->pos.x, vertex2->pos.y);
 		}
 		++line;
 	}
 	cairo_stroke(cr);
-	
+
 	/* Draw lines */
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	line= geo->lines;
@@ -266,13 +266,13 @@ draw_board(cairo_t *cr, int width, int height)
 			cairo_stroke(cr);
 			//fx_nextframe(line);
 		} else if (game->states[line->id] != LINE_OFF) {
-			g_debug("draw_line: line (%d) state invalid: %d", 
+			g_debug("draw_line: line (%d) state invalid: %d",
 				line->id, game->states[line->id]);
 		}
 		++line;
 	}
 	//cairo_stroke(cr);
-	
+
 	/* Draw vertexs */
 	if (0) {
 		vertex1= geo->vertex;
@@ -286,18 +286,18 @@ draw_board(cairo_t *cr, int width, int height)
 			/* draw vertex */
 			if (lines_on == 2) cairo_set_source_rgb(cr, 0, 0, 1);
 			else cairo_set_source_rgb(cr, 0, 0, 0);
-			cairo_arc (cr, vertex1->pos.x, vertex1->pos.y, DOT_RADIUS, 
+			cairo_arc (cr, vertex1->pos.x, vertex1->pos.y, DOT_RADIUS,
 				   0, 2 * M_PI);
 			cairo_fill(cr);
 			++vertex1;
 		}
 	}
-	
+
 	/* Text in squares */
 	sq= geo->squares;
 	cairo_set_font_size(cr, geo->font_size);
 	cairo_set_source_rgb(cr, 0, 0, 0);
-	
+
 	for(i=0; i<geo->nsquares; ++i) {
 		number= game->numbers[sq->id];
 		if (number != -1) {	// square has a number
@@ -324,7 +324,7 @@ draw_measure_font(GtkWidget *drawarea, int width, int height,
 	cairo_text_extents_t extent;
 
 	/* set up temporary cairo context */
-	cr= gdk_cairo_create (drawarea->window); 
+	cr= gdk_cairo_create (drawarea->window);
 	cairo_scale (cr, width/geo->board_size, height/geo->board_size);
 
 	/* scale font size so number 0 fits in sq_height/2. */
@@ -358,12 +358,12 @@ draw_benchmark(GtkWidget *drawarea)
 	double result;
 	int i;
 	int iters=1000;
-		
+
 	printf("Benchmark (%d): starting ...\n", iters);
 	gettimeofday (&start_time, NULL);
 	for(i=0; i < iters; ++i) {
 		cr= gdk_cairo_create (drawarea->window);
-		draw_board(cr, drawarea->allocation.width, 
+		draw_board(cr, drawarea->allocation.width,
 			   drawarea->allocation.height);
 		cairo_destroy(cr);
 	}
@@ -371,6 +371,6 @@ draw_benchmark(GtkWidget *drawarea)
 	result= ((double)(end_time.tv_sec - start_time.tv_sec))*1000000. \
 		+ ((double)(end_time.tv_usec - start_time.tv_usec));
 
-	printf("Benchmark (%d): total= %7.2lf ms ; iter=%5.2lf ms\n", iters, 
+	printf("Benchmark (%d): total= %7.2lf ms ; iter=%5.2lf ms\n", iters,
 	       result/1000., result/iters/1000.);
 }

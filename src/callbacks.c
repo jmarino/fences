@@ -3,12 +3,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
@@ -34,7 +34,7 @@ extern struct board board;
 /*
  * Callback when mouse is clicked on the board
  */
-gboolean 
+gboolean
 drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer drawarea)
 {
 	struct point point;
@@ -44,7 +44,7 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	gboolean inside;
 	int *state;
 	int old_state;
-	
+
 	/* Translate pixel coords to board coords */
 	point.x= event->x/board.width_pxscale;
 	point.y= event->y/board.height_pxscale;
@@ -54,7 +54,7 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	tile+= board.tile_cache->ntiles_side*(int)(point.y/board.tile_cache->tile_size);
 	//printf("mouse: Tile clicked %d\n", tile);
 	list= board.tile_cache->tiles[tile];
-	
+
 	/* Find in which line's area of influence the point falls */
 	while(list != NULL) {
 		lin= (struct line *)list->data;
@@ -63,7 +63,7 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 			break;
 		list= g_slist_next(list);
 	}
-	
+
 	/* check if a line was found */
 	if (list != NULL) {
 		//printf("mouse: - Line %d\n", lin->id);
@@ -71,30 +71,30 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 		old_state= *state;
 		switch(event->button) {
 			/* left button */
-			case 1: 
-				*state= (*state == LINE_ON) ? 
+			case 1:
+				*state= (*state == LINE_ON) ?
 					LINE_OFF : LINE_ON;
 				break;
 			/* right button */
-			case 3: 
-				*state= (*state == LINE_CROSSED) ? 
+			case 3:
+				*state= (*state == LINE_CROSSED) ?
 					LINE_OFF : LINE_CROSSED;
 				break;
 		}
 		if (old_state == *state) return TRUE;
-		
+
 		/* record change in history */
 		history_record_event_single(&board, lin->id, old_state, *state);
-		
+
 		/* schedule redraw of box containing line */
 		gtk_widget_queue_draw_area
-			(GTK_WIDGET(drawarea), 
-			 (gint)(lin->inf_box[0].x*board.width_pxscale), 
+			(GTK_WIDGET(drawarea),
+			 (gint)(lin->inf_box[0].x*board.width_pxscale),
 			 (gint)(lin->inf_box[0].y*board.height_pxscale),
-			 (gint)(lin->inf_box[1].x*board.width_pxscale), 
+			 (gint)(lin->inf_box[1].x*board.width_pxscale),
 			 (gint)(lin->inf_box[1].y*board.height_pxscale));
 	}
-	
+
 	return TRUE;
 }
 
@@ -102,11 +102,11 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 /*
  * Callback when key is pressed
  */
-gboolean 
+gboolean
 window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 {
 	//printf("key: %d\n", event->keyval);
-	
+
 	if (event->keyval == GDK_b) {
 		draw_benchmark(drawarea);
 	}
@@ -129,7 +129,7 @@ window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 	if (event->keyval == GDK_n) {
 		free_gamedata(board.game);
 		board.game= build_new_game(board.geo, 0);
-		
+
 		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
 	}
 	if (event->keyval == GDK_c) {
@@ -140,7 +140,7 @@ window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
 	}
 	//(void)g_timeout_add(200, (GSourceFunc)timer_function, drawarea);
-	
+
 	return FALSE;
 }
 
@@ -152,7 +152,7 @@ gboolean
 drawarea_configure(GtkWidget *drawarea, GdkEventConfigure *event, gpointer user_data)
 {
 	//printf("configure: %d, %d\n", event->width, event->height);
-		
+
 	/* setup pixel scales: to go from field coords to pixels on screen */
 	board.width_pxscale= event->width/(double)board.geo->board_size;
 	board.height_pxscale= event->height/(double)board.geo->board_size;
@@ -163,7 +163,7 @@ drawarea_configure(GtkWidget *drawarea, GdkEventConfigure *event, gpointer user_
 	 * accuracy of the measurements depends on the pixel size.
 	 */
 	draw_measure_font(drawarea, event->width, event->height, board.geo);
-	
+
 	return TRUE;
 }
 
@@ -177,27 +177,27 @@ drawarea_resize(GtkWidget *widget, gpointer user_data)
 
 
 /*
- * Function called when drawing area receives expose event 
+ * Function called when drawing area receives expose event
  */
 gboolean
 board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data)
 {
 	cairo_t *cr;
-	
+
 	//printf("expose\n");
 	/* get a cairo_t */
 	cr = gdk_cairo_create (drawarea->window);
-	
+
 	/* set a clip region for the expose event (faster) */
 	cairo_rectangle (cr,
 			 event->area.x, event->area.y,
 			 event->area.width, event->area.height);
 	cairo_clip (cr);
-	
+
 	draw_board (cr, drawarea->allocation.width, drawarea->allocation.height);
-	
+
 	cairo_destroy (cr);
-	
+
 	return TRUE;
 }
 
@@ -205,7 +205,7 @@ board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data)
 /*
  * Toolbar button undo
  */
-void 
+void
 undo_button_clicked(GtkToolButton *toolbutton, gpointer data)
 {
 	history_travel_history((struct board*)data, -1);
@@ -215,7 +215,7 @@ undo_button_clicked(GtkToolButton *toolbutton, gpointer data)
 /*
  * Toolbar button undo
  */
-void 
+void
 redo_button_clicked(GtkToolButton *toolbutton, gpointer data)
 {
 	history_travel_history((struct board*)data, 1);
@@ -225,7 +225,7 @@ redo_button_clicked(GtkToolButton *toolbutton, gpointer data)
 /*
  * Menu item undo
  */
-void 
+void
 undo_menu_clicked(GtkMenuItem *menuitem, gpointer data)
 {
 	history_travel_history((struct board*)data, -1);
@@ -235,7 +235,7 @@ undo_menu_clicked(GtkMenuItem *menuitem, gpointer data)
 /*
  * Menu item undo
  */
-void 
+void
 redo_menu_clicked(GtkMenuItem *menuitem, gpointer data)
 {
 	history_travel_history((struct board*)data, 1);

@@ -3,12 +3,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
@@ -61,13 +61,13 @@ static double separate_distance=0.;
 /*
  * Unfold a fat romb
  * Add new rombs to list newpenrose and return it
- */ 
+ */
 static GSList*
 penrose_unfold_fatromb(GSList *newpenrose, struct romb *romb)
 {
 	struct romb *nromb;
 	double nside=romb->side/RATIO;
-	
+
 	g_assert(romb->type == FAT_ROMB);
 
 	/* create new romb 1/5 (I'm going clockwise) */
@@ -99,7 +99,7 @@ penrose_unfold_fatromb(GSList *newpenrose, struct romb *romb)
 	nromb->angle= romb->angle + D2R(180);
 	WRAP(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
-	
+
 	/* next romb 4/5 */
 	nromb= (struct romb *)g_malloc(sizeof(struct romb));
 	nromb->type= THIN_ROMB;
@@ -121,7 +121,7 @@ penrose_unfold_fatromb(GSList *newpenrose, struct romb *romb)
 	nromb->angle= romb->angle + D2R(180 + 36);
 	WRAP(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
-	
+
 	return newpenrose;
 }
 
@@ -129,13 +129,13 @@ penrose_unfold_fatromb(GSList *newpenrose, struct romb *romb)
 /*
  * Unfold a thin romb
  * Add new rombs to list newpenrose and return it
- */ 
+ */
 static GSList*
 penrose_unfold_thinromb(GSList *newpenrose, struct romb *romb)
 {
 	struct romb *nromb;
 	double nside=romb->side/RATIO;
-	
+
 	g_assert(romb->type == THIN_ROMB);
 
 	/* create new romb 1/4 (I'm going clockwise) */
@@ -169,7 +169,7 @@ penrose_unfold_thinromb(GSList *newpenrose, struct romb *romb)
 	nromb->angle= romb->angle + D2R(270 - 18);
 	WRAP(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
-	
+
 	/* next romb 4/4 */
 	nromb= (struct romb *)g_malloc(sizeof(struct romb));
 	nromb->type= THIN_ROMB;
@@ -179,7 +179,7 @@ penrose_unfold_thinromb(GSList *newpenrose, struct romb *romb)
 	nromb->angle= romb->angle + D2R(90 + 18);
 	WRAP(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
-	
+
 	return newpenrose;
 }
 
@@ -193,7 +193,7 @@ static gboolean
 are_rombs_same(struct romb *r1, struct romb *r2)
 {
 	double x, y;
-	
+
 	if (r1->type != r2->type) return FALSE;
 	if (r1->type == FAT_ROMB) {
 		x= r1->pos.x + r1->side*RATIO/2.0*cos(r1->angle);
@@ -240,7 +240,7 @@ trim_repeated_rombs(GSList *penrose)
 	struct romb *r1, *r2;
 	struct point center1, center2;
 	double dist;
-	
+
 	current= penrose;
 	while(current != NULL) {
 		p= g_slist_next(current);
@@ -257,7 +257,7 @@ trim_repeated_rombs(GSList *penrose)
 			/* calculate dist between centers of both rombs */
 			center2.x-= center1.x;
 			center2.y-= center1.y;
-			dist= sqrt(center2.x*center2.x + center2.y*center2.y); 
+			dist= sqrt(center2.x*center2.x + center2.y*center2.y);
 			if (dist < separate_distance ) { // same romb
 				//g_debug("delete romb, dist: %lf < %lf", dist, r1->side/10.);
 				g_free(p->data);
@@ -288,11 +288,11 @@ trim_outside_rombs(GSList *penrose, double radius)
 	double dist;
 	int i;
 	double center=PENROSE_BOARD_SIZE/2.;
-	
+
 	current= penrose;
 	while(current != NULL) {
 		romb= (struct romb*) current->data;
-		
+
 		get_romb_vertices(romb, vertex);
 		next= g_slist_next(current);
 		for(i=0; i < 4; ++i) {
@@ -339,14 +339,14 @@ penrose_unfold(GSList* penrose, double edge)
 	/* get rid of repeated rombs */
 	separate_distance= ((struct romb*)newpenrose->data)->side/10.;
 	newpenrose= trim_repeated_rombs(newpenrose);
-	
+
 	/* get rid of rombs outside a certain radius */
 	if (edge > 0)
 		newpenrose= trim_outside_rombs(newpenrose, edge);
 
 	/* debug: count number of rombs in list */
 	g_debug("rombs in list: %d", g_slist_length(newpenrose));
-		
+
 	return newpenrose;
 }
 
@@ -385,14 +385,14 @@ is_vertex_unique(struct point *v, struct vertex *vertex, int nvertex)
 {
 	int i;
 	double x, y;
-	
+
 	for(i=0; i < nvertex; ++i) {
 		x= v->x - vertex[i].pos.x;
 		y= v->y - vertex[i].pos.y;
 		if ( sqrt(x*x + y*y) < separate_distance )
 			return FALSE;
 	}
-	
+
 	return TRUE;
 }
 
@@ -405,14 +405,14 @@ find_dot_by_coords(struct point *v, struct geometry *geo)
 {
 	int i;
 	double x, y;
-	
+
 	for(i=0; i < geo->nvertex; ++i) {
 		x= v->x - geo->vertex[i].pos.x;
 		y= v->y - geo->vertex[i].pos.y;
 		if ( sqrt(x*x + y*y) < separate_distance )
 			return geo->vertex + i;
 	}
-	
+
 	g_debug("find_dot_by_coords: vertex not found on dot list");
 	return NULL;
 }
@@ -429,18 +429,18 @@ set_lines_on_square(struct square *sq, struct geometry *geo)
 	struct line *lin;
 	int i, j;
 	double x, y;
-	
+
 	for(i=0; i < 4; ++i) {
 		j= (i + 1) % 4;
 		d1= sq->vertex[i];
 		d2= sq->vertex[j];
-		
+
 		/* align points in line so first point has smallest y (top point) */
 		if (d2->pos.y < d1->pos.y) {
 			d2= sq->vertex[i];
 			d1= sq->vertex[j];
 		}
-		
+
 		/* look for line in line list */
 		for(j=0; j < geo->nlines; ++j) {
 			x= d1->pos.x - geo->lines[j].ends[0]->pos.x;
@@ -453,7 +453,7 @@ set_lines_on_square(struct square *sq, struct geometry *geo)
 					break;	// line found!
 			}
 		}
-		
+
 		/* set square and line fields accordingly */
 		if (j < geo->nlines) { // line found
 			lin= geo->lines + j;
@@ -491,7 +491,7 @@ penrose_tile_to_geometry(GSList *penrose)
 	struct point vertex[4];
 	int i, j;
 	int nsquares;
-	
+
 	/* create new geometry (nsquares, nvertex, nlines) */
 	/* NOTE: oversize nvertex and nlines. Will adjust below */
 	nsquares= g_slist_length(penrose);
@@ -499,7 +499,7 @@ penrose_tile_to_geometry(GSList *penrose)
 	geo->board_size= PENROSE_BOARD_SIZE;
 	geo->board_margin= PENROSE_BOARD_MARGIN;
 	geo->game_size= geo->board_size - 2*geo->board_margin;
-	
+
 	/* Compile vertices (and count how many) */
 	list= penrose;
 	v= geo->vertex;
@@ -521,14 +521,14 @@ penrose_tile_to_geometry(GSList *penrose)
 		}
 		list= g_slist_next(list);
 	}
-	
+
 	/* change to actual number of vertices */
 	geo->nvertex= nvertex;
 	geo->vertex= g_realloc(geo->vertex, nvertex*sizeof(struct vertex));
-	
+
 	/* initialize lines */
 	geometry_initialize_lines(geo);
-	
+
 	/* initialize squares (rombs) */
 	list= penrose;
 	sq= geo->squares;
@@ -537,36 +537,36 @@ penrose_tile_to_geometry(GSList *penrose)
 		sq->id= i;
 		sq->nvertex= 4;
 		sq->vertex= (struct vertex **)g_malloc(4 * sizeof(void*));
-		
+
 		/* set square (romb) vertex pointers */
 		get_romb_vertices((struct romb*)list->data, vertex);
 		for(j=0; j < 4; ++j) {
 			sq->vertex[j]= find_dot_by_coords(&vertex[j], geo);
 		}
-		
+
 		/* calculate position of center of square (romb) */
 		get_romb_center((struct romb*)list->data, &sq->center);
-		
+
 		/* set lines on edges of square (romb) */
 		sq->nsides= 4;
 		sq->sides= (struct line **)g_malloc(4 * sizeof(void *));
 		set_lines_on_square(sq, geo);
-		
+
 		/* ini FX status */
 		sq->fx_status= 0;
 		sq->fx_frame= 0;
-			
-		++sq;	
+
+		++sq;
 		list= g_slist_next(list);
 	}
-	
+
 	/* reallocate to actual number of lines */
 	geo->lines= g_realloc(geo->lines, geo->nlines*sizeof(struct line));
-	
+
 	//printf("nsquares: %d (%d)\n", geo->nsquares, 4*geo->nsquares);
 	//printf("nvertex: %d\n", geo->nvertex);
 	//printf("nlines actual: %d\n", geo->nlines);
-	
+
 	return geo;
 }
 
@@ -574,7 +574,7 @@ penrose_tile_to_geometry(GSList *penrose)
 /*
  * Define seed to generate penrose tile
  * We use seed that generates krazydad's tile with 4 unfoldings:
- * 	5 fat rombs forming a star, with star tip pointing down
+ *	5 fat rombs forming a star, with star tip pointing down
  * Input 'side' is size of initial rombs size
  */
 static GSList*
@@ -595,7 +595,7 @@ create_tile_seed(double side)
 		penrose= g_slist_prepend(penrose, romb);
 		angle= (angle + 72)%360;
 	}
-	
+
 	return penrose;
 }
 
@@ -612,11 +612,11 @@ penrose_calculate_sizes(struct geometry *geo)
 	geo->cross_radius= MIN(geo->sq_width, geo->sq_height)/5.;
 	geo->font_scale= 2.;
 }
-			
+
 
 /*
  * Build a penrose tiling by unfolding two sets of rombs
- */ 
+ */
 struct geometry*
 build_penrose_board(void)
 {
@@ -626,11 +626,11 @@ build_penrose_board(void)
 
 	/*
 	 * radius of penrose tiling must be game_size/2
-	 * 	game_size/2 = side*(3*RATIO + 2 + 2*sin(18))
+	 *	game_size/2 = side*(3*RATIO + 2 + 2*sin(18))
 	 */
 	side= PENROSE_GAME_SIZE/2.0;
 	side/= 3.*RATIO + 2. + 2.*sin(D2R(18));
-	
+
 	/* Create the seed (increase size to account for 4 foldings) */
 	penrose= create_tile_seed(side*pow(RATIO, 4));
 
@@ -639,33 +639,33 @@ build_penrose_board(void)
 	penrose= penrose_unfold(penrose, PENROSE_GAME_SIZE);
 	penrose= penrose_unfold(penrose, PENROSE_GAME_SIZE/1.5);
 	penrose= penrose_unfold(penrose, PENROSE_GAME_SIZE/2.0);
-	
+
 	/* draw to file */
 	//draw_penrose_tile(penrose);
-	
+
 	/* clip rombs to make tile round */
 	/***TODO***/
-	
+
 	/* transform tile into geometry data (points, lines & squares) */
 	geo= penrose_tile_to_geometry(penrose);
-	
+
 	/* finalize geometry data: tie everything together */
 	geometry_connect_elements(geo);
-	
+
 	/* define sizes of drawing bits */
 	penrose_calculate_sizes(geo);
-	
+
 	/* debug: draw to file */
 	//draw_penrose_tile(penrose);
-		
+
 	/* free data */
 	while (penrose != NULL) {
 		g_free(penrose->data);
 		penrose= g_slist_delete_link(penrose, penrose);
 	}
-	
+
 	//exit(1);
-	
+
 	return geo;
 }
 
@@ -683,17 +683,17 @@ draw_penrose_tile(GSList *penrose)
 	cairo_t *cr;
 	struct romb *romb;
 	double x, y;
-	
+
 	surf= cairo_image_surface_create(CAIRO_FORMAT_RGB24, width, height);
 	cr= cairo_create(surf);
-	
+
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_paint(cr);
-	cairo_scale (cr, width/(double)PENROSE_BOARD_SIZE, 
+	cairo_scale (cr, width/(double)PENROSE_BOARD_SIZE,
 		     height/(double)PENROSE_BOARD_SIZE);
 	cairo_set_line_width (cr, 1/500.0*PENROSE_BOARD_SIZE);
 	cairo_set_source_rgb(cr, 0, 0, 0);
-	
+
 	while(penrose != NULL) {
 		romb= (struct romb*)penrose->data;
 		cairo_move_to(cr, romb->pos.x, romb->pos.y);
@@ -723,11 +723,11 @@ draw_penrose_tile(GSList *penrose)
 		cairo_stroke(cr);
 		penrose= g_slist_next(penrose);
 	}
-	
+
 	cairo_destroy(cr);
 	/* write png file */
 	if (cairo_surface_write_to_png(surf, filename) != 0) {
 		g_debug("draw_penrose_tile: error on write to png");
 	}
-	
+
 }

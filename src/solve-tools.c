@@ -3,12 +3,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
@@ -44,7 +44,7 @@ solve_check_valid_game(struct solution *sol)
 	int num_off;
 	struct square *sq;
 	struct vertex *vertex;
-	
+
 	/* check all squares */
 	sq= sol->geo->squares;
 	for(i=0; i < sol->geo->nsquares ; ++i) {
@@ -61,7 +61,7 @@ solve_check_valid_game(struct solution *sol)
 		if (num_on > sol->numbers[i]) return FALSE;
 		if (num_on + num_off < sol->numbers[i]) return FALSE;
 	}
-	
+
 	/* check all vertices, look for no exit lines & more than 2 lines */
 	vertex= sol->geo->vertex;
 	for(i=0; i < sol->geo->nvertex; ++i) {
@@ -76,7 +76,7 @@ solve_check_valid_game(struct solution *sol)
 		if (num_on > 2) return FALSE;
 		++vertex;
 	}
-	
+
 	return TRUE;
 }
 
@@ -90,14 +90,14 @@ struct line*
 goto_next_line(struct line *lin, int *direction, int which)
 {
 	struct line *next=NULL;
-	
+
 	if (*direction == DIRECTION_IN) {
 		if (which >= lin->nin) return NULL;
 		next= lin->in[which];
 		/* new direction that continues the flow away from lin */
-		if (next->ends[0] == lin->ends[0]) 
+		if (next->ends[0] == lin->ends[0])
 			*direction= DIRECTION_OUT;
-		else 
+		else
 			*direction= DIRECTION_IN;
 	} else if (*direction == DIRECTION_OUT) {
 		if (which >= lin->nout) return NULL;
@@ -107,9 +107,9 @@ goto_next_line(struct line *lin, int *direction, int which)
 			*direction= DIRECTION_OUT;
 		else
 			*direction= DIRECTION_IN;
-	} else 
+	} else
 		g_debug("illegal direction: %d", *direction);
-	
+
 	return next;
 }
 
@@ -124,7 +124,7 @@ follow_line(struct solution *sol, struct line *lin, int *direction)
 {
 	int j;
 	struct line *next=NULL;
-	
+
 	if (*direction == DIRECTION_IN) {
 		/* find next line on in this direction */
 		for(j=0; j < lin->nin; ++j) {
@@ -151,9 +151,9 @@ follow_line(struct solution *sol, struct line *lin, int *direction)
 				break;
 			}
 		}
-	} else 
+	} else
 		g_debug("illegal direction: %d", *direction);
-	
+
 	return next;
 }
 
@@ -161,12 +161,12 @@ follow_line(struct solution *sol, struct line *lin, int *direction)
 /*
  * Return a new solution structure
  */
-struct solution* 
+struct solution*
 solve_create_solution_data(struct geometry *geo, struct game *game)
 {
 	struct solution *sol;
 	int i;
-	
+
 	sol= (struct solution *)g_malloc(sizeof(struct solution));
 	sol->geo= geo;
 	sol->game= game;
@@ -174,13 +174,13 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	sol->states= (int *)g_malloc(geo->nlines*sizeof(int));
 	sol->lin_mask= (int *)g_malloc(geo->nlines*sizeof(int));
 	sol->sq_handled= (gboolean *)g_malloc(geo->nsquares*sizeof(gboolean));
-	
+
 	for(i=0; i < geo->nlines; ++i)
 		sol->states[i]= LINE_OFF;
 	for(i=0; i < geo->nsquares; ++i) {
 		sol->sq_handled[i]= FALSE;
 	}
-	
+
 	return sol;
 }
 
@@ -222,7 +222,7 @@ solve_duplicate_solution(struct solution *src)
 	struct solution *sol;
 	int lines_size;
 	int squares_size;
-	
+
 	g_assert(src != NULL);
 	lines_size= src->geo->nlines * sizeof(int);
 	squares_size= src->geo->nsquares * sizeof(gboolean);
@@ -233,10 +233,10 @@ solve_duplicate_solution(struct solution *src)
 	sol->states= (int *)g_malloc(lines_size);
 	sol->lin_mask= (int *)g_malloc(lines_size);
 	sol->sq_handled= (gboolean *)g_malloc(squares_size);
-	
+
 	memcpy(sol->states, src->states, lines_size);
 	memcpy(sol->sq_handled, src->sq_handled, squares_size);
 	memcpy(sol->lin_mask, src->lin_mask, lines_size);
-	
+
 	return sol;
 }
