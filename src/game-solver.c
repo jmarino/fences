@@ -594,7 +594,7 @@ solve_squares_net_1(struct solution *sol)
 /*
  * Cross out trivial lines.
  * Find vertices with 2 lines ON, vertex busy -> cross any OFF line left.
- * Find vertices with only 0 ON and 1 OFF, no exit -> cross it.
+ * Find vertices with all but one crossed (0 ON and 1 OFF) -> cross it.
  * Repeat process until no more lines are crossed out.
  * Find squares with enough lines ON, cross out any OFF lines around it.
  * **NOTE: this function should only modify 'sol->states' field, so it can be
