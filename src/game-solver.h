@@ -41,6 +41,8 @@ struct solution {
 	int *numbers;		// points to game->numbers
 	gboolean *sq_handled;	// has square been handled?
 	int *lin_mask;
+	int nchanges;			// number of line changes in last solution step
+	int *changes;			// ID of lines changed in last solution step
 };
 
 
