@@ -22,11 +22,17 @@
  * Convenience macros
  * They assume that 'struct solution *sol' and 'int count' is defined
  */
-#define SET_LINE(lin)		{sol->states[(lin)->id]= LINE_ON; ++count;}
-#define UNSET_LINE(lin)		{sol->states[(lin)->id]= LINE_OFF; ++count;}
-#define CROSS_LINE(lin)		{sol->states[(lin)->id]= LINE_CROSSED; ++count;}
-#define STATE(lin)		sol->states[(lin)->id]
-#define NUMBER(sq)		sol->numbers[(sq)->id]
+#define SET_LINE(lin)\
+	{sol->states[(lin)->id]= LINE_ON;			\
+		sol->changes[sol->nchanges]= (lin)->id;	\
+		++sol->nchanges;}
+#define CROSS_LINE(lin)\
+	{sol->states[(lin)->id]= LINE_CROSSED;		\
+		sol->changes[sol->nchanges]= (lin)->id;	\
+		++sol->nchanges;}
+//#define UNSET_LINE(lin)		{sol->states[(lin)->id]= LINE_OFF; ++count;}
+#define STATE(lin)			sol->states[(lin)->id]
+#define NUMBER(sq)			sol->numbers[(sq)->id]
 #define MAX_NUMBER(sq)		sol->numbers[(sq)->id] == ((sq)->nsides - 1)
 
 
@@ -62,16 +68,16 @@ struct solution *solve_duplicate_solution(struct solution *src);
 int solve_try_combinations(struct solution *sol, int level);
 
 /* game-solver.c */
-int solve_zero_squares(struct solution *sol);
-int solve_maxnumber_squares(struct solution *sol);
-int solve_maxnumber_incoming_line(struct solution *sol);
-int solve_maxnumber_exit_line(struct solution *sol);
-int solve_corner(struct solution *sol);
-int solve_squares_net_1(struct solution *sol);
-int solve_trivial_squares(struct solution *sol);
-int solve_trivial_vertex(struct solution *sol);
-int solve_bottleneck(struct solution *sol);
-int solve_cross_lines(struct solution *sol);
+void solve_zero_squares(struct solution *sol);
+void solve_maxnumber_squares(struct solution *sol);
+void solve_maxnumber_incoming_line(struct solution *sol);
+void solve_maxnumber_exit_line(struct solution *sol);
+void solve_corner(struct solution *sol);
+void solve_squares_net_1(struct solution *sol);
+void solve_trivial_squares(struct solution *sol);
+void solve_trivial_vertex(struct solution *sol);
+void solve_bottleneck(struct solution *sol);
+void solve_cross_lines(struct solution *sol);
 void solution_loop(struct solution *sol, int max_iter, int max_level, int *level_count);
 struct solution* solve_game(struct geometry *geo, struct game *game, double *score);
 

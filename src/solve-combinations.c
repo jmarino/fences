@@ -136,8 +136,10 @@ combination_solve1(struct solution *sol)
 
 	while(valid && count > 0) {
 		(void)solve_cross_lines(sol);
-		count= solve_trivial_vertex(sol);
-		count+= solve_trivial_squares(sol);
+		solve_trivial_vertex(sol);
+		count= sol->nchanges;
+		solve_trivial_squares(sol);
+		count+= sol->nchanges;
 		valid= solve_check_valid_game(sol);
 	}
 	return valid;
@@ -154,29 +156,28 @@ static gboolean
 combination_solve2(struct solution *sol)
 {
 	gboolean valid=TRUE;
-	int count=0;
 	int level=0;
 	int iter=0;
 
 	while(valid && level <= 5 && iter < 5) {
 		if (level == 0) {
-			(void)solve_cross_lines(sol);
-			count= solve_trivial_vertex(sol);
+			solve_cross_lines(sol);
+			solve_trivial_vertex(sol);
 		} else if (level == 1) {
-			count= solve_trivial_squares(sol);
+			solve_trivial_squares(sol);
 		} else if (level == 2) {
-			count= solve_bottleneck(sol);
+			solve_bottleneck(sol);
 		} else if (level == 3) {
-			count= solve_corner(sol);
+			solve_corner(sol);
 		} else if (level == 4) {
-			count= solve_maxnumber_incoming_line(sol);
-			if (count == 0) count= solve_maxnumber_exit_line(sol);
+			solve_maxnumber_incoming_line(sol);
+			if (sol->nchanges == 0) solve_maxnumber_exit_line(sol);
 		} else if (level == 5) {
-			count= solve_squares_net_1(sol);
+			solve_squares_net_1(sol);
 		}
 
 		/* if nothing found go to next level */
-		if (count == 0) {
+		if (sol->nchanges == 0) {
 			++level;
 		} else {
 			valid= solve_check_valid_game(sol);
