@@ -70,6 +70,7 @@ struct solution* solve_create_solution_data(struct geometry *geo, struct game *g
 void solve_free_solution_data(struct solution *sol);
 void solve_copy_solution(struct solution *dest, struct solution *src);
 struct solution *solve_duplicate_solution(struct solution *src);
+void solve_reset_solution(struct solution *sol);
 
 /* solve-combinations.c */
 int solve_try_combinations(struct solution *sol, int level);

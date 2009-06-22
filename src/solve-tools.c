@@ -261,3 +261,18 @@ solve_duplicate_solution(struct solution *src)
 
 	return sol;
 }
+
+
+/*
+ * Reset solution state
+ */
+void
+solve_reset_solution(struct solution *sol)
+{
+	memset(sol->states, 0, sol->geo->nlines * sizeof(int));
+	memset(sol->lin_mask, 0, sol->geo->nlines * sizeof(int));
+	memset(sol->sq_handled, 0, sol->geo->nsquares * sizeof(gboolean));
+	memset(sol->level_count, 0, SOLVE_NUM_LEVELS * sizeof(int));
+	sol->nchanges= 0;
+	sol->nsq_changes= 0;
+}
