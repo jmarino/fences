@@ -850,7 +850,7 @@ solve_check_solution(struct solution *sol)
  * Calculate difficulty of game from level_count
  */
 static double
-calculate_difficulty(int *level_count, int nsquares)
+calculate_difficulty(struct solution *sol)
 {
 	int i;
 	double max_diff[SOLVE_NUM_LEVELS]={1.0, 1.0, 3.0, 4.0, 5.0, 7.0, 8.0, 9.0, 10.0};
@@ -862,16 +862,16 @@ calculate_difficulty(int *level_count, int nsquares)
 
 	/* find top level used and calculate levels' score*/
 	for(i=0; i < SOLVE_NUM_LEVELS; ++i) {
-		if (level_count[i] > 0)
+		if (sol->level_count[i] > 0)
 			top_level= i;
-		score+= weights[i] * level_count[i];
-		printf("(%1d) %3d (@ %4.2lf) -> %4.2lf\n", i, level_count[i], weights[i],
-		       weights[i] * level_count[i]);
+		score+= weights[i] * sol->level_count[i];
+		printf("(%1d) %3d (@ %4.2lf) -> %4.2lf\n", i, sol->level_count[i], weights[i],
+		       weights[i] * sol->level_count[i]);
 	}
 
-	printf("total: 0.5 * %4.2lf/%3d ", score, level_count[0]);
-	if (level_count[0] > 0) {
-		score= score/level_count[0];
+	printf("total: 0.5 * %4.2lf/%3d ", score, sol->level_count[0]);
+	if (sol->level_count[0] > 0) {
+		score= score/sol->level_count[0];
 	}
 	if (score > 2.0) score= 2.0;
 	score= score/2.0;
@@ -972,7 +972,7 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 	for(i=0; i < SOLVE_NUM_LEVELS; ++i)
 		printf("-Level %1d: %3d\n", i, sol->level_count[i]);
 
-	*final_score= calculate_difficulty(sol->level_count, geo->nsquares);
+	*final_score= calculate_difficulty(sol);
 
 	/* check if we have a valid solution */
 	if (solve_check_solution(sol)) {
@@ -1034,7 +1034,7 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 		solution_loop(sol, 1, -1);
 	}
 
-	final_score= calculate_difficulty(sol->level_count, geo->nsquares);
+	final_score= calculate_difficulty(sol);
 
 	/* print current level counts */
 	for(i=0; i < SOLVE_NUM_LEVELS; ++i) {
