@@ -177,6 +177,9 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	sol->nchanges= 0;
 	sol->changes= (int *)g_malloc(geo->nlines*sizeof(int));
 	/* **TODO** size of changes is overkill (but safe): optimize */
+	sol->nsq_changes= 0;
+	sol->sq_changes= (int *)g_malloc(geo->nsquares*sizeof(int));
+	/* **TODO** size of sq_changes is overkill (but safe): optimize */
 
 	for(i=0; i < geo->nlines; ++i)
 		sol->states[i]= LINE_OFF;
@@ -198,6 +201,7 @@ solve_free_solution_data(struct solution *sol)
 	g_free(sol->lin_mask);
 	g_free(sol->sq_handled);
 	g_free(sol->changes);
+	g_free(sol->sq_changes);
 	g_free(sol);
 }
 
@@ -216,6 +220,8 @@ solve_copy_solution(struct solution *dest, struct solution *src)
 	memcpy(dest->lin_mask, src->lin_mask, src->geo->nlines*sizeof(int));
 	dest->nchanges= src->nchanges;
 	memcpy(dest->changes, src->changes, src->geo->nlines*sizeof(int));
+	dest->nsq_changes= src->nsq_changes;
+	memcpy(dest->sq_changes, src->sq_changes, src->geo->nsquares*sizeof(int));
 }
 
 
@@ -241,11 +247,14 @@ solve_duplicate_solution(struct solution *src)
 	sol->sq_handled= (gboolean *)g_malloc(squares_size);
 	sol->changes= (int *)g_malloc(lines_size);
 	sol->nchanges= src->nchanges;
+	sol->sq_changes= (int *)g_malloc(squares_size);
+	sol->nsq_changes= src->nsq_changes;
 
 	memcpy(sol->states, src->states, lines_size);
 	memcpy(sol->sq_handled, src->sq_handled, squares_size);
 	memcpy(sol->lin_mask, src->lin_mask, lines_size);
 	memcpy(sol->changes, src->changes, lines_size);
+	memcpy(sol->sq_changes, src->sq_changes, squares_size);
 
 	return sol;
 }

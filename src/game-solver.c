@@ -139,11 +139,13 @@ solve_zero_squares(struct solution *sol)
 	struct square *sq;
 	struct geometry *geo=sol->geo;
 
-	sol->nchanges= 0;
+	sol->nchanges= sol->nsq_changes= 0;
 	for(i=0; i < geo->nsquares; ++i) {
 		if (sol->numbers[i] != 0) continue; // only care about 0 squares
 		/* cross sides of square */
 		sol->sq_handled[i]= TRUE;	// mark square as handled
+		sol->sq_changes[sol->nsq_changes]= i;
+		++sol->nsq_changes;
 		sq= geo->squares + i;
 		for(j=0; j < sq->nsides; ++j)
 			CROSS_LINE(sq->sides[j]);
@@ -165,7 +167,7 @@ solve_trivial_squares(struct solution *sol)
 	struct square *sq;
 	struct geometry *geo=sol->geo;
 
-	sol->nchanges= 0;
+	sol->nchanges= sol->nsq_changes= 0;
 	for(i=0; i < geo->nsquares; ++i) {
 		/* only unhandled squares */
 		if (sol->sq_handled[i])
@@ -189,6 +191,8 @@ solve_trivial_squares(struct solution *sol)
 		/* enough lines crossed? -> set ON the OFF ones */
 		if ( sq->nsides - lines_crossed == NUMBER(sq) ) {
 			sol->sq_handled[i]= TRUE;
+			sol->sq_changes[sol->nsq_changes]= i;
+			++sol->nsq_changes;
 			for(j=0; j < sq->nsides; ++j) {
 				if (STATE(sq->sides[j]) == LINE_OFF)
 					SET_LINE(sq->sides[j]);
@@ -215,7 +219,7 @@ solve_trivial_vertex(struct solution *sol)
 	struct vertex *vertex;
 	struct geometry *geo=sol->geo;
 
-	sol->nchanges= 0;
+	sol->nchanges= sol->nsq_changes= 0;
 	vertex= geo->vertex;
 	for(i=0; i < geo->nvertex; ++i) {
 		lines_on= lines_off= 0;
@@ -255,8 +259,9 @@ solve_maxnumber_squares(struct solution *sol)
 	struct vertex *vertex;
 	struct line *lin;
 	struct geometry *geo=sol->geo;
+	int cache;
 
-	sol->nchanges= 0;
+	sol->nchanges= sol->nsq_changes= 0;
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
@@ -267,12 +272,18 @@ solve_maxnumber_squares(struct solution *sol)
 		/* inspect vertices of square */
 		for(j=0; j < sq->nvertex; ++j) {
 			vertex= sq->vertex[j];
+			cache= sol->nchanges;
 			/* vertex is in a corner -> enable lines touching it */
 			if (vertex->nlines == 2) {
 				if (STATE(vertex->lines[0]) != LINE_ON)
 					SET_LINE(vertex->lines[0]);
 				if (STATE(vertex->lines[1]) != LINE_ON)
 					SET_LINE(vertex->lines[1]);
+				/* any changes? -> record square */
+				if (sol->nchanges > cache) {
+					sol->sq_changes[sol->nsq_changes]= i;
+					++sol->nsq_changes;
+				}
 				continue;
 			}
 			/* at this point vertex touches at least 2 squares (not in a corner) */
@@ -311,6 +322,11 @@ solve_maxnumber_squares(struct solution *sol)
 						CROSS_LINE(vertex->lines[k]);
 
 				}
+				/* lines changed -> record square */
+				if (sol->nchanges > cache) {
+					sol->sq_changes[sol->nsq_changes]= i;
+					++sol->nsq_changes;
+				}
 			} else {	// no shared side: diagonally opposed squares
 				/* set all lines around squares that don't touch vertex */
 				for(k=0; k < sq->nsides; ++k) {
@@ -324,6 +340,11 @@ solve_maxnumber_squares(struct solution *sol)
 					    sq2->sides[k]->ends[1] == vertex) continue;
 					if (STATE(sq2->sides[k]) != LINE_ON)
 						SET_LINE(sq2->sides[k]);
+				}
+				/* lines changed -> record square */
+				if (sol->nchanges > cache) {
+					sol->sq_changes[sol->nsq_changes]= i;
+					++sol->nsq_changes;
 				}
 			}
 		}
@@ -349,8 +370,9 @@ solve_maxnumber_incoming_line(struct solution *sol)
 	int nlines_on;
 	struct line *lin=NULL;
 	struct geometry *geo=sol->geo;
+	int cache;
 
-	sol->nchanges= 0;
+	sol->nchanges= sol->nsq_changes= 0;
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
@@ -373,6 +395,7 @@ solve_maxnumber_incoming_line(struct solution *sol)
 			/* make sure ON line is not part of square */
 			if (line_touches_square(lin, sq)) continue;
 
+			cache= sol->nchanges;
 			/* cross lines going out from vertex that don't
 			 * touch square */
 			for(k=0; k < vertex->nlines; ++k) {
@@ -388,6 +411,11 @@ solve_maxnumber_incoming_line(struct solution *sol)
 				    sq->sides[k]->ends[1] == vertex) continue;
 				if (STATE(sq->sides[k]) != LINE_ON)
 					SET_LINE(sq->sides[k]);
+			}
+			/* lines changed? record square */
+			if (sol->nchanges > cache) {
+				sol->sq_changes[sol->nsq_changes]= i;
+				++sol->nsq_changes;
 			}
 			break;
 		}
@@ -413,7 +441,7 @@ solve_maxnumber_exit_line(struct solution *sol)
 	int nlines_off;
 	struct geometry *geo=sol->geo;
 
-	sol->nchanges= 0;
+	sol->nchanges= sol->nsq_changes= 0;
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
@@ -460,6 +488,8 @@ solve_maxnumber_exit_line(struct solution *sol)
 
 		/* only one line OFF -> set it ON */
 		SET_LINE(vertex->lines[pos]);
+		sol->sq_changes[sol->nsq_changes]= i;
+		++sol->nsq_changes;
 		break;
 	}
 }
@@ -478,8 +508,9 @@ solve_corner(struct solution *sol)
 	struct square *sq;
 	struct vertex *vertex;
 	struct geometry *geo=sol->geo;
+	int cache;
 
-	sol->nchanges= 0;
+	sol->nchanges= sol->nsq_changes= 0;
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
@@ -488,6 +519,7 @@ solve_corner(struct solution *sol)
 		    (sol->numbers[i] != sq->nsides - 1 && sol->numbers[i] != 1))
 			continue;
 
+		cache= sol->nchanges;
 		/* inspect vertices of square */
 		for(j=0; j < sq->nvertex; ++j) {
 			vertex= sq->vertex[j];
@@ -508,6 +540,11 @@ solve_corner(struct solution *sol)
 				}
 			}
 		}
+		/* any line changes? record square */
+		if (sol->nchanges > cache) {
+			sol->sq_changes[sol->nsq_changes]= i;
+			++sol->nsq_changes;
+		}
 	}
 }
 
@@ -527,8 +564,9 @@ solve_squares_net_1(struct solution *sol)
 	struct line *lin=NULL;
 	struct vertex *vertex;
 	struct geometry *geo=sol->geo;
+	int cache;
 
-	sol->nchanges= 0;
+	sol->nchanges= sol->nsq_changes= 0;
 	/* iterate over all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		sq= geo->squares + i;
@@ -544,6 +582,7 @@ solve_squares_net_1(struct solution *sol)
 		}
 		if (NUMBER(sq) - nlines_on != 1) continue;
 
+		cache= sol->nchanges;
 		/* inspect vertices of square */
 		for(j=0; j < sq->nvertex; ++j) {
 			vertex= sq->vertex[j];
@@ -574,6 +613,11 @@ solve_squares_net_1(struct solution *sol)
 					CROSS_LINE(sq->sides[k]);
 			}
 		}
+		/* any line changes? record square */
+		if (sol->nchanges > cache) {
+			sol->sq_changes[sol->nsq_changes]= i;
+			++sol->nsq_changes;
+		}
 	}
 }
 
@@ -598,8 +642,9 @@ solve_cross_lines(struct solution *sol)
 	struct square *sq;
 	struct geometry *geo=sol->geo;
 	int old_count=-1;
+	int cache;
 
-	sol->nchanges= 0;
+	sol->nchanges= sol->nsq_changes= 0;
 	/* go through all squares */
 	for(i=0; i < geo->nsquares; ++i) {
 		/* only unhandled squares */
@@ -619,10 +664,16 @@ solve_cross_lines(struct solution *sol)
 			/* square not finished, ignore */
 			if (num_on != NUMBER(sq)) continue;
 		}
+		cache= sol->nchanges;
 		/* square is complete, cross any OFF left */
 		for(j=0; j < sq->nsides; ++j) {
 			if (STATE(sq->sides[j]) == LINE_OFF)
 				CROSS_LINE(sq->sides[j]);
+		}
+		/* any line changes? record square */
+		if (sol->nchanges > cache) {
+			sol->sq_changes[sol->nsq_changes]= i;
+			++sol->nsq_changes;
 		}
 	}
 
@@ -676,7 +727,7 @@ solve_bottleneck(struct solution *sol)
 	int length=0;
 	gboolean all_handled=TRUE;
 
-	sol->nchanges= 0;
+	sol->nchanges= sol->nsq_changes= 0;
 	/* check if all numbered squares have been handled */
 	for(i=0; i < geo->nsquares; ++i) {
 		if (sol->numbers[i] != -1 && sol->sq_handled[i] == FALSE) {

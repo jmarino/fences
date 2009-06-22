@@ -49,6 +49,8 @@ struct solution {
 	int *lin_mask;
 	int nchanges;			// number of line changes in last solution step
 	int *changes;			// ID of lines changed in last solution step
+	int nsq_changes;		// number of squares involved in last solution step
+	int *sq_changes;		// ID of squares that caused changes in last step
 };
 
 
