@@ -36,6 +36,10 @@
 #define MAX_NUMBER(sq)		sol->numbers[(sq)->id] == ((sq)->nsides - 1)
 
 
+/* number of solution levels */
+#define SOLVE_MAX_LEVEL		8
+#define SOLVE_NUM_LEVELS	(SOLVE_MAX_LEVEL + 1)
+
 
 /*
  * Contains detail about game solution
@@ -51,6 +55,7 @@ struct solution {
 	int *changes;			// ID of lines changed in last solution step
 	int nsq_changes;		// number of squares involved in last solution step
 	int *sq_changes;		// ID of squares that caused changes in last step
+	int level_count[SOLVE_NUM_LEVELS];	// solution score by level
 };
 
 
@@ -80,7 +85,7 @@ void solve_trivial_squares(struct solution *sol);
 void solve_trivial_vertex(struct solution *sol);
 void solve_bottleneck(struct solution *sol);
 void solve_cross_lines(struct solution *sol);
-void solution_loop(struct solution *sol, int max_iter, int max_level, int *level_count);
+void solution_loop(struct solution *sol, int max_iter, int max_level);
 struct solution* solve_game(struct geometry *geo, struct game *game, double *score);
 
 #endif

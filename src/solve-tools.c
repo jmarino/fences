@@ -186,6 +186,7 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	for(i=0; i < geo->nsquares; ++i) {
 		sol->sq_handled[i]= FALSE;
 	}
+	memset(sol->level_count, 0, SOLVE_NUM_LEVELS * sizeof(int));
 
 	return sol;
 }
@@ -222,6 +223,7 @@ solve_copy_solution(struct solution *dest, struct solution *src)
 	memcpy(dest->changes, src->changes, src->geo->nlines*sizeof(int));
 	dest->nsq_changes= src->nsq_changes;
 	memcpy(dest->sq_changes, src->sq_changes, src->geo->nsquares*sizeof(int));
+	memcpy(dest->level_count, src->level_count, SOLVE_NUM_LEVELS * sizeof(int));
 }
 
 
@@ -255,6 +257,7 @@ solve_duplicate_solution(struct solution *src)
 	memcpy(sol->lin_mask, src->lin_mask, lines_size);
 	memcpy(sol->changes, src->changes, lines_size);
 	memcpy(sol->sq_changes, src->sq_changes, squares_size);
+	memcpy(sol->level_count, src->level_count, SOLVE_NUM_LEVELS * sizeof(int));
 
 	return sol;
 }

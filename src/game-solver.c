@@ -22,10 +22,6 @@
 #include "game-solver.h"
 
 
-/* number of solution levels */
-#define MAX_LEVEL	8
-#define NUM_LEVELS	(MAX_LEVEL + 1)
-
 
 /*
  * Description:
@@ -857,15 +853,15 @@ static double
 calculate_difficulty(int *level_count, int nsquares)
 {
 	int i;
-	double max_diff[NUM_LEVELS]={1.0, 1.0, 3.0, 4.0, 5.0, 7.0, 8.0, 9.0, 10.0};
-	double weights[NUM_LEVELS]={0.5, 0.75, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+	double max_diff[SOLVE_NUM_LEVELS]={1.0, 1.0, 3.0, 4.0, 5.0, 7.0, 8.0, 9.0, 10.0};
+	double weights[SOLVE_NUM_LEVELS]={0.5, 0.75, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
 	double score=0;
 	double difficulty;
 	int top_level=0;
 	double step;
 
 	/* find top level used and calculate levels' score*/
-	for(i=0; i < NUM_LEVELS; ++i) {
+	for(i=0; i < SOLVE_NUM_LEVELS; ++i) {
 		if (level_count[i] > 0)
 			top_level= i;
 		score+= weights[i] * level_count[i];
@@ -900,13 +896,13 @@ calculate_difficulty(int *level_count, int nsquares)
  * level_count: array to count level scores (if NULL don't count)
  */
 void
-solution_loop(struct solution *sol, int max_iter, int max_level, int *level_count)
+solution_loop(struct solution *sol, int max_iter, int max_level)
 {
 	int iter=0;
 	int level=0;
 	int last_level=0;
 
-	if (max_level < 0) max_level= MAX_LEVEL;
+	if (max_level < 0) max_level= SOLVE_MAX_LEVEL;
 	while(level <= max_level) {
 		/* */
 		if (level == 0) {
@@ -935,8 +931,8 @@ solution_loop(struct solution *sol, int max_iter, int max_level, int *level_coun
 		if (sol->nchanges == 0) {
 			++level;
 		} else {
-			if (level_count != NULL) {
-				++level_count[level];
+			if (sol->level_count != NULL) {
+				++sol->level_count[level];
 				//printf("level %d: %d\n", level, count);
 			}
 			last_level= level;
@@ -958,7 +954,6 @@ struct solution*
 solve_game(struct geometry *geo, struct game *game, double *final_score)
 {
 	struct solution *sol;
-	int level_count[NUM_LEVELS]={0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	/* init solution structure */
 	sol= solve_create_solution_data(geo, game);
@@ -970,14 +965,14 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 	printf("maxnumber: changes %d\n", sol->nchanges);
 
 	/* run solution loop with no limits */
-	solution_loop(sol, -1, -1, level_count);
+	solution_loop(sol, -1, -1);
 
 	/* print level counts */
 	int i;
-	for(i=0; i < NUM_LEVELS; ++i)
-		printf("-Level %1d: %3d\n", i, level_count[i]);
+	for(i=0; i < SOLVE_NUM_LEVELS; ++i)
+		printf("-Level %1d: %3d\n", i, sol->level_count[i]);
 
-	*final_score= calculate_difficulty(level_count, geo->nsquares);
+	*final_score= calculate_difficulty(sol->level_count, geo->nsquares);
 
 	/* check if we have a valid solution */
 	if (solve_check_solution(sol)) {
@@ -1021,7 +1016,6 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 	double final_score;
 
 	static int level=-2;
-	static int level_count[NUM_LEVELS]={0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	if (first) {
 		/* init solution structure */
@@ -1037,14 +1031,14 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 		++level;
 	} else {
 		/* run solution loop for 1 iteration */
-		solution_loop(sol, 1, -1, level_count);
+		solution_loop(sol, 1, -1);
 	}
 
-	final_score= calculate_difficulty(level_count, geo->nsquares);
+	final_score= calculate_difficulty(sol->level_count, geo->nsquares);
 
 	/* print current level counts */
-	for(i=0; i < NUM_LEVELS; ++i) {
-		printf("Level %1d: %d\n", i, level_count[i]);
+	for(i=0; i < SOLVE_NUM_LEVELS; ++i) {
+		printf("Level %1d: %d\n", i, sol->level_count[i]);
 	}
 	printf("-----> %5.2lf <------\n", final_score);
 
