@@ -144,7 +144,8 @@ solve_zero_squares(struct solution *sol)
 		++sol->nsq_changes;
 		sq= geo->squares + i;
 		for(j=0; j < sq->nsides; ++j)
-			CROSS_LINE(sq->sides[j]);
+			if (STATE(sq->sides[j]) == LINE_OFF)
+				CROSS_LINE(sq->sides[j]);
 	}
 }
 
