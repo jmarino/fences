@@ -374,3 +374,28 @@ draw_benchmark(GtkWidget *drawarea)
 	printf("Benchmark (%d): total= %7.2lf ms ; iter=%5.2lf ms\n", iters,
 	       result/1000., result/iters/1000.);
 }
+
+
+/*
+ * Draw to file
+ */
+void
+draw_board_to_file(struct geometry *geo, struct game *game, const char *filename)
+{
+	cairo_surface_t *surf;
+	cairo_t *cr;
+	struct game *game_bak=board.game;
+	struct geometry *geo_bak=board.geo;
+
+	surf= cairo_image_surface_create(CAIRO_FORMAT_RGB24, 600, 600);
+	cr= cairo_create(surf);
+
+	board.geo= geo;
+	board.game= game;
+	draw_board(cr, 600, 600);
+	cairo_surface_write_to_png(surf, filename);
+	cairo_destroy(cr);
+	cairo_surface_destroy(surf);
+	board.geo= geo_bak;
+	board.game= game_bak;
+}
