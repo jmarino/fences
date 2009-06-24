@@ -90,5 +90,6 @@ void solve_bottleneck(struct solution *sol);
 void solve_cross_lines(struct solution *sol);
 void solution_loop(struct solution *sol, int max_iter, int max_level);
 struct solution* solve_game(struct geometry *geo, struct game *game, double *score);
+void solve_game_solution(struct solution *sol);
 
 #endif

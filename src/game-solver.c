@@ -1053,3 +1053,29 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 
 	//solve_free_solution_data(sol);
 }
+
+
+/*
+ * Solve game from given solution struct
+ */
+void
+solve_game_solution(struct solution *sol)
+{
+	/* These two tests only run once at the very start */
+	solve_zero_squares(sol);
+	solve_maxnumber_squares(sol);
+
+	/* run solution loop with no limits */
+	solution_loop(sol, -1, -1);
+
+	calculate_difficulty(sol);
+
+	/* check if we have a valid solution */
+	if (solve_check_solution(sol)) {
+		sol->solved= TRUE;
+		printf("Solution good! (%lf)\n", sol->difficulty);
+	} else {
+		sol->solved= FALSE;
+		printf("Solution BAD! (%lf)\n", sol->difficulty);
+	}
+}
