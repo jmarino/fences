@@ -56,6 +56,8 @@ struct solution {
 	int nsq_changes;		// number of squares involved in last solution step
 	int *sq_changes;		// ID of squares that caused changes in last step
 	int level_count[SOLVE_NUM_LEVELS];	// solution score by level
+	gboolean solved;		// is solution complete
+	double difficulty;		// difficulty of solution
 };
 
 

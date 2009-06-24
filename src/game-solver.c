@@ -850,14 +850,13 @@ solve_check_solution(struct solution *sol)
 /*
  * Calculate difficulty of game from level_count
  */
-static double
+static void
 calculate_difficulty(struct solution *sol)
 {
 	int i;
 	double max_diff[SOLVE_NUM_LEVELS]={1.0, 1.0, 3.0, 4.0, 5.0, 7.0, 8.0, 9.0, 10.0};
 	double weights[SOLVE_NUM_LEVELS]={0.5, 0.75, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
 	double score=0;
-	double difficulty;
 	int top_level=0;
 	double step;
 
@@ -880,13 +879,11 @@ calculate_difficulty(struct solution *sol)
 
 	if (top_level == 0) {
 		/* consider unlikely case of top_level == 0 */
-		difficulty= score * max_diff[0];
+		sol->difficulty= score * max_diff[0];
 	} else {
 		step= max_diff[top_level] - max_diff[top_level - 1];
-		difficulty= max_diff[top_level - 1] + score * step;
+		sol->difficulty= max_diff[top_level - 1] + score * step;
 	}
-
-	return difficulty;
 }
 
 
@@ -973,14 +970,16 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 	for(i=0; i < SOLVE_NUM_LEVELS; ++i)
 		printf("-Level %1d: %3d\n", i, sol->level_count[i]);
 
-	*final_score= calculate_difficulty(sol);
+	calculate_difficulty(sol);
 
 	/* check if we have a valid solution */
 	if (solve_check_solution(sol)) {
-		printf("Solution good! (%lf)\n", *final_score);
+		sol->solved= TRUE;
+		printf("Solution good! (%lf)\n", sol->difficulty);
 	} else {
-		*final_score+= 10;
-		printf("Solution BAD! (%lf)\n", *final_score);
+		sol->solved= FALSE;
+		sol->difficulty+= 10;
+		printf("Solution BAD! (%lf)\n", sol->difficulty);
 	}
 
 	return sol;
@@ -1014,7 +1013,6 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 	int i;
 	static struct solution *sol;
 	static gboolean first=TRUE;
-	double final_score;
 
 	static int level=-2;
 
@@ -1035,13 +1033,13 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 		solution_loop(sol, 1, -1);
 	}
 
-	final_score= calculate_difficulty(sol);
+	calculate_difficulty(sol);
 
 	/* print current level counts */
 	for(i=0; i < SOLVE_NUM_LEVELS; ++i) {
 		printf("Level %1d: %d\n", i, sol->level_count[i]);
 	}
-	printf("-----> %5.2lf <------\n", final_score);
+	printf("-----> %5.2lf <------\n", sol->difficulty);
 
 
 
@@ -1050,7 +1048,7 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 		game->states[i]= sol->states[i];
 
 	if (solve_check_solution(sol)) {
-		printf("**Solution found! (%lf)\n", final_score);
+		printf("**Solution found! (%lf)\n", sol->difficulty);
 	}
 
 	//solve_free_solution_data(sol);
