@@ -1059,14 +1059,14 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
  * Solve game from given solution struct
  */
 void
-solve_game_solution(struct solution *sol)
+solve_game_solution(struct solution *sol, int max_level)
 {
 	/* These two tests only run once at the very start */
 	solve_zero_squares(sol);
 	solve_maxnumber_squares(sol);
 
 	/* run solution loop with no limits */
-	solution_loop(sol, -1, -1);
+	solution_loop(sol, -1, max_level);
 
 	calculate_difficulty(sol);
 
