@@ -58,6 +58,7 @@ struct solution {
 	int level_count[SOLVE_NUM_LEVELS];	// solution score by level
 	gboolean solved;		// is solution complete
 	double difficulty;		// difficulty of solution
+	int last_level;			// level used in last step of solution
 };
 
 

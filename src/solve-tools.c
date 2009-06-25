@@ -182,6 +182,7 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	/* **TODO** size of sq_changes is overkill (but safe): optimize */
 	sol->solved= FALSE;
 	sol->difficulty= 0.0;
+	sol->last_level= -1;
 
 	for(i=0; i < geo->nlines; ++i)
 		sol->states[i]= LINE_OFF;
@@ -228,6 +229,7 @@ solve_copy_solution(struct solution *dest, struct solution *src)
 	memcpy(dest->level_count, src->level_count, SOLVE_NUM_LEVELS * sizeof(int));
 	dest->solved= src->solved;
 	dest->difficulty= src->difficulty;
+	dest->last_level= src->last_level;
 }
 
 
@@ -257,6 +259,7 @@ solve_duplicate_solution(struct solution *src)
 	sol->nsq_changes= src->nsq_changes;
 	sol->solved= src->solved;
 	sol->difficulty= src->difficulty;
+	sol->last_level= src->last_level;
 
 	memcpy(sol->states, src->states, lines_size);
 	memcpy(sol->sq_handled, src->sq_handled, squares_size);
@@ -283,4 +286,5 @@ solve_reset_solution(struct solution *sol)
 	sol->nsq_changes= 0;
 	sol->solved= FALSE;
 	sol->difficulty= 0.0;
+	sol->last_level= -1;
 }

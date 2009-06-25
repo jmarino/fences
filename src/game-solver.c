@@ -899,7 +899,6 @@ solution_loop(struct solution *sol, int max_iter, int max_level)
 {
 	int iter=0;
 	int level=0;
-	int last_level=0;
 
 	if (max_level < 0) max_level= SOLVE_MAX_LEVEL;
 	while(level <= max_level) {
@@ -934,7 +933,7 @@ solution_loop(struct solution *sol, int max_iter, int max_level)
 				++sol->level_count[level];
 				//printf("level %d: %d\n", level, count);
 			}
-			last_level= level;
+			sol->last_level= level;
 			level= 0;
 			++iter;
 		}
