@@ -137,7 +137,8 @@ solve_zero_squares(struct solution *sol)
 
 	sol->nchanges= sol->nsq_changes= 0;
 	for(i=0; i < geo->nsquares; ++i) {
-		if (sol->numbers[i] != 0) continue; // only care about 0 squares
+		/* only care about unhandled 0 squares */
+		if (sol->numbers[i] != 0 || sol->sq_handled[i]) continue;
 		/* cross sides of square */
 		sol->sq_handled[i]= TRUE;	// mark square as handled
 		sol->sq_changes[sol->nsq_changes]= i;
