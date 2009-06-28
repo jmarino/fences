@@ -165,7 +165,6 @@
             <child>
               <widget class="GtkToolButton" id="undo_toolbutton">
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="stock_id">gtk-undo</property>
               </widget>
               <packing>
@@ -176,7 +175,6 @@
             <child>
               <widget class="GtkToolButton" id="redo_toolbutton">
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="stock_id">gtk-redo</property>
               </widget>
               <packing>

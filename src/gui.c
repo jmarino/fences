@@ -112,14 +112,18 @@ gui_initialize(GtkWidget *window, struct board *board)
 	gboolean state;
 
 	/* set state of undo */
-	widget= g_object_get_data(G_OBJECT(window), "undo_toolbutton");
 	if (g_list_next(board->history) != NULL) state= TRUE;
 	else state= FALSE;
-	//gtk_widget_set_sensitive (widget, state);
+	widget= g_object_get_data(G_OBJECT(window), "undo_toolbutton");
+	gtk_widget_set_sensitive (widget, state);
+	widget= g_object_get_data(G_OBJECT(window), "undo_menuitem");
+	gtk_action_set_sensitive(GTK_ACTION(widget), state);
 
 	/* set state of redo */
-	widget= g_object_get_data(G_OBJECT(window), "redo_toolbutton");
 	if (g_list_previous(board->history) != NULL) state= TRUE;
 	else state= FALSE;
-	//gtk_widget_set_sensitive (widget, state);
+	widget= g_object_get_data(G_OBJECT(window), "redo_toolbutton");
+	gtk_widget_set_sensitive (widget, state);
+	widget= g_object_get_data(G_OBJECT(window), "redo_menuitem");
+	gtk_action_set_sensitive(GTK_ACTION(widget), state);
 }
