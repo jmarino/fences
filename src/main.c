@@ -23,7 +23,6 @@
 #include <config.h>
 
 #include <gtk/gtk.h>
-//#include <glade/glade.h>
 
 
 #include "gamedata.h"
@@ -57,28 +56,13 @@
 extern struct board board;
 
 
-/* For testing propose use the local (not installed) glade file */
-/* #define GLADE_FILE PACKAGE_DATA_DIR"/fences/glade/fences.glade" */
-#define GLADE_FILE "fences.glade"
+/* UI definition file */
 #define XML_FILE "fences.xml"
 
+
 /*
-GtkWidget*
-create_window2 (void)
-{
-	GtkWidget *window;
-	GladeXML *gxml;
-
-	gxml = glade_xml_new (GLADE_FILE, NULL, NULL);
-
-	// This is important
-	glade_xml_signal_autoconnect (gxml);
-	window = glade_xml_get_widget (gxml, "window");
-
-	return window;
-}*/
-
-
+ *
+ */
 int
 main (int argc, char *argv[])
 {
@@ -99,9 +83,6 @@ main (int argc, char *argv[])
 
 	/* Init board */
 	initialize_board();
-
-	/* test routine to build loop */
-	//try_loop(board.geo, board.game);
 
 	gtk_set_locale ();
 	gtk_init (&argc, &argv);
