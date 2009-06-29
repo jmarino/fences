@@ -203,40 +203,20 @@ board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data)
 
 
 /*
- * Toolbar button undo
+ * Toolbar button or menuitem 'Undo'
  */
 void
-undo_button_clicked(GtkToolButton *toolbutton, gpointer data)
+undo_button_clicked(GtkWidget *button, gpointer data)
 {
 	history_travel_history((struct board*)data, -1);
 }
 
 
 /*
- * Toolbar button undo
+ * Toolbar button or menuitem 'Redo'
  */
 void
-redo_button_clicked(GtkToolButton *toolbutton, gpointer data)
-{
-	history_travel_history((struct board*)data, 1);
-}
-
-
-/*
- * Menu item undo
- */
-void
-undo_menu_clicked(GtkMenuItem *menuitem, gpointer data)
-{
-	history_travel_history((struct board*)data, -1);
-}
-
-
-/*
- * Menu item undo
- */
-void
-redo_menu_clicked(GtkMenuItem *menuitem, gpointer data)
+redo_button_clicked(GtkWidget *button, gpointer data)
 {
 	history_travel_history((struct board*)data, 1);
 }

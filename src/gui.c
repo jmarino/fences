@@ -83,7 +83,7 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 			  board);
 	widget= gtk_builder_get_object(builder, "undo_menuitem");
 	g_object_set_data(G_OBJECT(window), "undo_menuitem", widget);
-	g_signal_connect (widget, "activate", G_CALLBACK(undo_menu_clicked),
+	g_signal_connect (widget, "activate", G_CALLBACK(undo_button_clicked),
 			  board);
 
 	widget= gtk_builder_get_object(builder, "redo_toolbutton");
@@ -92,7 +92,7 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 			  board);
 	widget= gtk_builder_get_object(builder, "redo_menuitem");
 	g_object_set_data(G_OBJECT(window), "redo_menuitem", widget);
-	g_signal_connect (widget, "activate", G_CALLBACK(redo_menu_clicked),
+	g_signal_connect (widget, "activate", G_CALLBACK(redo_button_clicked),
 			  board);
 
 	widget= gtk_builder_get_object(builder, "new_toolbutton");
