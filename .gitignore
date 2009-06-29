@@ -21,5 +21,5 @@ src/Makefile
 src/Makefile.in
 src/*.o
 src/fences
-src/fences.xml
+src/fences.ui
 stamp-h1

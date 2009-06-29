@@ -57,7 +57,7 @@ extern struct board board;
 
 
 /* UI definition file */
-#define XML_FILE "fences.xml"
+#define XML_FILE "fences.ui"
 
 
 /*
