@@ -31,6 +31,7 @@ void undo_button_clicked(GtkToolButton *toolbutton, gpointer data);
 void redo_button_clicked(GtkToolButton *toolbutton, gpointer data);
 void undo_menu_clicked(GtkMenuItem *menuitem, gpointer data);
 void redo_menu_clicked(GtkMenuItem *menuitem, gpointer data);
+void new_button_clicked(GtkWidget *button, gpointer data);
 
 
 #endif

@@ -95,6 +95,15 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 	g_signal_connect (widget, "activate", G_CALLBACK(redo_menu_clicked),
 			  board);
 
+	widget= gtk_builder_get_object(builder, "new_toolbutton");
+	g_object_set_data(G_OBJECT(window), "new_toolbutton", widget);
+	g_signal_connect (widget, "clicked", G_CALLBACK(new_button_clicked),
+			  board);
+	widget= gtk_builder_get_object(builder, "Game_New_menuitem");
+	g_object_set_data(G_OBJECT(window), "new_menuitem", widget);
+	g_signal_connect (widget, "activate", G_CALLBACK(new_button_clicked),
+			  board);
+
 	/* done with builder */
 	g_object_unref (G_OBJECT (builder));
 

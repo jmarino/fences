@@ -240,3 +240,13 @@ redo_menu_clicked(GtkMenuItem *menuitem, gpointer data)
 {
 	history_travel_history((struct board*)data, 1);
 }
+
+
+/*
+ * Tool button or menuitem 'New' clicked
+ */
+void
+new_button_clicked(GtkWidget *button, gpointer data)
+{
+	g_debug("new clicked");
+}
