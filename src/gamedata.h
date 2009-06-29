@@ -31,6 +31,14 @@
 #define DIRECTION_OUT	1
 
 
+/* Possible game states */
+enum {
+	GAMESTATE_NEW,			/* new game: no moves yet*/
+	GAMESTATE_ONGOING,		/* game in progress */
+	GAMESTATE_FINISHED,		/* game finished */
+	GAMESTATE_NOGAME		/* board empty, no game going on */
+};
+
 
 /*
  * Holds game data (square numbers and lines that are on)
@@ -59,6 +67,7 @@ struct board {
 	struct tile_cache *tile_cache; // tile to line cache
 	GList *history;
 	gpointer drawarea;	// widget where board is drawn
+	int game_state;		// hold current state of game
 };
 
 

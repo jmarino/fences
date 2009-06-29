@@ -222,6 +222,7 @@ initialize_board(void)
 	board.tile_cache= NULL;
 	board.history= NULL;
 	board.drawarea= NULL;
+	board.game_state= GAMESTATE_NOGAME;
 
 	/* make up example game */
 	board.geo= build_square_board(7);
