@@ -20,6 +20,87 @@
 #include "callbacks.h"
 
 
+#define MENU_TOOLBAR_UI_FILE	"menu_toolbar.ui"
+
+
+/* **HACK** **FIXME** define gettext macro to avoid errors */
+#ifndef N_
+#define N_(a) (a)
+#endif
+
+
+/*
+ * Menu entries
+ */
+static const GtkActionEntry ui_actions[]=
+{
+	/* Toplevel */
+	{ "Game", NULL, N_("_Game"), NULL, NULL, NULL },
+	{ "Edit", NULL, N_("_Edit"), NULL, NULL, NULL },
+	{ "Help", NULL, N_("_Help"), NULL, NULL, NULL },
+	/* Game menu */
+	{ "new", GTK_STOCK_NEW, NULL, "<control>N",
+	  N_("Start new game"), G_CALLBACK(action_new_cb) },
+	{ "clear", GTK_STOCK_CLEAR, NULL, "<control>C",
+	  N_("Clear board"), G_CALLBACK(action_clear_cb) },
+	{ "quit", GTK_STOCK_QUIT, NULL, "<control>Q",
+	  N_("Quit"), G_CALLBACK(gtk_main_quit) },
+	/* Edit menu */
+	{ "undo", GTK_STOCK_UNDO, NULL, "<control>Z",
+	  N_("Undo move"), G_CALLBACK(action_undo_cb) },
+	{ "redo", GTK_STOCK_REDO, NULL, "<control>R",
+	  N_("Redo move"), G_CALLBACK(action_redo_cb) },
+	/* Help menu */
+	{ "about", GTK_STOCK_ABOUT, NULL, NULL,
+	  N_("About fences"), NULL },
+	/* Toolbar only */
+	{ "hint", GTK_STOCK_DIALOG_INFO, N_("Hint"), NULL,
+	  N_("Give a hint"), NULL }
+};
+
+
+/*
+ * Setup UIManager
+ */
+static GtkUIManager*
+gui_setup_uimanager(GtkWidget *window, struct board *board)
+{
+	GtkUIManager *uiman;
+	GtkAccelGroup *accel_group;
+	GtkActionGroup *action_group;
+	GtkAction *action;
+	GError *error=NULL;
+
+	/* UI Manager */
+	uiman= gtk_ui_manager_new();
+	gtk_ui_manager_add_ui_from_file(uiman, MENU_TOOLBAR_UI_FILE, &error);
+	if (error != NULL) {
+		g_warning ("Could not merge %s: %s", "menus.ui", error->message);
+		g_error_free (error);
+	}
+
+	/* add UI manager's accel group to main window */
+	accel_group= gtk_ui_manager_get_accel_group(uiman);
+	gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
+
+	/* create action group */
+	action_group= gtk_action_group_new("UIFences");
+	gtk_action_group_add_actions(action_group,
+								 ui_actions, G_N_ELEMENTS(ui_actions),
+								 board);
+	gtk_ui_manager_insert_action_group  (uiman, action_group, 0);
+
+	/* store some actions in main window */
+	action= gtk_action_group_get_action(action_group, "undo");
+	g_object_set_data(G_OBJECT(window), "undo-action", action);
+	action= gtk_action_group_get_action(action_group, "redo");
+	g_object_set_data(G_OBJECT(window), "redo-action", action);
+
+	g_object_unref(action_group);
+
+	return uiman;
+}
+
 
 /*
  * Setup gui
@@ -29,25 +110,51 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 {
 	GtkWidget *window;
 	GtkWidget *drawarea;
-	GtkBuilder *builder;
-	GObject *widget;
-	GObject *object;
+	GtkUIManager *uiman;
+	GtkWidget *vbox;
+	GtkWidget *menubar;
+	GtkWidget *toolbar;
+	GtkWidget *statbar;
 
-	builder = gtk_builder_new ();
-	gtk_builder_add_from_file (builder, xml_file, NULL);
+	window= gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title(GTK_WINDOW(window), "fences game");
+	gtk_window_set_default_size(GTK_WINDOW(window), 500, 400);
 
-	window = GTK_WIDGET(gtk_builder_get_object (builder, "window"));
-	/* note: connect_signals doesn't work, it needs some gmodule stuff */
-	//gtk_builder_connect_signals (builder, NULL);
+	/* vbox containing window elements */
+	vbox= gtk_vbox_new(FALSE, 0);
+	gtk_container_add(GTK_CONTAINER(window), vbox);
 
-	drawarea= GTK_WIDGET(gtk_builder_get_object(builder, "drawingarea"));
+	/* connect widgets from UI manager to window */
+	uiman= gui_setup_uimanager(window, board);
+	menubar= gtk_ui_manager_get_widget(uiman, "/MenuBar");
+	gtk_box_pack_start(GTK_BOX(vbox), menubar, TRUE, TRUE, 0);
+	toolbar= gtk_ui_manager_get_widget(uiman, "/ToolBar");
+	gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+	g_object_unref(uiman);
+
+	/* drawing area */
+	drawarea= gtk_drawing_area_new();
+	gtk_box_pack_start(GTK_BOX(vbox), drawarea, TRUE, TRUE, 0);
+	board->drawarea= drawarea;
 	/* store data in drawarea */
 	g_object_set_data(G_OBJECT(drawarea), "board", board);
 	g_object_set_data(G_OBJECT(drawarea), "window", window);
-	board->drawarea= drawarea;
+	g_object_set_data(G_OBJECT(window), "drawarea", drawarea);
+	/* Ensure drawing area has aspect ratio of 1 */
+	/*GdkGeometry geo;
+	geo.min_aspect= geo.max_aspect= 1.0;
+	gtk_window_set_geometry_hints(GTK_WINDOW(window), drawarea, &geo,
+					GDK_HINT_ASPECT);*/
+	gtk_widget_set_size_request(drawarea, 500,500);
 
-	g_signal_connect(drawarea, "configure-event", G_CALLBACK(drawarea_configure),
-			 NULL);
+	/* status bar */
+	statbar= gtk_statusbar_new();
+	gtk_box_pack_start(GTK_BOX(vbox), statbar, FALSE, TRUE, 0);
+
+
+	/* connect some signals */
+	g_signal_connect(drawarea, "configure-event",
+					 G_CALLBACK(drawarea_configure), NULL);
 	//g_signal_connect(drawarea, "check-resize", G_CALLBACK(drawarea_resize),
 	//		 NULL);
 	g_signal_connect(drawarea, "expose_event", G_CALLBACK(board_expose),
@@ -56,7 +163,7 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 
 	/* capture any key pressed in the window */
 	g_signal_connect ((gpointer) window, "key-press-event",
-			    G_CALLBACK (window_keypressed), drawarea);
+					  G_CALLBACK (window_keypressed), drawarea);
 
 	/* catch mouse clicks on game board */
 	gtk_widget_add_events(drawarea,
@@ -64,42 +171,7 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 	g_signal_connect (G_OBJECT (drawarea), "button_release_event",
 			  G_CALLBACK (drawarea_mouseclicked), drawarea);
 
-	g_signal_connect(gtk_builder_get_object (builder, "Game_Quit_menuitem"),
-			 "activate", gtk_main_quit, NULL);
-
-	/* Ensure drawing area has aspect ratio of 1 */
-	/*GdkGeometry geo;
-	geo.min_aspect= geo.max_aspect= 1.0;
-	gtk_window_set_geometry_hints(GTK_WINDOW(window), drawarea, &geo,
-					GDK_HINT_ASPECT);*/
-	gtk_widget_set_size_request(drawarea, 500,500);
-
-	/* store current drawarea (maybe there'll be a netbook) in window */
-	g_object_set_data(G_OBJECT(window), "drawarea", drawarea);
-
-	/* action callbacks */
-	object= gtk_builder_get_object(builder, "undo_action");
-	g_object_set_data(G_OBJECT(window), "undo_action", object);
-	g_signal_connect (object, "activate", G_CALLBACK (action_undo_activated),
-			  board);
-
-	object= gtk_builder_get_object(builder, "redo_action");
-	g_object_set_data(G_OBJECT(window), "redo_action", object);
-	g_signal_connect (object, "activate", G_CALLBACK(action_redo_activated),
-			  board);
-
-	object= gtk_builder_get_object(builder, "new_action");
-	g_object_set_data(G_OBJECT(window), "new_action", object);
-	g_signal_connect (object, "activate", G_CALLBACK(action_new_activated),
-			  board);
-
-	object= gtk_builder_get_object(builder, "clear_action");
-	g_object_set_data(G_OBJECT(window), "clear_action", object);
-	g_signal_connect (object, "activate", G_CALLBACK(action_clear_activated),
-			  board);
-
-	/* done with builder */
-	g_object_unref (G_OBJECT (builder));
+	gtk_widget_show_all(window);
 
 	return window;
 }
@@ -111,19 +183,18 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 void
 gui_initialize(GtkWidget *window, struct board *board)
 {
-	GtkWidget *widget;
 	gboolean state;
 	GObject *object;
 
 	/* set state of undo */
 	if (g_list_next(board->history) != NULL) state= TRUE;
 	else state= FALSE;
-	object= g_object_get_data(G_OBJECT(window), "undo_action");
+	object= g_object_get_data(G_OBJECT(window), "undo-action");
 	gtk_action_set_sensitive(GTK_ACTION(object), state);
 
 	/* set state of redo */
 	if (g_list_previous(board->history) != NULL) state= TRUE;
 	else state= FALSE;
-	object= g_object_get_data(G_OBJECT(window), "redo_action");
+	object= g_object_get_data(G_OBJECT(window), "redo-action");
 	gtk_action_set_sensitive(GTK_ACTION(object), state);
 }

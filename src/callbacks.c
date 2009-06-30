@@ -206,7 +206,7 @@ board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data)
  * Toolbar button or menuitem 'Undo'
  */
 void
-action_undo_activated(GtkAction *action, gpointer data)
+action_undo_cb(GtkAction *action, gpointer data)
 {
 	history_travel_history((struct board*)data, -1);
 }
@@ -216,7 +216,7 @@ action_undo_activated(GtkAction *action, gpointer data)
  * Toolbar button or menuitem 'Redo'
  */
 void
-action_redo_activated(GtkAction *action, gpointer data)
+action_redo_cb(GtkAction *action, gpointer data)
 {
 	history_travel_history((struct board*)data, 1);
 }
@@ -226,7 +226,7 @@ action_redo_activated(GtkAction *action, gpointer data)
  * Tool button or menuitem 'New' clicked
  */
 void
-action_new_activated(GtkAction *action, gpointer data)
+action_new_cb(GtkAction *action, gpointer data)
 {
 	g_debug("new action");
 }
@@ -236,7 +236,7 @@ action_new_activated(GtkAction *action, gpointer data)
  * Tool button or menuitem 'Clear' clicked
  */
 void
-action_clear_activated(GtkAction *action, gpointer data)
+action_clear_cb(GtkAction *action, gpointer data)
 {
 	g_debug("clear action");
 }

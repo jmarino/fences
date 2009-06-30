@@ -45,4 +45,4 @@ fences_LDADD = $(FENCES_LIBS)
 
 # Tell automake to include fences.xml as data (and where)
 fencesdir = $(datadir)/fences/
-fences_DATA = fences.ui
+fences_DATA = menu_toolbar.ui

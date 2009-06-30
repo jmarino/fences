@@ -54,13 +54,13 @@ history_set_undoredo_state(struct board *board)
 	/* set undo button & menu */
 	if (g_list_next(board->history) == NULL) state= FALSE;
 	else state= TRUE;
-	object= g_object_get_data(G_OBJECT(window), "undo_action");
+	object= g_object_get_data(G_OBJECT(window), "undo-action");
 	gtk_action_set_sensitive(GTK_ACTION(object), state);
 
 	/* set redo button & menu */
 	if (g_list_previous(board->history) == NULL) state= FALSE;
 	else state= TRUE;
-	object= g_object_get_data(G_OBJECT(window), "redo_action");
+	object= g_object_get_data(G_OBJECT(window), "redo-action");
 	gtk_action_set_sensitive(GTK_ACTION(object), state);
 }
 

@@ -1,0 +1,26 @@
+<ui>
+<menubar name="MenuBar">
+  <menu action="Game">
+    <menuitem action="new"/>
+    <menuitem action="clear"/>
+    <separator/>
+    <menuitem action="quit"/>
+  </menu>
+  <menu action="Edit">
+    <menuitem action="undo"/>
+    <menuitem action="redo"/>
+  </menu>
+  <menu action="Help">
+    <menuitem action="about"/>
+  </menu>
+</menubar>
+<toolbar name="ToolBar">
+  <toolitem action="new"/>
+  <toolitem action="clear"/>
+  <separator/>
+  <toolitem action="undo"/>
+  <toolitem action="redo"/>
+  <separator/>
+  <toolitem action="hint"/>
+</toolbar>
+</ui>
