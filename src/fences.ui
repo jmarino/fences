@@ -1,231 +1,259 @@
 <?xml version="1.0"?>
-<glade-interface>
-  <!-- interface-requires gtk+ 2.16 -->
+<interface>
+  <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy toplevel-contextual -->
-  <widget class="GtkWindow" id="window">
+  <object class="GtkWindow" id="window">
     <property name="visible">True</property>
     <property name="title" translatable="yes">window</property>
     <property name="default_width">500</property>
     <property name="default_height">400</property>
     <child>
-      <widget class="GtkVBox" id="vbox1">
+      <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
         <child>
-          <widget class="GtkMenuBar" id="menubar">
+          <object class="GtkMenuBar" id="menubar">
             <property name="visible">True</property>
             <child>
-              <widget class="GtkMenuItem" id="Game_menu">
+              <object class="GtkMenuItem" id="Game_menu">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_Game</property>
                 <property name="use_underline">True</property>
-                <child>
-                  <widget class="GtkMenu" id="menu1">
+                <child type="submenu">
+                  <object class="GtkMenu" id="menu1">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkImageMenuItem" id="Game_New_menuitem">
-                        <property name="label">gtk-new</property>
+                      <object class="GtkImageMenuItem" id="Game_New_menuitem">
                         <property name="visible">True</property>
-                        <property name="use_underline">True</property>
+                        <property name="related_action">new_action</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="Game_Open_menuitem">
+                      <object class="GtkImageMenuItem" id="Game_Open_menuitem">
                         <property name="label">gtk-open</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="Game_Save_menuitem">
+                      <object class="GtkImageMenuItem" id="Game_Save_menuitem">
                         <property name="label">gtk-save</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="imagemenuitem4">
+                      <object class="GtkImageMenuItem" id="imagemenuitem4">
                         <property name="label">gtk-save-as</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkSeparatorMenuItem" id="separatormenuitem1">
+                      <object class="GtkSeparatorMenuItem" id="separatormenuitem1">
                         <property name="visible">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="Game_Quit_menuitem">
+                      <object class="GtkImageMenuItem" id="Game_Quit_menuitem">
                         <property name="label">gtk-quit</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
             </child>
             <child>
-              <widget class="GtkMenuItem" id="menuitem2">
+              <object class="GtkMenuItem" id="menuitem2">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_Edit</property>
                 <property name="use_underline">True</property>
-                <child>
-                  <widget class="GtkMenu" id="menu2">
+                <child type="submenu">
+                  <object class="GtkMenu" id="menu2">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkImageMenuItem" id="undo_menuitem">
-                        <property name="label">gtk-undo</property>
+                      <object class="GtkImageMenuItem" id="undo_menuitem">
                         <property name="visible">True</property>
-                        <property name="use_underline">True</property>
+                        <property name="related_action">undo_action</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                      </object>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="redo_menuitem">
-                        <property name="label">gtk-redo</property>
+                      <object class="GtkImageMenuItem" id="redo_menuitem">
                         <property name="visible">True</property>
-                        <property name="use_underline">True</property>
+                        <property name="related_action">redo_action</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
             </child>
             <child>
-              <widget class="GtkMenuItem" id="menuitem3">
+              <object class="GtkMenuItem" id="menuitem3">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_View</property>
                 <property name="use_underline">True</property>
-              </widget>
+              </object>
             </child>
             <child>
-              <widget class="GtkMenuItem" id="menuitem4">
+              <object class="GtkMenuItem" id="menuitem4">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_Help</property>
                 <property name="use_underline">True</property>
-                <child>
-                  <widget class="GtkMenu" id="menu3">
+                <child type="submenu">
+                  <object class="GtkMenu" id="menu3">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkImageMenuItem" id="imagemenuitem10">
+                      <object class="GtkImageMenuItem" id="imagemenuitem10">
                         <property name="label">gtk-about</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
             <property name="position">0</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkToolbar" id="toolbar">
+          <object class="GtkToolbar" id="toolbar">
             <property name="visible">True</property>
             <child>
-              <widget class="GtkToolButton" id="new_toolbutton">
+              <object class="GtkToolButton" id="new_toolbutton">
                 <property name="visible">True</property>
-                <property name="stock_id">gtk-new</property>
-              </widget>
+                <property name="related_action">new_action</property>
+                <property name="use_action_appearance">True</property>
+              </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkToolButton" id="clear_toolbutton">
+              <object class="GtkToolButton" id="clear_toolbutton">
                 <property name="visible">True</property>
-                <property name="stock_id">gtk-clear</property>
-              </widget>
+                <property name="related_action">clear_action</property>
+                <property name="use_action_appearance">True</property>
+              </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkSeparatorToolItem" id="sep1_toolbutton">
+              <object class="GtkSeparatorToolItem" id="sep1_toolbutton">
                 <property name="visible">True</property>
-              </widget>
+              </object>
               <packing>
                 <property name="expand">False</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkToolButton" id="undo_toolbutton">
+              <object class="GtkToolButton" id="undo_toolbutton">
                 <property name="visible">True</property>
-                <property name="stock_id">gtk-undo</property>
-              </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="GtkToolButton" id="redo_toolbutton">
-                <property name="visible">True</property>
-                <property name="stock_id">gtk-redo</property>
-              </widget>
+                <property name="related_action">undo_action</property>
+                <property name="use_action_appearance">True</property>
+              </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkSeparatorToolItem" id="sep2_toolbutton">
+              <object class="GtkToolButton" id="redo_toolbutton">
                 <property name="visible">True</property>
-              </widget>
+                <property name="related_action">redo_action</property>
+                <property name="use_action_appearance">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparatorToolItem" id="sep2_toolbutton">
+                <property name="visible">True</property>
+              </object>
               <packing>
                 <property name="expand">False</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkToolButton" id="hint_toolbutton">
+              <object class="GtkToolButton" id="hint_toolbutton">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Hint</property>
                 <property name="stock_id">gtk-dialog-info</property>
-              </widget>
+              </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="homogeneous">True</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
             <property name="position">1</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkDrawingArea" id="drawingarea">
+          <object class="GtkDrawingArea" id="drawingarea">
             <property name="visible">True</property>
-          </widget>
+          </object>
           <packing>
             <property name="position">2</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkStatusbar" id="statusbar">
+          <object class="GtkStatusbar" id="statusbar">
             <property name="visible">True</property>
             <property name="spacing">2</property>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
             <property name="position">3</property>
           </packing>
         </child>
-      </widget>
+      </object>
     </child>
-  </widget>
-</glade-interface>
+  </object>
+  <object class="GtkAction" id="undo_action">
+    <property name="label">Undo</property>
+    <property name="short_label">Undo</property>
+    <property name="tooltip">Undo move</property>
+    <property name="stock_id">gtk-undo</property>
+  </object>
+  <object class="GtkAction" id="redo_action">
+    <property name="label">Redo</property>
+    <property name="short_label">Redo</property>
+    <property name="tooltip">Redo move</property>
+    <property name="stock_id">gtk-redo</property>
+  </object>
+  <object class="GtkAction" id="new_action">
+    <property name="label">New</property>
+    <property name="short_label">New</property>
+    <property name="tooltip">New game</property>
+    <property name="stock_id">gtk-new</property>
+  </object>
+  <object class="GtkAction" id="clear_action">
+    <property name="label">Clear</property>
+    <property name="short_label">Clear</property>
+    <property name="tooltip">Clear game</property>
+    <property name="stock_id">gtk-clear</property>
+  </object>
+</interface>

@@ -46,7 +46,3 @@ fences_LDADD = $(FENCES_LIBS)
 # Tell automake to include fences.xml as data (and where)
 fencesdir = $(datadir)/fences/
 fences_DATA = fences.ui
-
-# Tell automake how to build fences.ui from fences.glade
-.glade.ui:
-	gtk-builder-convert $< $@

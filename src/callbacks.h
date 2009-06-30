@@ -27,9 +27,10 @@ gboolean drawarea_configure(GtkWidget *widget, GdkEventConfigure *event,
 			    gpointer user_data);
 gboolean drawarea_resize(GtkWidget *widget, gpointer user_data);
 gboolean board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data);
-void undo_button_clicked(GtkWidget *button, gpointer data);
-void redo_button_clicked(GtkWidget *button, gpointer data);
-void new_button_clicked(GtkWidget *button, gpointer data);
+void action_undo_activated(GtkAction *action, gpointer data);
+void action_redo_activated(GtkAction *action, gpointer data);
+void action_new_activated(GtkAction *action, gpointer data);
+void action_clear_activated(GtkAction *action, gpointer data);
 
 
 #endif
