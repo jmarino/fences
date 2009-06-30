@@ -240,3 +240,23 @@ action_clear_cb(GtkAction *action, gpointer data)
 {
 	g_debug("clear action");
 }
+
+
+/*
+ * Tool button or menuitem 'Hint' clicked
+ */
+void
+action_hint_cb(GtkAction *action, gpointer data)
+{
+	g_debug("hint action");
+}
+
+
+/*
+ * Tool button or menuitem 'About' clicked
+ */
+void
+action_about_cb(GtkAction *action, gpointer data)
+{
+	g_debug("about action");
+}

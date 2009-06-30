@@ -52,10 +52,10 @@ static const GtkActionEntry ui_actions[]=
 	  N_("Redo move"), G_CALLBACK(action_redo_cb) },
 	/* Help menu */
 	{ "about", GTK_STOCK_ABOUT, NULL, NULL,
-	  N_("About fences"), NULL },
+	  N_("About fences"), G_CALLBACK(action_about_cb) },
 	/* Toolbar only */
 	{ "hint", GTK_STOCK_DIALOG_INFO, N_("Hint"), NULL,
-	  N_("Give a hint"), NULL }
+	  N_("Give a hint"), G_CALLBACK(action_hint_cb) }
 };
 
 

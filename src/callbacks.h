@@ -31,6 +31,8 @@ void action_undo_cb(GtkAction *action, gpointer data);
 void action_redo_cb(GtkAction *action, gpointer data);
 void action_new_cb(GtkAction *action, gpointer data);
 void action_clear_cb(GtkAction *action, gpointer data);
+void action_hint_cb(GtkAction *action, gpointer data);
+void action_about_cb(GtkAction *action, gpointer data);
 
 
 #endif
