@@ -26,6 +26,7 @@
 #include "geometry_tools.h"
 #include "draw.h"
 #include "history.h"
+#include "gui.h"
 
 /* defined in gamedata.c */
 extern struct board board;
@@ -228,7 +229,9 @@ action_redo_cb(GtkAction *action, gpointer data)
 void
 action_new_cb(GtkAction *action, gpointer data)
 {
-	g_debug("new action");
+	if (!fences_yesno_dialog(((struct board*)data)->window, DIALOG_NEW_GAME))
+		return;
+	g_debug("starting new game");
 }
 
 
@@ -238,7 +241,9 @@ action_new_cb(GtkAction *action, gpointer data)
 void
 action_clear_cb(GtkAction *action, gpointer data)
 {
-	g_debug("clear action");
+	if (!fences_yesno_dialog(((struct board*)data)->window, DIALOG_CLEAR_GAME))
+		return;
+	g_debug("clearing game");
 }
 
 
