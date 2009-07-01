@@ -222,6 +222,7 @@ initialize_board(void)
 	board.tile_cache= NULL;
 	board.history= NULL;
 	board.drawarea= NULL;
+	board.window= NULL;
 	board.game_state= GAMESTATE_NOGAME;
 
 	/* make up example game */

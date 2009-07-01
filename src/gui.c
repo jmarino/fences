@@ -117,6 +117,7 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 	GtkWidget *statbar;
 
 	window= gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	board->window= window;
 	gtk_window_set_title(GTK_WINDOW(window), "fences game");
 	gtk_window_set_default_size(GTK_WINDOW(window), 500, 400);
 

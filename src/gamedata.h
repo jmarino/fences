@@ -67,6 +67,7 @@ struct board {
 	struct tile_cache *tile_cache; // tile to line cache
 	GList *history;
 	gpointer drawarea;	// widget where board is drawn
+	gpointer window;	// main gtk window
 	int game_state;		// hold current state of game
 };
 
