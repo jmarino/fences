@@ -239,6 +239,8 @@ void
 action_clear_cb(GtkAction *action, gpointer data)
 {
 	g_debug("clear action");
+	if ( fences_clear_dialog(((struct board*)data)->window) )
+		g_debug("game cleared!!");
 }
 
 
