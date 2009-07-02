@@ -18,7 +18,6 @@
 
 #include "gamedata.h"
 #include "callbacks.h"
-#include "gui.h"
 
 
 #define MENU_TOOLBAR_UI_FILE	"menu_toolbar.ui"
@@ -27,7 +26,6 @@
 /* **HACK** **FIXME** define gettext macro to avoid errors */
 #ifndef N_
 #define N_(a) (a)
-#define _(a)  (a)
 #endif
 
 
@@ -200,99 +198,4 @@ gui_initialize(GtkWidget *window, struct board *board)
 	else state= FALSE;
 	object= g_object_get_data(G_OBJECT(window), "redo-action");
 	gtk_action_set_sensitive(GTK_ACTION(object), state);
-}
-
-
-/*
- * Dialog to warn about New game, Clean game
- */
-gboolean
-fences_yesno_dialog(GtkWindow *parent, int dialog_type)
-{
-	GtkWidget *dialog;
-	GtkWidget *image;
-	GtkWidget *primary_label;
-	GtkWidget *secondary_label;
-	GtkWidget *hbox;
-	GtkWidget *vbox;
-	GtkWidget *content_area;
-	gchar *str=NULL;
-	gchar *button_stock=NULL;
-	gchar *image_stock=NULL;
-	gint response;
-
-	/* set according to dialog type */
-	switch(dialog_type) {
-	case DIALOG_NEW_GAME:
-		button_stock= image_stock= GTK_STOCK_NEW;
-		str= g_markup_printf_escaped("<span weight=\"bold\" size=\"larger\">%s</span>",
-									 _("Start a New Game?"));
-		break;
-	case DIALOG_CLEAR_GAME:
-		button_stock= image_stock= GTK_STOCK_CLEAR;
-		str= g_markup_printf_escaped("<span weight=\"bold\" size=\"larger\">%s</span>",
-									 _("Clear Game?"));
-		break;
-	default:
-		g_debug("(fences_yesno_dialgo) unknown dialog type: %d", dialog_type);
-	}
-
-	/* create dialog */
-	dialog= gtk_dialog_new_with_buttons(
-		"", parent,
-		GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_NO_SEPARATOR ,
-		GTK_STOCK_CANCEL, GTK_RESPONSE_NO,
-		button_stock, GTK_RESPONSE_YES, NULL);
-	gtk_container_set_border_width(GTK_CONTAINER(dialog), 5);
-	gtk_box_set_spacing(GTK_BOX(GTK_DIALOG(dialog)->vbox), 14);
-	gtk_window_set_resizable(GTK_WINDOW(dialog), FALSE);
-
-	/* Image */
-	image= gtk_image_new_from_stock(image_stock,
-									GTK_ICON_SIZE_DIALOG);
-	gtk_misc_set_alignment(GTK_MISC(image), 0.5, 0.0);
-
-	/* Primary label */
-	primary_label= gtk_label_new (NULL);
-	gtk_label_set_line_wrap (GTK_LABEL (primary_label), TRUE);
-	gtk_label_set_use_markup (GTK_LABEL (primary_label), TRUE);
-	gtk_misc_set_alignment (GTK_MISC (primary_label), 0.0, 0.5);
-	gtk_label_set_selectable (GTK_LABEL (primary_label), TRUE);
-
-	gtk_label_set_markup(GTK_LABEL(primary_label), str);
-	g_free (str);
-	str= g_strdup(_("Current game will be lost."));
-	secondary_label= gtk_label_new(str);
-	g_free(str);
-	gtk_label_set_line_wrap(GTK_LABEL(secondary_label), TRUE);
-	gtk_misc_set_alignment(GTK_MISC(secondary_label), 0.0, 0.5);
-	gtk_label_set_selectable(GTK_LABEL(secondary_label), TRUE);
-
-	/* build dialog contents */
-	hbox= gtk_hbox_new(FALSE, 12);
-	gtk_container_set_border_width(GTK_CONTAINER(hbox), 5);
-	gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
-	vbox= gtk_vbox_new(FALSE, 12);
-	gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), primary_label, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), secondary_label, FALSE, FALSE, 0);
-
-	/* add content to dialog */
-	content_area= gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-	gtk_container_add(GTK_CONTAINER(content_area), hbox);
-	//gtk_box_pack_start (GTK_BOX(GTK_DIALOG(dialog)->vbox),
-	//					hbox, FALSE, FALSE,	0);
-
-	/* add buttons */
-	//gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Cancel"), GTK_RESPONSE_NO);
-	//gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_NEW, GTK_RESPONSE_YES);
-
-	/* show all */
-	gtk_widget_show_all (dialog);
-
-	/* run dialog */
-	response= gtk_dialog_run(GTK_DIALOG(dialog));
-	gtk_widget_destroy(dialog);
-
-	return response == GTK_RESPONSE_YES;
 }

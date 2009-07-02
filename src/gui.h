@@ -18,19 +18,11 @@
 #define __INCLUDED_GUI_H__
 
 
-/* dialog types */
-enum {
-	DIALOG_NEW_GAME,
-	DIALOG_CLEAR_GAME
-};
-
-
 /*
  * Functions
  */
 GtkWidget* gui_setup_main_window(const char *xml_file, struct board *board);
 void gui_initialize(GtkWidget *window, struct board *board);
-gboolean fences_yesno_dialog(GtkWindow *parent, int dialog_type);
 
 
 #endif
