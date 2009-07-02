@@ -271,3 +271,27 @@ fences_clear_dialog(GtkWindow *parent)
 
 	return response == GTK_RESPONSE_YES;
 }
+
+
+/*
+ * Set correct sensitiveness for undo/redo buttons
+ */
+void
+fencesgui_set_undoredo_state(struct board *board)
+{
+	GObject *action;
+
+	/* set undo button & menu */
+	action= g_object_get_data(G_OBJECT(board->window), "undo-action");
+	if (g_list_next(board->history) == NULL)
+		gtk_action_set_sensitive(GTK_ACTION(action), FALSE);
+	else
+		gtk_action_set_sensitive(GTK_ACTION(action), TRUE);
+
+	/* set redo button & menu */
+	action= g_object_get_data(G_OBJECT(board->window), "redo-action");
+	if (g_list_previous(board->history) == NULL)
+		gtk_action_set_sensitive(GTK_ACTION(action), FALSE);
+	else
+		gtk_action_set_sensitive(GTK_ACTION(action), TRUE);
+}

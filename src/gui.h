@@ -24,6 +24,7 @@
 GtkWidget* gui_setup_main_window(const char *xml_file, struct board *board);
 void gui_initialize(GtkWidget *window, struct board *board);
 gboolean fences_clear_dialog(GtkWindow *parent);
+void fencesgui_set_undoredo_state(struct board *board);
 
 
 #endif
