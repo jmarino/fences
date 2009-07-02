@@ -238,9 +238,13 @@ action_new_cb(GtkAction *action, gpointer data)
 void
 action_clear_cb(GtkAction *action, gpointer data)
 {
-	g_debug("clear action");
-	if ( fences_clear_dialog(((struct board*)data)->window) )
-		g_debug("game cleared!!");
+	struct board *board=(struct board*)data;
+
+	if ( fences_clear_dialog(board->window) ) {
+		gamedata_clear_game(board);
+		fencesgui_set_undoredo_state(board);
+		gtk_widget_queue_draw(GTK_WIDGET(board->drawarea));
+	}
 }
 
 
