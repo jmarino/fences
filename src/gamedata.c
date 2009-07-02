@@ -240,3 +240,18 @@ initialize_board(void)
 	board.game= generate_example_game(board.geo);
 	printf("nlines: %d\nnsquares: %d\n", board.geo->nlines, board.geo->nsquares);
 }
+
+
+/*
+ * Clear game
+ */
+void
+gamedata_clear_game(struct board *board)
+{
+	/* clear line states */
+	memset(board->game->states, 0, board->geo->nlines*sizeof(int));
+	/* clear history */
+	history_free(board->history);
+	board->history= NULL;
+	board->game_state= GAMESTATE_NEW;
+}
