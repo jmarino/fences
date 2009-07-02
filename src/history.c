@@ -20,6 +20,7 @@
 
 #include "gamedata.h"
 #include "history.h"
+#include "gui.h"
 
 
 /*
@@ -37,32 +38,6 @@ struct line_change {
 	int new_state;		// new state of line
 };
 
-
-
-/**
- * Set correct sensitiveness for undo/redo buttons
- */
-static void
-history_set_undoredo_state(struct board *board)
-{
-	gboolean state;
-	GtkWidget *window;
-	GObject *object;
-
-	window= g_object_get_data(G_OBJECT(board->drawarea), "window");
-
-	/* set undo button & menu */
-	if (g_list_next(board->history) == NULL) state= FALSE;
-	else state= TRUE;
-	object= g_object_get_data(G_OBJECT(window), "undo-action");
-	gtk_action_set_sensitive(GTK_ACTION(object), state);
-
-	/* set redo button & menu */
-	if (g_list_previous(board->history) == NULL) state= FALSE;
-	else state= TRUE;
-	object= g_object_get_data(G_OBJECT(window), "redo-action");
-	gtk_action_set_sensitive(GTK_ACTION(object), state);
-}
 
 
 /*
@@ -91,7 +66,7 @@ history_record_event(struct board *board, GSList *event)
 	board->history= g_list_prepend(board->history, event);
 
 	/* set undo/redo sensitivity */
-	history_set_undoredo_state(board);
+	fencesgui_set_undoredo_state(board);
 }
 
 
@@ -194,7 +169,7 @@ history_travel_history(struct board *board, int offset)
 	if (board->history != history) {
 		board->history= history;
 		/* set undo/redo sensitivity */
-		history_set_undoredo_state(board);
+		fencesgui_set_undoredo_state(board);
 		gtk_widget_queue_draw(board->drawarea);
 	}
 
