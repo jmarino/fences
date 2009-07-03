@@ -396,3 +396,32 @@ draw_board_to_file(struct geometry *geo, struct game *game, const char *filename
 	cairo_destroy(cr);
 	cairo_surface_destroy(surf);
 }
+
+
+/*
+ * Draw board preview
+ */
+void
+draw_board_skeleton(cairo_t *cr, struct geometry *geo)
+{
+	struct vertex *vertex1, *vertex2;
+	struct line *line;
+	int i;
+
+	/* white background */
+	cairo_set_source_rgb(cr, 1, 1, 1);
+	cairo_paint(cr);
+
+	/* Draw lines */
+	cairo_set_source_rgb(cr, 50./256., 50./256., 50./256.);
+	cairo_set_line_width (cr, geo->off_line_width);
+	line= geo->lines;
+	for(i=0; i<geo->nlines; ++i) {
+		vertex1= line->ends[0];
+		vertex2= line->ends[1];
+		cairo_move_to(cr, vertex1->pos.x, vertex1->pos.y);
+		cairo_line_to(cr, vertex2->pos.x, vertex2->pos.y);
+		++line;
+	}
+	cairo_stroke(cr);
+}
