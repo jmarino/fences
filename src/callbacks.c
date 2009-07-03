@@ -183,6 +183,7 @@ gboolean
 board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data)
 {
 	cairo_t *cr;
+	struct board *board=(struct board *)data;
 
 	//printf("expose\n");
 	/* get a cairo_t */
@@ -190,11 +191,16 @@ board_expose(GtkWidget *drawarea, GdkEventExpose *event, gpointer data)
 
 	/* set a clip region for the expose event (faster) */
 	cairo_rectangle (cr,
-			 event->area.x, event->area.y,
-			 event->area.width, event->area.height);
+					 event->area.x, event->area.y,
+					 event->area.width, event->area.height);
 	cairo_clip (cr);
 
-	draw_board (cr, drawarea->allocation.width, drawarea->allocation.height);
+	/* set scale so we draw in board_size space */
+	cairo_scale (cr,
+				 drawarea->allocation.width/(double)board->geo->board_size,
+				 drawarea->allocation.height/(double)board->geo->board_size);
+
+	draw_board (cr, board->geo, board->game);
 
 	cairo_destroy (cr);
 

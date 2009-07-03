@@ -197,27 +197,23 @@ fx_nextframe(struct line *line)
 
 /*
  * Draw game on board
+ * Cairo context is assumed to be properly scaled to board units,
+ * i.e., we draw in 'board_size' units.
  */
 void
-draw_board(cairo_t *cr, int width, int height)
+draw_board(cairo_t *cr, struct geometry *geo, struct game *game)
 {
 	struct vertex *vertex1, *vertex2;
 	struct line *line;
 	struct square *sq;
 	int i, j;
 	double x, y;
-	struct geometry *geo=board.geo;
 	int lines_on;	// how many ON lines a vertex has
-	struct game *game=board.game;
 	int number;
 
 	/* white background */
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_paint(cr);
-
-	/* set scale so we draw in board_size space */
-	cairo_scale (cr, width/(double)geo->board_size,
-		     height/(double)geo->board_size);
 
 	// debug
 	//draw_tiles(cr);
@@ -363,8 +359,11 @@ draw_benchmark(GtkWidget *drawarea)
 	gettimeofday (&start_time, NULL);
 	for(i=0; i < iters; ++i) {
 		cr= gdk_cairo_create (drawarea->window);
-		draw_board(cr, drawarea->allocation.width,
-			   drawarea->allocation.height);
+		/* set scale so we draw in board_size space */
+		cairo_scale (cr,
+					 drawarea->allocation.width/(double)board.geo->board_size,
+					 drawarea->allocation.height/(double)board.geo->board_size);
+		draw_board(cr, board.geo, board.game);
 		cairo_destroy(cr);
 	}
 	gettimeofday (&end_time, NULL);
@@ -384,18 +383,16 @@ draw_board_to_file(struct geometry *geo, struct game *game, const char *filename
 {
 	cairo_surface_t *surf;
 	cairo_t *cr;
-	struct game *game_bak=board.game;
-	struct geometry *geo_bak=board.geo;
 
 	surf= cairo_image_surface_create(CAIRO_FORMAT_RGB24, 600, 600);
 	cr= cairo_create(surf);
 
-	board.geo= geo;
-	board.game= game;
-	draw_board(cr, 600, 600);
+	/* set scale so we draw in board_size space */
+	cairo_scale (cr,
+				 600.0/(double)board.geo->board_size,
+				 600.0/(double)board.geo->board_size);
+	draw_board(cr, board.geo, board.game);
 	cairo_surface_write_to_png(surf, filename);
 	cairo_destroy(cr);
 	cairo_surface_destroy(surf);
-	board.geo= geo_bak;
-	board.game= game_bak;
 }

@@ -18,7 +18,7 @@
 #define __INCLUDED_DRAW_H__
 
 
-void draw_board(cairo_t *cr, int width, int height);
+void draw_board(cairo_t *cr, struct geometry *geo, struct game *game);
 void draw_measure_font(GtkWidget *drawarea, int width, int height, struct geometry *geo);
 void draw_benchmark(GtkWidget *drawarea);
 void draw_board_to_file(struct geometry *geo, struct game *game, const char *filename);
