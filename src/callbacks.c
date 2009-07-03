@@ -264,5 +264,5 @@ action_hint_cb(GtkAction *action, gpointer data)
 void
 action_about_cb(GtkAction *action, gpointer data)
 {
-	g_debug("about action");
+	fencesgui_show_about_dialog((struct board*)data);
 }

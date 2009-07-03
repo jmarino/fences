@@ -295,3 +295,19 @@ fencesgui_set_undoredo_state(struct board *board)
 	else
 		gtk_action_set_sensitive(GTK_ACTION(action), TRUE);
 }
+
+
+/*
+ * Show About dialog
+ */
+void
+fencesgui_show_about_dialog(struct board *board)
+{
+	const gchar *authors[]={"Jose Marino", NULL};
+
+	gtk_show_about_dialog(board->window,
+						  "program-name", "fences",
+						  "title", _("About fences"),
+						  "authors", authors,
+						  NULL);
+}
