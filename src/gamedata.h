@@ -40,6 +40,14 @@ enum {
 };
 
 
+/* types of game */
+enum {
+	GAMETYPE_SQUARE,
+	GAMETYPE_RECTANGULAR,
+	GAMETYPE_PENROSE
+};
+
+
 /*
  * Holds game data (square numbers and lines that are on)
  */
@@ -60,6 +68,7 @@ struct tile_cache {
 };
 
 struct board {
+	int type;			// type of game (square, penrose, ...)
 	struct geometry *geo;	// geometry info of lines, squares & vertices
 	struct game *game;	// game data (line states and square numbers)
 	double width_pxscale;	// Width board-to-pixel scale

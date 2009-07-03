@@ -219,6 +219,7 @@ initialize_board(void)
 	//board.board_size= 1;//11000;
 	//board.board_margin= 0.05;//500;
 	//board.game_size= board.board_size - 2*board.board_margin; //10000
+	board.type= GAMETYPE_SQUARE;
 	board.tile_cache= NULL;
 	board.history= NULL;
 	board.drawarea= NULL;
