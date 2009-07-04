@@ -40,6 +40,7 @@ struct romb {
 	struct point pos;	// coords of romb vertex
 	double side;		// length of side
 	double angle;		// angle of romb (0=horizontal/right; pi/2: down)
+	struct point center;
 };
 
 
@@ -78,6 +79,8 @@ penrose_unfold_fatromb(GSList *newpenrose, struct romb *romb)
 	nromb->side= nside;
 	nromb->angle= romb->angle + D2R(180 - 36);
 	WRAP(nromb->angle);
+	nromb->center.x= nromb->pos.x + nromb->side*RATIO/2.0*cos(nromb->angle);
+	nromb->center.y= nromb->pos.y + nromb->side*RATIO/2.0*sin(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
 
 	/* next romb 2/5 */
@@ -88,6 +91,8 @@ penrose_unfold_fatromb(GSList *newpenrose, struct romb *romb)
 	nromb->side= nside;
 	nromb->angle= romb->angle + D2R(360 - (36 + 18));
 	WRAP(nromb->angle);
+	nromb->center.x= nromb->pos.x + nromb->side*cos(D2R(18))*cos(nromb->angle);
+	nromb->center.y= nromb->pos.y + nromb->side*cos(D2R(18))*sin(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
 
 	/* next romb 3/5 */
@@ -98,6 +103,8 @@ penrose_unfold_fatromb(GSList *newpenrose, struct romb *romb)
 	nromb->side= nside;
 	nromb->angle= romb->angle + D2R(180);
 	WRAP(nromb->angle);
+	nromb->center.x= nromb->pos.x + nromb->side*RATIO/2.0*cos(nromb->angle);
+	nromb->center.y= nromb->pos.y + nromb->side*RATIO/2.0*sin(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
 
 	/* next romb 4/5 */
@@ -110,6 +117,8 @@ penrose_unfold_fatromb(GSList *newpenrose, struct romb *romb)
 	nromb->side= nside;
 	nromb->angle= romb->angle + D2R(180 + 36 + 18);
 	WRAP(nromb->angle);
+	nromb->center.x= nromb->pos.x + nromb->side*cos(D2R(18))*cos(nromb->angle);
+	nromb->center.y= nromb->pos.y + nromb->side*cos(D2R(18))*sin(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
 
 	/* next romb 5/5 */
@@ -120,6 +129,8 @@ penrose_unfold_fatromb(GSList *newpenrose, struct romb *romb)
 	nromb->side= nside;
 	nromb->angle= romb->angle + D2R(180 + 36);
 	WRAP(nromb->angle);
+	nromb->center.x= nromb->pos.x + nromb->side*RATIO/2.0*cos(nromb->angle);
+	nromb->center.y= nromb->pos.y + nromb->side*RATIO/2.0*sin(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
 
 	return newpenrose;
@@ -146,6 +157,8 @@ penrose_unfold_thinromb(GSList *newpenrose, struct romb *romb)
 	nromb->side= nside;
 	nromb->angle= romb->angle + D2R(270 + (90 - 18));
 	WRAP(nromb->angle);
+	nromb->center.x= nromb->pos.x + nromb->side*RATIO/2.0*cos(nromb->angle);
+	nromb->center.y= nromb->pos.y + nromb->side*RATIO/2.0*sin(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
 
 	/* next romb 2/4 */
@@ -156,6 +169,8 @@ penrose_unfold_thinromb(GSList *newpenrose, struct romb *romb)
 	nromb->side= nside;
 	nromb->angle= romb->angle + D2R(180 + 18);
 	WRAP(nromb->angle);
+	nromb->center.x= nromb->pos.x + nromb->side*RATIO/2.0*cos(nromb->angle);
+	nromb->center.y= nromb->pos.y + nromb->side*RATIO/2.0*sin(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
 
 	/* next romb 3/4 */
@@ -168,6 +183,8 @@ penrose_unfold_thinromb(GSList *newpenrose, struct romb *romb)
 	nromb->side= nside;
 	nromb->angle= romb->angle + D2R(270 - 18);
 	WRAP(nromb->angle);
+	nromb->center.x= nromb->pos.x + nromb->side*cos(D2R(18))*cos(nromb->angle);
+	nromb->center.y= nromb->pos.y + nromb->side*cos(D2R(18))*sin(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
 
 	/* next romb 4/4 */
@@ -178,6 +195,8 @@ penrose_unfold_thinromb(GSList *newpenrose, struct romb *romb)
 	nromb->side= nside;
 	nromb->angle= romb->angle + D2R(90 + 18);
 	WRAP(nromb->angle);
+	nromb->center.x= nromb->pos.x + nromb->side*cos(D2R(18))*cos(nromb->angle);
+	nromb->center.y= nromb->pos.y + nromb->side*cos(D2R(18))*sin(nromb->angle);
 	newpenrose= g_slist_prepend(newpenrose, nromb);
 
 	return newpenrose;
@@ -212,22 +231,6 @@ are_rombs_same(struct romb *r1, struct romb *r2)
 
 
 /*
- * Calculate center point of romb
- */
-static void
-get_romb_center(struct romb *romb, struct point *center)
-{
-	if (romb->type == FAT_ROMB) {
-		center->x= romb->pos.x + romb->side*RATIO/2.0*cos(romb->angle);
-		center->y= romb->pos.y + romb->side*RATIO/2.0*sin(romb->angle);
-	} else {
-		center->x= romb->pos.x + romb->side*cos(D2R(18))*cos(romb->angle);
-		center->y= romb->pos.y + romb->side*cos(D2R(18))*sin(romb->angle);
-	}
-}
-
-
-/*
  * Eliminate repeated rombs in the list
  * Returns new trimmed list
  */
@@ -238,14 +241,12 @@ trim_repeated_rombs(GSList *penrose)
 	GSList *next;
 	GSList *p;
 	struct romb *r1, *r2;
-	struct point center1, center2;
-	double dist;
+	struct point c;
 
 	current= penrose;
 	while(current != NULL) {
 		p= g_slist_next(current);
 		r1= (struct romb*)current->data;
-		get_romb_center(r1, &center1);
 		/* iterate over rest of rombs */
 		while(p != NULL) {
 			r2= (struct romb*)p->data;
@@ -253,12 +254,10 @@ trim_repeated_rombs(GSList *penrose)
 				p= g_slist_next(p);
 				continue;
 			}
-			get_romb_center(r2, &center2);
 			/* calculate dist between centers of both rombs */
-			center2.x-= center1.x;
-			center2.y-= center1.y;
-			dist= sqrt(center2.x*center2.x + center2.y*center2.y);
-			if (dist < separate_distance ) { // same romb
+			c.x= r2->center.x - r1->center.x;
+			c.y= r2->center.y - r1->center.y;
+			if ((c.x*c.x + c.y*c.y) < separate_distance ) { // same romb
 				//g_debug("delete romb, dist: %lf < %lf", dist, r1->side/10.);
 				g_free(p->data);
 				next= g_slist_next(p);
@@ -338,6 +337,7 @@ penrose_unfold(GSList* penrose, double edge)
 
 	/* get rid of repeated rombs */
 	separate_distance= ((struct romb*)newpenrose->data)->side/10.;
+	separate_distance*= separate_distance;
 	newpenrose= trim_repeated_rombs(newpenrose);
 
 	/* get rid of rombs outside a certain radius */
@@ -389,7 +389,7 @@ is_vertex_unique(struct point *v, struct vertex *vertex, int nvertex)
 	for(i=0; i < nvertex; ++i) {
 		x= v->x - vertex[i].pos.x;
 		y= v->y - vertex[i].pos.y;
-		if ( sqrt(x*x + y*y) < separate_distance )
+		if ( x*x + y*y < separate_distance )
 			return FALSE;
 	}
 
@@ -409,7 +409,7 @@ find_dot_by_coords(struct point *v, struct geometry *geo)
 	for(i=0; i < geo->nvertex; ++i) {
 		x= v->x - geo->vertex[i].pos.x;
 		y= v->y - geo->vertex[i].pos.y;
-		if ( sqrt(x*x + y*y) < separate_distance )
+		if ( x*x + y*y < separate_distance )
 			return geo->vertex + i;
 	}
 
@@ -445,11 +445,11 @@ set_lines_on_square(struct square *sq, struct geometry *geo)
 		for(j=0; j < geo->nlines; ++j) {
 			x= d1->pos.x - geo->lines[j].ends[0]->pos.x;
 			y= d1->pos.y - geo->lines[j].ends[0]->pos.y;
-			if ( sqrt(x*x + y*y) < separate_distance ) {
+			if ( x*x + y*y < separate_distance ) {
 				/* if top point matches: try bottom point */
 				x= d2->pos.x - geo->lines[j].ends[1]->pos.x;
 				y= d2->pos.y - geo->lines[j].ends[1]->pos.y;
-				if ( sqrt(x*x + y*y) < separate_distance )
+				if ( x*x + y*y < separate_distance )
 					break;	// line found!
 			}
 		}
@@ -545,7 +545,7 @@ penrose_tile_to_geometry(GSList *penrose)
 		}
 
 		/* calculate position of center of square (romb) */
-		get_romb_center((struct romb*)list->data, &sq->center);
+		memcpy(&sq->center, &((struct romb*)list->data)->center, sizeof(struct point));
 
 		/* set lines on edges of square (romb) */
 		sq->nsides= 4;
