@@ -35,7 +35,8 @@ fences_SOURCES = \
 	solve-combinations.c \
 	solve-tools.c \
 	gui.c gui.h \
-	history.c history.h
+	history.c history.h \
+	benchmark.c benchmark.h
 
 fences_LDFLAGS = 
 
