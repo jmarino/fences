@@ -231,7 +231,7 @@ initialize_board(void)
 	//board.geo= build_square_board(15);
 	//board.geo= build_square_board(6);
 	//board.geo= build_square_board(17);
-	//board.geo= build_penrose_board();
+	//board.geo= build_penrose_board(2);
 
 	/* generate tile cache for lines */
 	setup_tile_cache();

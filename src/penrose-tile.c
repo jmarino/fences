@@ -615,30 +615,80 @@ penrose_calculate_sizes(struct geometry *geo)
 
 
 /*
+ * Compute side and number of folds to produce a penrose
+ * of the requested size index
+ * Returns: number of folds
+ *  side size is passed by pointer in '*side'
+ */
+static int
+penrose_calculate_params(int size_index, double *side)
+{
+	int nfolds=0;
+
+	/*
+	 * radius of penrose tiling must be game_size/2
+	 *  game_size/2 = side * Factor
+	 * Factor is number of sides that fit in radius.
+	 *   Any rhomb side:  1
+	 *   Fat rhomb height: RATIO
+	 *   Thin rhomb width: 2 * sin (D2R(18))
+	 */
+	*side= PENROSE_GAME_SIZE/2.0;
+	switch(size_index) {
+	case 0:		/* small */
+		nfolds= 2;
+		*side/= RATIO + 1.0 + 2.*sin(D2R(18));
+		break;
+	case 1:		/* medium */
+		nfolds= 3;
+		*side/= 2.*RATIO + 2. + 2.*sin(D2R(18));
+		break;
+	case 2:		/* normal */
+		nfolds= 4;
+		*side/= 3.*RATIO + 2. + 2.*sin(D2R(18));
+	    g_message("nfolds: %d, side: %lf", nfolds, *side);
+		break;
+	case 3:		/* large */
+		nfolds= 4;
+		*side/= 3.*RATIO + 5. + 2.*2.*sin(D2R(18));
+		break;
+	case 4:		/* huge */
+		nfolds= 5;
+		*side/= 4.*RATIO + 5. + 2.*2.*sin(D2R(18));
+		break;
+	default:
+		g_message("(penrose_calculate_params) unknown penrose size: %d", size_index);
+	}
+	return nfolds;
+}
+
+
+/*
  * Build a penrose tiling by unfolding two sets of rombs
  */
 struct geometry*
-build_penrose_board(void)
+build_penrose_board(int size_index)
 {
 	GSList *penrose=NULL;
 	struct geometry *geo;
 	double side;
+	int nfolds;
+	int i;
+	double edge;
 
-	/*
-	 * radius of penrose tiling must be game_size/2
-	 *	game_size/2 = side*(3*RATIO + 2 + 2*sin(18))
-	 */
-	side= PENROSE_GAME_SIZE/2.0;
-	side/= 3.*RATIO + 2. + 2.*sin(D2R(18));
+	/* get side size and number of folds */
+	nfolds= penrose_calculate_params(size_index, &side);
 
 	/* Create the seed (increase size to account for 4 foldings) */
-	penrose= create_tile_seed(side*pow(RATIO, 4));
+	penrose= create_tile_seed(side*pow(RATIO, nfolds));
 
 	/* unfold list of shapes */
-	penrose= penrose_unfold(penrose, PENROSE_GAME_SIZE);
-	penrose= penrose_unfold(penrose, PENROSE_GAME_SIZE);
-	penrose= penrose_unfold(penrose, PENROSE_GAME_SIZE/1.5);
-	penrose= penrose_unfold(penrose, PENROSE_GAME_SIZE/2.0);
+	for(i=0; i < nfolds; ++i) {
+		if (i == nfolds - 1) edge= PENROSE_GAME_SIZE/2.0;
+		else if (i > 1 && i == nfolds - 2) edge= PENROSE_GAME_SIZE/1.5;
+		else edge= PENROSE_GAME_SIZE;
+		penrose= penrose_unfold(penrose, edge);
+	}
 
 	/* draw to file */
 	//draw_penrose_tile(penrose);

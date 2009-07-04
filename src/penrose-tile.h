@@ -17,6 +17,6 @@
 #ifndef __INCLUDED_PENROSE_TILE_H__
 #define __INCLUDED_PENROSE_TILE_H__
 
-struct geometry* build_penrose_board(void);
+struct geometry* build_penrose_board(int size_index);
 
 #endif
