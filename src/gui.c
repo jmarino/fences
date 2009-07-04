@@ -129,9 +129,9 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 	/* connect widgets from UI manager to window */
 	uiman= gui_setup_uimanager(window, board);
 	menubar= gtk_ui_manager_get_widget(uiman, "/MenuBar");
-	gtk_box_pack_start(GTK_BOX(vbox), menubar, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), menubar, FALSE, TRUE, 0);
 	toolbar= gtk_ui_manager_get_widget(uiman, "/ToolBar");
-	gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, TRUE, 0);
 	g_object_unref(uiman);
 
 	/* drawing area */
