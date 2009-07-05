@@ -26,6 +26,7 @@
 #include "geometry_tools.h"
 #include "draw.h"
 #include "history.h"
+#include "gui.h"
 
 /* defined in gamedata.c */
 extern struct board board;
@@ -234,7 +235,9 @@ action_redo_cb(GtkAction *action, gpointer data)
 void
 action_new_cb(GtkAction *action, gpointer data)
 {
-	g_debug("new action");
+	if (fencesgui_newgame_dialog((struct board *)data)) {
+		g_debug("*** New game started!");
+	}
 }
 
 
