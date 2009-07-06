@@ -26,8 +26,8 @@ fences_SOURCES = \
 	gamedata.c gamedata.h \
 	tile_cache.c tile_cache.h \
 	geometry_tools.c geometry_tools.h \
-	penrose-tile.c penrose-tile.h \
-	square-tile.c square-tile.h \
+	penrose-tile.c tiles.h \
+	square-tile.c \
 	build-loop.c build-loop.h \
 	game-solver.c game-solver.h \
 	brute-force.c brute-force.h \

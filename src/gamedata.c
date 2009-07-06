@@ -18,8 +18,7 @@
 #include <math.h>
 
 #include "gamedata.h"
-#include "square-tile.h"
-#include "penrose-tile.h"
+#include "tiles.h"
 #include "tile_cache.h"
 
 

@@ -14,9 +14,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
-#ifndef __INCLUDED_SQUARE_TILE_H__
-#define __INCLUDED_SQUARE_TILE_H__
+#ifndef __INCLUDED_TILES_H__
+#define __INCLUDED_TILES_H__
 
+
+/* square-tile.c */
 struct geometry* build_square_board(const int dim);
+
+/* penrose-tile.c */
+struct geometry* build_penrose_board(int size_index);
+
 
 #endif
