@@ -18,11 +18,44 @@
 #define __INCLUDED_TILES_H__
 
 
+/* types of game tile */
+enum {
+	TILE_TYPE_SQUARE,
+	TILE_TYPE_PENROSE,
+	TILE_TYPE_TRIANGULAR
+};
+
+
+/*
+ * info about game: tile type, size, ...
+ */
+struct gameinfo {
+	int type;			// type of tile
+	void *info;			// properties depending on type of tile
+};
+
+
+
+/* info structure for square tile geometries */
+struct square_tile_info {
+	int width;
+	int height;
+};
+
+/* info structure for penrose tile geometries */
+struct penrose_tile_info {
+	int size_index;
+};
+
+
+
 /* square-tile.c */
-struct geometry* build_square_board(const int dim);
+struct geometry* build_square_tile_geometry(const struct square_tile_info *info);
+struct gameinfo* build_square_gameinfo(int width, int height);
 
 /* penrose-tile.c */
-struct geometry* build_penrose_board(int size_index);
+struct geometry* build_penrose_tile_geometry(const struct penrose_tile_info *info);
+struct gameinfo* build_penrose_gameinfo(int size_index);
 
 
 #endif

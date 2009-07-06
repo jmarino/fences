@@ -218,26 +218,25 @@ initialize_board(void)
 	//board.board_size= 1;//11000;
 	//board.board_margin= 0.05;//500;
 	//board.game_size= board.board_size - 2*board.board_margin; //10000
-	board.type= TILE_TYPE_SQUARE;
+
+	board.gameinfo= build_penrose_gameinfo(1);
+	//board.gameinfo= build_square_gameinfo(7, 7);
+
 	board.tile_cache= NULL;
 	board.history= NULL;
 	board.drawarea= NULL;
 	board.window= NULL;
 	board.game_state= GAMESTATE_NOGAME;
 
-	/* make up example game */
-	board.geo= build_square_board(7);
-	//board.geo= build_square_board(15);
-	//board.geo= build_square_board(6);
-	//board.geo= build_square_board(17);
-	//board.geo= build_penrose_board(2);
+	/* build geometry data from gameinfo */
+	board.geo= build_board_geometry(board.gameinfo);
 
 	/* generate tile cache for lines */
 	setup_tile_cache();
 
 	/* empty gamedata */
-	//board.game= create_empty_gamedata(board.geo);
-	board.game= generate_example_game(board.geo);
+	board.game= create_empty_gamedata(board.geo);
+	//board.game= generate_example_game(board.geo);
 	printf("nlines: %d\nnsquares: %d\n", board.geo->nlines, board.geo->nsquares);
 }
 
@@ -254,4 +253,29 @@ gamedata_clear_game(struct board *board)
 	history_free(board->history);
 	board->history= NULL;
 	board->game_state= GAMESTATE_NEW;
+}
+
+
+/*
+ * Build board geometry of given game type
+ */
+struct geometry *
+build_board_geometry(struct gameinfo *gameinfo)
+{
+	struct geometry *geo;
+
+	switch(gameinfo->type){
+	case TILE_TYPE_SQUARE:
+		geo= build_square_tile_geometry((struct square_tile_info*)gameinfo->info);
+		break;
+	case TILE_TYPE_PENROSE:
+		geo= build_penrose_tile_geometry((struct penrose_tile_info*)gameinfo->info);
+		break;
+	case TILE_TYPE_TRIANGULAR:
+		g_message("triangular tile type not defined yet");
+		break;
+	default:
+		g_message("(build_board_geometry) unknown tile type: %d", gameinfo->type);
+	};
+	return geo;
 }

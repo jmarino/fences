@@ -18,6 +18,7 @@
 #define __INCLUDED_GAMEDATA_H__
 
 #include "geometry.h"
+#include "tiles.h"
 
 
 /* Line states */
@@ -40,12 +41,6 @@ enum {
 };
 
 
-/* types of game tile */
-enum {
-	TILE_TYPE_SQUARE,
-	TILE_TYPE_PENROSE,
-	TILE_TYPE_TRIANGULAR
-};
 
 
 /*
@@ -68,7 +63,7 @@ struct tile_cache {
 };
 
 struct board {
-	int type;			// type of game (square, penrose, ...)
+	struct gameinfo *gameinfo;		// info about game (tile type, size, ...)
 	struct geometry *geo;	// geometry info of lines, squares & vertices
 	struct game *game;	// game data (line states and square numbers)
 	double width_pxscale;	// Width board-to-pixel scale
@@ -90,6 +85,7 @@ void free_gamedata(struct game *game);
 void game_set_line(int id, int state);
 void initialize_board(void);
 void gamedata_clear_game(struct board *board);
+struct geometry *build_board_geometry(struct gameinfo *gameinfo);
 
 
 #endif

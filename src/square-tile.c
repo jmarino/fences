@@ -17,6 +17,7 @@
 #include <glib.h>
 
 #include "geometry.h"
+#include "tiles.h"
 
 
 /* prefered board dimensions for square tile */
@@ -78,7 +79,7 @@ square_calculate_sizes(struct geometry *geo, int dim)
  * Square grid of dim x dim dimensions
  */
 struct geometry*
-build_square_board(const int dim)
+build_square_tile_geometry(const struct square_tile_info *info)
 {
 	struct geometry *geo;
 	int i, j, k;
@@ -86,6 +87,7 @@ build_square_board(const int dim)
 	struct vertex *ver;
 	struct square *sq;
 	int id;
+	int dim=info->width;		/** HACK ** FIXME: allow rectangular games */
 
 	/* create new geometry (nsquares, nvertex, nlines) */
 	geo= geometry_create_new(dim*dim, (dim + 1)*(dim + 1), 2*dim*(dim + 1), 4);
@@ -163,4 +165,24 @@ build_square_board(const int dim)
 	square_calculate_sizes(geo, dim);
 
 	return geo;
+}
+
+
+/*
+ * Build gameinfo for a square tile game
+ */
+struct gameinfo*
+build_square_gameinfo(int width, int height)
+{
+	struct gameinfo *gameinfo;
+	struct square_tile_info *info;
+
+	gameinfo= (struct gameinfo*)g_malloc(sizeof(struct gameinfo));
+	gameinfo->type= TILE_TYPE_SQUARE;
+	info= (struct square_tile_info*)g_malloc(sizeof(struct square_tile_info));
+	info->width= width;
+	info->height= height;
+	gameinfo->info= (void*)info;
+
+	return gameinfo;
 }
