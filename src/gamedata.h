@@ -40,11 +40,11 @@ enum {
 };
 
 
-/* types of game */
+/* types of game tile */
 enum {
-	GAMETYPE_SQUARE,
-	GAMETYPE_RECTANGULAR,
-	GAMETYPE_PENROSE
+	TILE_TYPE_SQUARE,
+	TILE_TYPE_PENROSE,
+	TILE_TYPE_TRIANGULAR
 };
 
 
