@@ -16,9 +16,11 @@
 
 #include <glib.h>
 #include <math.h>
+#include <string.h>
 
 #include "gamedata.h"
 #include "tiles.h"
+#include "history.h"
 
 
 /* holds info about board */
@@ -238,7 +240,7 @@ initialize_board(void)
 	/* empty gamedata */
 	board.game= create_empty_gamedata(board.geo);
 	//board.game= generate_example_game(board.geo);
-	printf("nlines: %d\nnsquares: %d\n", board.geo->nlines, board.geo->nsquares);
+	//printf("nlines: %d\nnsquares: %d\n", board.geo->nlines, board.geo->nsquares);
 }
 
 
