@@ -20,6 +20,7 @@ bin_PROGRAMS = fences
 fences_SOURCES = \
 	fences.glade \
 	main.c \
+	i18n.h \
 	callbacks.c callbacks.h \
 	draw.c draw.h \
 	geometry.c geometry.h \

@@ -16,18 +16,13 @@
 
 #include <gtk/gtk.h>
 
+#include "i18n.h"
 #include "gamedata.h"
 #include "callbacks.h"
 
 
 #define MENU_TOOLBAR_UI_FILE	"menu_toolbar.ui"
 
-
-/* **HACK** **FIXME** define gettext macro to avoid errors */
-#ifndef N_
-#define N_(a) (a)
-#define _(a)  (a)
-#endif
 
 
 /*
