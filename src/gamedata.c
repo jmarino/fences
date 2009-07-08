@@ -218,8 +218,10 @@ initialize_board(void)
 	//board.board_margin= 0.05;//500;
 	//board.game_size= board.board_size - 2*board.board_margin; //10000
 
-	board.gameinfo= build_penrose_gameinfo(1);
-	//board.gameinfo= build_square_gameinfo(7, 7);
+	board.gameinfo.type= TILE_TYPE_PENROSE;
+	//board.gameinfo.type= TILE_TYPE_SQUARE;
+	board.gameinfo.size= 2;
+	//board.gameinfo.size= 7;
 
 	board.click_mesh= NULL;
 	board.history= NULL;
@@ -228,7 +230,7 @@ initialize_board(void)
 	board.game_state= GAMESTATE_NOGAME;
 
 	/* build geometry data from gameinfo */
-	board.geo= build_board_geometry(board.gameinfo);
+	board.geo= build_board_geometry(&board.gameinfo);
 
 	/* generate click mesh for lines */
 	setup_click_mesh();
@@ -265,10 +267,10 @@ build_board_geometry(struct gameinfo *gameinfo)
 
 	switch(gameinfo->type){
 	case TILE_TYPE_SQUARE:
-		geo= build_square_tile_geometry((struct square_tile_info*)gameinfo->info);
+		geo= build_square_tile_geometry(gameinfo);
 		break;
 	case TILE_TYPE_PENROSE:
-		geo= build_penrose_tile_geometry((struct penrose_tile_info*)gameinfo->info);
+		geo= build_penrose_tile_geometry(gameinfo);
 		break;
 	case TILE_TYPE_TRIANGULAR:
 		g_message("triangular tile type not defined yet");

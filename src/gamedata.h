@@ -63,7 +63,7 @@ struct click_mesh {
 };
 
 struct board {
-	struct gameinfo *gameinfo;		// info about game (tile type, size, ...)
+	struct gameinfo gameinfo;		// info about game (tile type, size, ...)
 	struct geometry *geo;	// geometry info of lines, squares & vertices
 	struct game *game;	// game data (line states and square numbers)
 	double width_pxscale;	// Width board-to-pixel scale

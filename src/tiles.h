@@ -31,31 +31,17 @@ enum {
  */
 struct gameinfo {
 	int type;			// type of tile
-	void *info;			// properties depending on type of tile
-};
-
-
-
-/* info structure for square tile geometries */
-struct square_tile_info {
-	int width;
-	int height;
-};
-
-/* info structure for penrose tile geometries */
-struct penrose_tile_info {
-	int size_index;
+	int size;			// size of game
 };
 
 
 
 /* square-tile.c */
-struct geometry* build_square_tile_geometry(const struct square_tile_info *info);
-struct gameinfo* build_square_gameinfo(int width, int height);
+struct geometry* build_square_tile_geometry(const struct gameinfo *info);
+
 
 /* penrose-tile.c */
-struct geometry* build_penrose_tile_geometry(const struct penrose_tile_info *info);
-struct gameinfo* build_penrose_gameinfo(int size_index);
+struct geometry* build_penrose_tile_geometry(const struct gameinfo *info);
 
 
 #endif

@@ -95,24 +95,35 @@ draw_preview_image(struct dialog_data *dialog_data)
 {
 	cairo_t *cr;
 	struct geometry *geo;
-	struct gameinfo *gameinfo;
+	struct gameinfo gameinfo;
 
 	/* create geometry for current tile type */
 	switch(dialog_data->tile_index) {
 	case 0:	/* square tile */
-		gameinfo= build_square_gameinfo(5, 5);
+		gameinfo.type= TILE_TYPE_SQUARE;
+		gameinfo.size= 5;
 		break;
 	case 1: /* penrose tile */
-		gameinfo= build_penrose_gameinfo(1);
+		gameinfo.type= TILE_TYPE_PENROSE;
+		gameinfo.size= 1;
 		break;
 	case 2: /* triangle tile */
-		gameinfo= build_penrose_gameinfo(2);
+		gameinfo.type= TILE_TYPE_PENROSE;
+		gameinfo.size= 2;
+		break;
+	case 3: /*  */
+		gameinfo.type= TILE_TYPE_PENROSE;
+		gameinfo.size= 2;
+		break;
+	case 4: /*  */
+		gameinfo.type= TILE_TYPE_PENROSE;
+		gameinfo.size= 2;
 		break;
 	default:
 		g_message("(draw_prewiew_image) unknown tile type: %d", dialog_data->tile_index);
 	};
 	fences_benchmark_start();
-	geo= build_board_geometry(gameinfo);
+	geo= build_board_geometry(&gameinfo);
 	g_message("time: %lf", fences_benchmark_stop());
 
 	cr= gdk_cairo_create(dialog_data->preview);
@@ -123,10 +134,6 @@ draw_preview_image(struct dialog_data *dialog_data)
 	/* draw board preview */
 	draw_board_skeleton(cr, geo);
 	cairo_destroy (cr);
-
-	/* free gameinfo */
-	g_free(gameinfo->info);
-	g_free(gameinfo);
 
 	/* destroy geometry */
 	geometry_destroy(geo);

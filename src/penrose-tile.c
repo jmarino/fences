@@ -669,7 +669,7 @@ penrose_calculate_params(int size_index, double *side)
  * Build a penrose tiling by unfolding two sets of rombs
  */
 struct geometry*
-build_penrose_tile_geometry(const struct penrose_tile_info *info)
+build_penrose_tile_geometry(const struct gameinfo *info)
 {
 	GSList *penrose=NULL;
 	struct geometry *geo;
@@ -677,7 +677,7 @@ build_penrose_tile_geometry(const struct penrose_tile_info *info)
 	int nfolds;
 	int i;
 	double edge;
-	int size_index=info->size_index;
+	int size_index=info->size;
 
 	/* get side size and number of folds */
 	nfolds= penrose_calculate_params(size_index, &side);
@@ -720,25 +720,6 @@ build_penrose_tile_geometry(const struct penrose_tile_info *info)
 	//exit(1);
 
 	return geo;
-}
-
-
-/*
- * Build gameinfo for a penrose tile game
- */
-struct gameinfo*
-build_penrose_gameinfo(int size_index)
-{
-	struct gameinfo *gameinfo;
-	struct penrose_tile_info *info;
-
-	gameinfo= (struct gameinfo*)g_malloc(sizeof(struct gameinfo));
-	gameinfo->type= TILE_TYPE_PENROSE;
-	info= (struct penrose_tile_info*)g_malloc(sizeof(struct penrose_tile_info));
-	info->size_index= size_index;
-	gameinfo->info= (void*)info;
-
-	return gameinfo;
 }
 
 
