@@ -37,13 +37,13 @@ extern struct board board;
 
 
 /*
- * DEBUG: Hack to display tile cache as a green grid
+ * DEBUG: Hack to display click mesh as a green grid
  */
 static void
 draw_tiles(cairo_t *cr)
 {
 	int i, j;
-	double width=board.tile_cache->tile_size;
+	double width=board.click_mesh->tile_size;
 
 	//g_message("draw_tiles");
 	cairo_set_source_rgba(cr, 0., 1., 0., 0.2);

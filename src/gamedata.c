@@ -19,7 +19,6 @@
 
 #include "gamedata.h"
 #include "tiles.h"
-#include "tile_cache.h"
 
 
 /* holds info about board */
@@ -222,7 +221,7 @@ initialize_board(void)
 	board.gameinfo= build_penrose_gameinfo(1);
 	//board.gameinfo= build_square_gameinfo(7, 7);
 
-	board.tile_cache= NULL;
+	board.click_mesh= NULL;
 	board.history= NULL;
 	board.drawarea= NULL;
 	board.window= NULL;
@@ -231,8 +230,8 @@ initialize_board(void)
 	/* build geometry data from gameinfo */
 	board.geo= build_board_geometry(board.gameinfo);
 
-	/* generate tile cache for lines */
-	setup_tile_cache();
+	/* generate click mesh for lines */
+	setup_click_mesh();
 
 	/* empty gamedata */
 	board.game= create_empty_gamedata(board.geo);

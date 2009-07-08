@@ -53,13 +53,13 @@ struct game {
 
 
 /*
- * Cache listing lines found inside each cache tile
+ * Click mesh: listing lines found inside each mesh tile
  */
-struct tile_cache {
-	int ntiles_side;	// number of tiles per side
-	int ntiles;		// Total num of tiles (ntiles_side^2)
+struct click_mesh {
+	int ntiles_side;	// number of mesh tiles per side
+	int ntiles;		// Total num of mesh tiles (nmesh_side^2)
 	double tile_size;	// size of boxes that tile gameboard
-	GSList **tiles;		// array of lists (board tile -> lines in it)
+	GSList **tiles;		// array of lists (mesh tile -> lines in it)
 };
 
 struct board {
@@ -68,7 +68,7 @@ struct board {
 	struct game *game;	// game data (line states and square numbers)
 	double width_pxscale;	// Width board-to-pixel scale
 	double height_pxscale;	// Height board-to-pixel scale
-	struct tile_cache *tile_cache; // tile to line cache
+	struct click_mesh *click_mesh; // click mesh
 	GList *history;
 	gpointer drawarea;	// widget where board is drawn
 	gpointer window;	// main gtk window
@@ -76,9 +76,7 @@ struct board {
 };
 
 
-/*
- * Functions
- */
+/* gamedata.c */
 void find_smallest_numbered_square(struct geometry *geo, struct game *game);
 struct game* create_empty_gamedata(struct geometry *geo);
 void free_gamedata(struct game *game);
@@ -86,6 +84,9 @@ void game_set_line(int id, int state);
 void initialize_board(void);
 void gamedata_clear_game(struct board *board);
 struct geometry *build_board_geometry(struct gameinfo *gameinfo);
+
+/* click-mesh.c */
+void setup_click_mesh(void);
 
 
 #endif

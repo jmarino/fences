@@ -50,10 +50,10 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	point.y= event->y/board.height_pxscale;
 
 	/* Find in which tile the point falls */
-	tile= point.x / board.tile_cache->tile_size;
-	tile+= board.tile_cache->ntiles_side*(int)(point.y/board.tile_cache->tile_size);
+	tile= point.x / board.click_mesh->tile_size;
+	tile+= board.click_mesh->ntiles_side*(int)(point.y/board.click_mesh->tile_size);
 	//printf("mouse: Tile clicked %d\n", tile);
-	list= board.tile_cache->tiles[tile];
+	list= board.click_mesh->tiles[tile];
 
 	/* Find in which line's area of influence the point falls */
 	while(list != NULL) {

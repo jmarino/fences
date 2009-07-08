@@ -20,8 +20,8 @@
 #include "geometry_tools.h"
 
 
-#define NUM_TILES_PER_SIDE	10
-#define NUM_TILES			NUM_TILES_PER_SIDE*NUM_TILES_PER_SIDE
+#define WIDTH_MESH	10
+#define SIZE_MESH			WIDTH_MESH*WIDTH_MESH
 
 
 /* defined in gamedata.c */
@@ -29,62 +29,62 @@ extern struct board board;
 
 
 /*
- * Deallocate old tile cache
+ * Deallocate click mesh structure
  */
 static void
-clear_tile_cache(void)
+clear_click_mesh(void)
 {
 	int i;
-	int numtiles;		// total number of tiles (ntiles^2)
+	int num_tiles;		// total number of mesh tiles
 
-	numtiles= board.tile_cache->ntiles;
-	for(i=0; i < numtiles; ++i) {
+	num_tiles= board.click_mesh->ntiles;
+	for(i=0; i < num_tiles; ++i) {
 		/* free list for tile i */
-		g_slist_free(board.tile_cache->tiles[i]);
+		g_slist_free(board.click_mesh->tiles[i]);
 	}
-	g_free(board.tile_cache->tiles);	/* free tiles array */
-	g_free(board.tile_cache);		/* free cache struct */
-	board.tile_cache= NULL;
+	g_free(board.click_mesh->tiles);	/* free mesh tile array */
+	g_free(board.click_mesh);			/* free click_mesh struct */
+	board.click_mesh= NULL;
 }
 
 
 /*
- * Initialize tile cache (list of lines in each tile):
+ * Initialize click mesh (list of lines in each mesh tile):
  * The board is divided in NxN squares
  * on the game board
  */
 void
-setup_tile_cache(void)
+setup_click_mesh(void)
 {
 	int l, b;
 	struct line *lin;
 	struct point edge[2];
 	gboolean inside;
-	struct tile_cache *cache;
+	struct click_mesh *click_mesh;
 	GSList **tiles;
 
-	/* empty tile_cache first if necessary */
-	if (board.tile_cache != NULL)
-		clear_tile_cache();
+	/* empty click_mesh first if necessary */
+	if (board.click_mesh != NULL)
+		clear_click_mesh();
 
-	/* new tile_cache */
-	cache= (struct tile_cache*)g_malloc(sizeof(struct tile_cache));
-	cache->ntiles_side= NUM_TILES_PER_SIDE;
-	cache->ntiles= cache->ntiles_side * cache->ntiles_side;
-	cache->tile_size= board.geo->board_size / cache->ntiles_side;
-	board.tile_cache= cache;
+	/* new click_mesh */
+	click_mesh= (struct click_mesh*)g_malloc(sizeof(struct click_mesh));
+	click_mesh->ntiles_side= WIDTH_MESH;
+	click_mesh->ntiles= click_mesh->ntiles_side * click_mesh->ntiles_side;
+	click_mesh->tile_size= board.geo->board_size / click_mesh->ntiles_side;
+	board.click_mesh= click_mesh;
 
 	/* Initialize line status vector */
-	tiles= (GSList **) g_malloc0(cache->ntiles * sizeof(GSList *));
+	tiles= (GSList **) g_malloc0(click_mesh->ntiles * sizeof(GSList *));
 	// **TODO** handle mem error
-	cache->tiles= tiles;
+	click_mesh->tiles= tiles;
 
-	/* Iterate through the tiles: build list of lines in each tile */
-	for(b=0; b < NUM_TILES; ++b) {
-		edge[0].x= (b % cache->ntiles_side) * cache->tile_size;
-		edge[0].y= (b / cache->ntiles_side) * cache->tile_size;
-		edge[1].x= edge[0].x + cache->tile_size;
-		edge[1].y= edge[0].y + cache->tile_size;
+	/* Iterate through the mesh: build list of lines in each tile */
+	for(b=0; b < SIZE_MESH; ++b) {
+		edge[0].x= (b % click_mesh->ntiles_side) * click_mesh->tile_size;
+		edge[0].y= (b / click_mesh->ntiles_side) * click_mesh->tile_size;
+		edge[1].x= edge[0].x + click_mesh->tile_size;
+		edge[1].y= edge[0].y + click_mesh->tile_size;
 		lin= board.geo->lines;
 		for(l=0; l < board.geo->nlines; ++l) {
 			/* check if line's area of influence intersects the box */
