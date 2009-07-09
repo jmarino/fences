@@ -46,6 +46,12 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	int *state;
 	int old_state;
 
+	/* check game state to decide what to do */
+	if (board.game_state == GAMESTATE_FINISHED ||
+		board.game_state == GAMESTATE_NOGAME) {
+		//return TRUE;
+	}
+
 	/* Translate pixel coords to board coords */
 	point.x= event->x/board.width_pxscale;
 	point.y= event->y/board.height_pxscale;
@@ -235,11 +241,22 @@ action_redo_cb(GtkAction *action, gpointer data)
 void
 action_new_cb(GtkAction *action, gpointer data)
 {
+	struct board *board=(struct board*)data;
 	struct gameinfo info;
+	GtkWidget *drawarea=GTK_WIDGET(board->drawarea);
 
-	if (fencesgui_newgame_dialog((struct board *)data, &info)) {
-		g_debug("*** New game started!");
-	}
+	if (fencesgui_newgame_dialog(board, &info) == FALSE)
+		return;
+
+	/* destroy current game and set up new one */
+	gamedata_destroy_current_game(board);
+	gamedata_create_new_game(board, &info);
+	/* force redraw of gui parts */
+	fencesgui_set_undoredo_state(board);
+	draw_measure_font(drawarea,
+					  drawarea->allocation.width,
+					  drawarea->allocation.height, board->geo);
+	gtk_widget_queue_draw(GTK_WIDGET(board->drawarea));
 }
 
 
