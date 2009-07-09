@@ -344,10 +344,6 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 		dialog_data->tile_button[i]= radio;
 	}
 
-	/* set default tile setting */
-	i= dialog_data->tile_index;
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog_data->tile_button[i]), TRUE);
-
 	/* preview image */
 	image= gtk_image_new_from_pixmap(pixmap, NULL);
 	gtk_misc_set_alignment(GTK_MISC(image), 0.5, 0.5);
@@ -367,6 +363,10 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 
 	/* store container that hold size widget, i.e. hbox */
 	dialog_data->size_container= hbox;
+
+	/* set default tile setting */
+	i= dialog_data->tile_index;
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog_data->tile_button[i]), TRUE);
 
 	return frame;
 }
