@@ -153,7 +153,7 @@ build_square_game_properties(void)
 	GtkWidget *spin;
 	GtkObject *adj;
 
-	adj= gtk_adjustment_new(10, 2, 25, 1, 5, 0);
+	adj= gtk_adjustment_new(7, 5, 25, 1, 5, 0);
 	spin= gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 0);
 
 	return spin;
