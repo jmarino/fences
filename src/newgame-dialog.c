@@ -27,6 +27,7 @@
 #define NUM_TILE_TYPE		5
 #define NUM_DIFFICULTY		6
 
+
 /*
  * Data associated with dialog
  */
@@ -39,6 +40,7 @@ struct dialog_data {
 	GdkPixmap *preview;
 	GtkWidget *size;
 	GtkWidget *size_container;
+	int size_cache[NUM_TILE_TYPE];
 };
 
 
@@ -401,7 +403,7 @@ static void
 extract_game_info(const struct dialog_data *dialog_data, struct gameinfo *info)
 {
 	int i;
-	
+
 	switch(dialog_data->tile_index) {
 	case 0:	/* square tile */
 		info->type= TILE_TYPE_SQUARE;
