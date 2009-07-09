@@ -171,9 +171,9 @@ build_penrose_game_properties(const struct dialog_data *dialog_data)
 {
 	GtkWidget *combo;
 	int i;
-	const gchar *sizes[]={N_("Small"),
+	const gchar *sizes[]={N_("Tiny"),
+						  N_("Small"),
 						  N_("Medium"),
-						  N_("Normal"),
 						  N_("Large"),
 						  N_("Huge")};
 
