@@ -224,6 +224,7 @@ initialize_board(void)
 	//board.gameinfo.type= TILE_TYPE_SQUARE;
 	board.gameinfo.size= 2;
 	//board.gameinfo.size= 7;
+	board.gameinfo.diff_index= 3;
 
 	board.click_mesh= NULL;
 	board.history= NULL;

@@ -465,7 +465,7 @@ extract_game_info(const struct dialog_data *dialog_data, struct gameinfo *info)
 		g_message("(extract_game_info) unknown tile type: %d", dialog_data->tile_index);
 	};
 	info->size= size_widget_get_value(dialog_data);
-	//info->difficulty= dialog_data->diff_index;
+	info->diff_index= dialog_data->diff_index;
 }
 
 
@@ -484,13 +484,17 @@ setup_dialog_data(const struct gameinfo *info, struct dialog_data *dialog_data)
 	switch(info->type) {
 	case TILE_TYPE_SQUARE:
 		dialog_data->tile_index= 0;
+		dialog_data->size_cache[0]= info->size;
 		break;
 	case TILE_TYPE_PENROSE:
 		dialog_data->tile_index= 1;
+		dialog_data->size_cache[1]= info->size;
 		break;
 	default:
 		g_message("(setup_dialog_data) unknown tile type: %d", info->type);
 	}
+	dialog_data->diff_index= info->diff_index;
+	dialog_data->size= NULL;
 }
 
 
@@ -510,8 +514,6 @@ fencesgui_newgame_dialog(struct board *board, struct gameinfo *info)
 
 	/* setup dialog_data */
 	setup_dialog_data(&board->gameinfo, &dialog_data);
-	dialog_data.tile_index= 0;
-	dialog_data.diff_index= 2;
 
 	/* create dialog */
 	dialog= gtk_dialog_new_with_buttons(
