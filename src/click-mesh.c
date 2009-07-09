@@ -24,9 +24,6 @@
 #define SIZE_MESH			WIDTH_MESH*WIDTH_MESH
 
 
-/* defined in gamedata.c */
-extern struct board board;
-
 
 /*
  * Deallocate click mesh structure
@@ -50,8 +47,8 @@ click_mesh_destroy(struct click_mesh *click_mesh)
  * The board is divided in NxN squares
  * on the game board
  */
-void
-setup_click_mesh(void)
+struct click_mesh*
+click_mesh_setup(const struct geometry *geo)
 {
 	int l, b;
 	struct line *lin;
@@ -60,16 +57,11 @@ setup_click_mesh(void)
 	struct click_mesh *click_mesh;
 	GSList **tiles;
 
-	/* empty click_mesh first if necessary */
-	if (board.click_mesh != NULL)
-		click_mesh_destroy(&board);
-
 	/* new click_mesh */
 	click_mesh= (struct click_mesh*)g_malloc(sizeof(struct click_mesh));
 	click_mesh->ntiles_side= WIDTH_MESH;
 	click_mesh->ntiles= click_mesh->ntiles_side * click_mesh->ntiles_side;
-	click_mesh->tile_size= board.geo->board_size / click_mesh->ntiles_side;
-	board.click_mesh= click_mesh;
+	click_mesh->tile_size= geo->board_size / click_mesh->ntiles_side;
 
 	/* Initialize line status vector */
 	tiles= (GSList **) g_malloc0(click_mesh->ntiles * sizeof(GSList *));
@@ -82,8 +74,8 @@ setup_click_mesh(void)
 		edge[0].y= (b / click_mesh->ntiles_side) * click_mesh->tile_size;
 		edge[1].x= edge[0].x + click_mesh->tile_size;
 		edge[1].y= edge[0].y + click_mesh->tile_size;
-		lin= board.geo->lines;
-		for(l=0; l < board.geo->nlines; ++l) {
+		lin= geo->lines;
+		for(l=0; l < geo->nlines; ++l) {
 			/* check if line's area of influence intersects the box */
 			if(b == 0 && l == 22)
 				inside= is_area_inside_box(lin->inf, edge, 1);
@@ -98,4 +90,5 @@ setup_click_mesh(void)
 			++lin;
 		}
 	}
+	return click_mesh;
 }

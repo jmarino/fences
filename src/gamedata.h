@@ -87,7 +87,7 @@ struct geometry *build_board_geometry(struct gameinfo *gameinfo);
 
 /* click-mesh.c */
 void click_mesh_destroy(struct click_mesh *click_mesh);
-void setup_click_mesh(void);
+struct click_mesh* click_mesh_setup(const struct geometry *geo);
 
 
 #endif

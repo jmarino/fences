@@ -236,7 +236,7 @@ initialize_board(void)
 	board.geo= build_board_geometry(&board.gameinfo);
 
 	/* generate click mesh for lines */
-	setup_click_mesh();
+	board.click_mesh= click_mesh_setup(board.geo);
 
 	/* empty gamedata */
 	board.game= create_empty_gamedata(board.geo);
