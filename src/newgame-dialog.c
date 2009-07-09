@@ -244,7 +244,6 @@ tiletype_radio_cb(GtkToggleButton *button, gpointer user_data)
 	gtk_box_pack_start(GTK_BOX(dialog_data->size_container), dialog_data->size,
 					   FALSE, FALSE, 0);
 	gtk_widget_show(dialog_data->size);
-	gtk_widget_queue_draw(dialog_data->size_container);
 }
 
 

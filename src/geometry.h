@@ -106,7 +106,7 @@ struct geometry {
  */
 struct geometry* geometry_create_new(int nsquares, int nvertex, int nlines, int max_numlines);
 void geometry_initialize_lines(struct geometry *geo);
-void geometry_free(struct geometry *geo);
+void geometry_destroy(struct geometry *geo);
 void geometry_connect_elements(struct geometry *geo);
 
 #endif
