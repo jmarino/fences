@@ -36,7 +36,7 @@ extern struct board board;
  * Callback when mouse is clicked on the board
  */
 gboolean
-drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer drawarea)
+drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
 	struct point point;
 	int tile;
@@ -45,6 +45,7 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	gboolean inside;
 	int *state;
 	int old_state;
+	struct board *board=(struct board*)user_data;
 
 	/* check game state to decide what to do */
 	if (board.game_state == GAMESTATE_FINISHED ||
@@ -53,14 +54,14 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	}
 
 	/* Translate pixel coords to board coords */
-	point.x= event->x/board.width_pxscale;
-	point.y= event->y/board.height_pxscale;
+	point.x= event->x/board->width_pxscale;
+	point.y= event->y/board->height_pxscale;
 
 	/* Find in which tile the point falls */
-	tile= point.x / board.click_mesh->tile_size;
-	tile+= board.click_mesh->ntiles_side*(int)(point.y/board.click_mesh->tile_size);
+	tile= point.x / board->click_mesh->tile_size;
+	tile+= board->click_mesh->ntiles_side*(int)(point.y/board->click_mesh->tile_size);
 	//printf("mouse: Tile clicked %d\n", tile);
-	list= board.click_mesh->tiles[tile];
+	list= board->click_mesh->tiles[tile];
 
 	/* Find in which line's area of influence the point falls */
 	while(list != NULL) {
@@ -74,7 +75,7 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 	/* check if a line was found */
 	if (list != NULL) {
 		//printf("mouse: - Line %d\n", lin->id);
-		state= board.game->states + lin->id;
+		state= board->game->states + lin->id;
 		old_state= *state;
 		switch(event->button) {
 			/* left button */
@@ -91,15 +92,15 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer draware
 		if (old_state == *state) return TRUE;
 
 		/* record change in history */
-		history_record_event_single(&board, lin->id, old_state, *state);
+		history_record_event_single(board, lin->id, old_state, *state);
 
 		/* schedule redraw of box containing line */
 		gtk_widget_queue_draw_area
-			(GTK_WIDGET(drawarea),
-			 (gint)(lin->inf_box[0].x*board.width_pxscale),
-			 (gint)(lin->inf_box[0].y*board.height_pxscale),
-			 (gint)(lin->inf_box[1].x*board.width_pxscale),
-			 (gint)(lin->inf_box[1].y*board.height_pxscale));
+			(GTK_WIDGET(board->drawarea),
+			 (gint)(lin->inf_box[0].x*board->width_pxscale),
+			 (gint)(lin->inf_box[0].y*board->height_pxscale),
+			 (gint)(lin->inf_box[1].x*board->width_pxscale),
+			 (gint)(lin->inf_box[1].y*board->height_pxscale));
 	}
 
 	return TRUE;

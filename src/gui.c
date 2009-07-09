@@ -166,7 +166,7 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 	gtk_widget_add_events(drawarea,
 			      GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK);
 	g_signal_connect (G_OBJECT (drawarea), "button_release_event",
-			  G_CALLBACK (drawarea_mouseclicked), drawarea);
+			  G_CALLBACK (drawarea_mouseclicked), board);
 
 	gtk_widget_show_all(window);
 
