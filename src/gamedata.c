@@ -283,3 +283,21 @@ build_board_geometry(struct gameinfo *gameinfo)
 	};
 	return geo;
 }
+
+
+/*
+ * Destroy current game
+ */
+void
+gamedata_destroy_current_game(struct board *board)
+{
+	geometry_destroy(board->geo);
+	board->geo= NULL;
+	free_gamedata(board->game);
+	board->game= NULL;
+	click_mesh_destroy(board->click_mesh);
+	board->click_mesh= NULL;
+	history_destroy(board->history);
+	board->history= NULL;
+	board->game_state= GAMESTATE_NOGAME;
+}

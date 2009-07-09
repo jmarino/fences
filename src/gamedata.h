@@ -84,6 +84,7 @@ void game_set_line(int id, int state);
 void initialize_board(void);
 void gamedata_clear_game(struct board *board);
 struct geometry *build_board_geometry(struct gameinfo *gameinfo);
+void gamedata_destroy_current_game(struct board *board);
 
 /* click-mesh.c */
 void click_mesh_destroy(struct click_mesh *click_mesh);
