@@ -413,8 +413,8 @@ draw_board_skeleton(cairo_t *cr, struct geometry *geo)
 	cairo_paint(cr);
 
 	/* Draw lines */
-	cairo_set_source_rgb(cr, 50./256., 50./256., 50./256.);
-	cairo_set_line_width (cr, geo->off_line_width);
+	cairo_set_source_rgb(cr, 0./256., 0./256., 0./256.);
+	cairo_set_line_width (cr, geo->off_line_width*2);
 	line= geo->lines;
 	for(i=0; i<geo->nlines; ++i) {
 		vertex1= line->ends[0];
