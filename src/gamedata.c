@@ -301,3 +301,22 @@ gamedata_destroy_current_game(struct board *board)
 	board->history= NULL;
 	board->game_state= GAMESTATE_NOGAME;
 }
+
+
+/*
+ * Create new game according to given gameinfo
+ */
+void
+gamedata_create_new_game(struct board *board, struct gameinfo *info)
+{
+	memcpy(&board->gameinfo, info, sizeof(struct gameinfo));
+
+	/* build geometry data from gameinfo */
+	board->geo= build_board_geometry(info);
+
+	/* generate click mesh for lines */
+	board->click_mesh= click_mesh_setup(board->geo);
+
+	/* build new game */
+	board->game= build_new_game(board->geo, 4.0);
+}
