@@ -181,7 +181,7 @@ history_travel_history(struct board *board, int offset)
  * Free history memory
  */
 void
-history_free(GList *history)
+history_destroy(GList *history)
 {
 	history= g_list_first(history);
 

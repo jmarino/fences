@@ -28,7 +28,7 @@ void history_record_event_single(struct board *board, int id, int old_state,
 void history_undo_event(GSList *event);
 void history_redo_event(GSList *event);
 void history_travel_history(struct board *board, int offset);
-void history_free(GList *history);
+void history_destroy(GList *history);
 
 
 #endif

@@ -254,7 +254,7 @@ gamedata_clear_game(struct board *board)
 	/* clear line states */
 	memset(board->game->states, 0, board->geo->nlines*sizeof(int));
 	/* clear history */
-	history_free(board->history);
+	history_destroy(board->history);
 	board->history= NULL;
 	board->game_state= GAMESTATE_NEW;
 }
