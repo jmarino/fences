@@ -395,10 +395,54 @@ build_difficulty_settings(struct dialog_data *dialog_data)
 
 
 /*
+ * Fill gameinfo from dialog_data
+ */
+static void
+extract_game_info(const struct dialog_data *dialog_data, struct gameinfo *info)
+{
+	int i;
+	
+	switch(dialog_data->tile_index) {
+	case 0:	/* square tile */
+		info->type= TILE_TYPE_SQUARE;
+		info->size= (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size));
+		break;
+	case 1: /* penrose tile */
+		info->type= TILE_TYPE_PENROSE;
+		i= gtk_combo_box_get_active(GTK_COMBO_BOX(dialog_data->size));
+		if (i < 0) info->size= 2;
+		else info->size= i;
+		break;
+	case 2: /* triangle tile */
+		info->type= TILE_TYPE_PENROSE;
+		i= gtk_combo_box_get_active(GTK_COMBO_BOX(dialog_data->size));
+		if (i < 0) info->size= 2;
+		else info->size= i;
+		break;
+	case 3: /*  */
+		info->type= TILE_TYPE_PENROSE;
+		i= gtk_combo_box_get_active(GTK_COMBO_BOX(dialog_data->size));
+		if (i < 0) info->size= 2;
+		else info->size= i;
+		break;
+	case 4: /*  */
+		info->type= TILE_TYPE_PENROSE;
+		i= gtk_combo_box_get_active(GTK_COMBO_BOX(dialog_data->size));
+		if (i < 0) info->size= 2;
+		else info->size= i;
+		break;
+	default:
+		g_message("(extract_game_info) unknown tile type: %d", dialog_data->tile_index);
+	};
+	//info->difficulty= dialog_data->diff_index;
+}
+
+
+/*
  * New game dialog
  */
 gboolean
-fencesgui_newgame_dialog(struct board *board)
+fencesgui_newgame_dialog(struct board *board, struct gameinfo *info)
 {
 	GtkWidget *dialog;
 	GtkWidget *hbox;
@@ -450,9 +494,13 @@ fencesgui_newgame_dialog(struct board *board)
 
 	/* run dialog */
 	response= gtk_dialog_run(GTK_DIALOG(dialog));
-	gtk_widget_destroy(dialog);
 
-	g_message("tile:%d ; diff:%d", dialog_data.tile_index, dialog_data.diff_index);
+	/* extract game info */
+	extract_game_info(&dialog_data, info);
+	g_message("tile:%d ; diff:%d ; size:%d", dialog_data.tile_index, dialog_data.diff_index, info->size);
+
+	/* destroy dialog */
+	gtk_widget_destroy(dialog);
 
 	return response == GTK_RESPONSE_YES;
 }

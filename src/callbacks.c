@@ -235,7 +235,9 @@ action_redo_cb(GtkAction *action, gpointer data)
 void
 action_new_cb(GtkAction *action, gpointer data)
 {
-	if (fencesgui_newgame_dialog((struct board *)data)) {
+	struct gameinfo info;
+
+	if (fencesgui_newgame_dialog((struct board *)data, &info)) {
 		g_debug("*** New game started!");
 	}
 }

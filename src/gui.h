@@ -29,7 +29,7 @@ void fencesgui_set_undoredo_state(struct board *board);
 void fencesgui_show_about_dialog(struct board *board);
 
 /* newgame-dialog.c */
-gboolean fencesgui_newgame_dialog(struct board *board);
+gboolean fencesgui_newgame_dialog(struct board *board, struct gameinfo *info);
 
 
 #endif
