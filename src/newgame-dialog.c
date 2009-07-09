@@ -20,7 +20,7 @@
 #include "gamedata.h"
 
 
-#define PREVIEW_IMAGE_SIZE		200
+#define PREVIEW_IMAGE_SIZE		160
 
 #define NUM_TILE_TYPE		5
 #define NUM_DIFFICULTY		6
@@ -146,73 +146,13 @@ draw_preview_image(struct dialog_data *dialog_data)
 static GtkWidget*
 build_square_game_properties(void)
 {
-	GtkWidget *vbox;
-	GtkWidget *hbox;
 	GtkWidget *spin;
-	GtkWidget *label;
-	GtkObject *adj;
-	GtkWidget *button;
-
-	vbox= gtk_vbox_new(FALSE, 0);
-	gtk_container_set_border_width(GTK_CONTAINER(vbox), 14);
-
-	/* size */
-	hbox= gtk_hbox_new(FALSE, 15);
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
-	label= gtk_label_new(_("Game Size:"));
-	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-	adj= gtk_adjustment_new(10, 2, 25, 1, 5, 0);
-	spin= gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), spin, FALSE, FALSE, 0);
-	label= gtk_label_new("x");
-	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-	adj= gtk_adjustment_new(10, 2, 25, 1, 5, 0);
-	spin= gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), spin, FALSE, FALSE, 0);
-
-	button= gtk_check_button_new_with_label(_("Square"));
-	gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
-
-	return vbox;
-}
-
-
-/*
- * Build properties for Rectangular game
- */
-static GtkWidget*
-build_rectangular_game_properties(void)
-{
-	GtkWidget *table;
-	GtkWidget *spin;
-	GtkWidget *label;
 	GtkObject *adj;
 
-	table= gtk_table_new(2, 2, FALSE);
-	gtk_table_set_row_spacings(GTK_TABLE(table), 5);
-	gtk_table_set_col_spacings(GTK_TABLE(table), 5);
-
-	/* width */
-	label= gtk_label_new(_("Width:"));
-	gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-	gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
-					 GTK_FILL, GTK_FILL, 0, 0);
 	adj= gtk_adjustment_new(10, 2, 25, 1, 5, 0);
 	spin= gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 0);
-	gtk_table_attach(GTK_TABLE(table), spin, 1, 2, 0, 1,
-					 GTK_FILL, GTK_FILL, 0, 0);
 
-	/* width */
-	label= gtk_label_new(_("Height:"));
-	gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-	gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
-					 GTK_FILL, GTK_FILL, 0, 0);
-	adj= gtk_adjustment_new(10, 2, 25, 1, 5, 0);
-	spin= gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 0);
-	gtk_table_attach(GTK_TABLE(table), spin, 1, 2, 1, 2,
-					 GTK_FILL, GTK_FILL, 0, 0);
-
-	return table;
+	return spin;
 }
 
 
@@ -222,7 +162,7 @@ build_rectangular_game_properties(void)
 static GtkWidget*
 build_penrose_game_properties(void)
 {
-	GtkWidget *vbox;
+	GtkWidget *combo;
 	GtkWidget *radio;
 	GtkWidget *label;
 	int i;
@@ -232,20 +172,13 @@ build_penrose_game_properties(void)
 						  N_("Large"),
 						  N_("Huge")};
 
-	vbox= gtk_vbox_new(FALSE, 0);
-
-	label= gtk_label_new(_("Board Size:"));
-	gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 5);
-
-	radio= gtk_radio_button_new_with_label(NULL, sizes[0]);
-	gtk_box_pack_start(GTK_BOX(vbox), radio, FALSE, FALSE, 0);
-	for(i=1; i < 5; ++i) {
-		radio= gtk_radio_button_new_with_label_from_widget(
-			GTK_RADIO_BUTTON(radio), sizes[i]);
-		gtk_box_pack_start(GTK_BOX(vbox), radio, FALSE, FALSE, 0);
+	combo= gtk_combo_box_new_text();
+	for(i=0; i < 5; ++i) {
+		gtk_combo_box_append_text(combo, sizes[i]);
 	}
+	gtk_combo_box_set_active(combo, 2);
 
-	return vbox;
+	return combo;
 }
 
 
@@ -281,11 +214,13 @@ static GtkWidget*
 build_tile_type_properties(struct dialog_data *dialog_data)
 {
 	GtkWidget *frame;
+	GtkWidget *mainvbox;
 	GtkWidget *hbox;
 	GtkWidget *vbox;
 	GtkWidget *radio;
 	GtkWidget *image;
 	GdkPixmap *pixmap;
+	GtkWidget *widget;
 	int i;
 	const gchar *tiles[]={N_("Square"),
 						  N_("Penrose"),
@@ -300,10 +235,15 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 	/* frame: game type and properties */
 	frame= gtk_frame_new(_("Tile Type"));
 
-	/* hbox: left radios and right properties */
+	/* main vbox */
+	mainvbox= gtk_vbox_new(FALSE, 5);
+	gtk_container_set_border_width(GTK_CONTAINER(mainvbox), 5);
+	gtk_container_add(GTK_CONTAINER(frame), mainvbox);
+
+	/* hbox: left radios and right preview */
 	hbox= gtk_hbox_new(FALSE, 5);
-	gtk_container_set_border_width(GTK_CONTAINER(hbox), 5);
-	gtk_container_add(GTK_CONTAINER(frame), hbox);
+	//gtk_container_set_border_width(GTK_CONTAINER(hbox), 5);
+	gtk_box_pack_start(GTK_BOX(mainvbox), hbox, FALSE, FALSE, 0);
 	/* vbox with game types (radios) */
 	vbox= gtk_vbox_new(FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
@@ -321,7 +261,7 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 		dialog_data->tile_button[i]= radio;
 	}
 
-	/* set default setting */
+	/* set default tile setting */
 	i= dialog_data->tile_index;
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog_data->tile_button[i]), TRUE);
 
@@ -333,13 +273,16 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 	gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 5);
 	dialog_data->image= image;
 
-	/* vertical separator */
-	//gtk_box_pack_start(GTK_BOX(hbox), gtk_vseparator_new(), FALSE, FALSE, 0);
-	/* property panels */
+	/* game size */
+	hbox= gtk_hbox_new(FALSE, 15);
+	gtk_container_set_border_width(GTK_CONTAINER(hbox), 5);
+	gtk_box_pack_start(GTK_BOX(mainvbox), hbox, FALSE, FALSE, 0);
+	widget= gtk_label_new(_("Game Size:"));
+	gtk_box_pack_start(GTK_BOX(hbox), widget, FALSE, FALSE, 0);
+
 	//widget= build_square_game_properties();
-	//widget= build_rectangular_game_properties();
-	//widget= build_penrose_game_properties();
-	//gtk_box_pack_start(GTK_BOX(hbox), widget, FALSE, FALSE, 0);
+	widget= build_penrose_game_properties();
+	gtk_box_pack_start(GTK_BOX(hbox), widget, FALSE, FALSE, 0);
 
 	return frame;
 }
@@ -444,10 +387,6 @@ fencesgui_newgame_dialog(struct board *board)
 	widget= build_image_title();
 	gtk_box_pack_start(dlg_vbox, widget, FALSE, FALSE, 10);
 
-	/* preview image */
-	//widget= build_preview_image();
-	//gtk_box_pack_start(dlg_vbox, widget, FALSE, FALSE, 10);
-
 	/* vbox with main content */
 	vbox= gtk_vbox_new(FALSE, 5);
 	gtk_box_pack_start(dlg_vbox, vbox, FALSE, FALSE, 0);
@@ -463,15 +402,6 @@ fencesgui_newgame_dialog(struct board *board)
 	/* difficulty settings */
 	widget= build_difficulty_settings(&dialog_data);
 	gtk_box_pack_start(GTK_BOX(hbox), widget, FALSE, FALSE, 0);
-
-	/* game properties */
-	frame= gtk_frame_new(_("Game Properties"));
-	gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
-	/* property panels */
-	widget= build_square_game_properties();
-	//widget= build_rectangular_game_properties();
-	//widget= build_penrose_game_properties();
-	gtk_container_add(GTK_CONTAINER(frame), widget);
 
 	g_object_set_data(G_OBJECT(dialog), "dialog-data", &dialog_data);
 
