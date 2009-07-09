@@ -263,9 +263,11 @@ tiletype_radio_cb(GtkToggleButton *button, gpointer user_data)
 	struct dialog_data *dialog_data=(struct dialog_data*)user_data;
 	int i=0;
 
+	/* ignore early callback when default is set */
+	if (GTK_WIDGET_REALIZED(button) == FALSE)
+		return;
 	if (!gtk_toggle_button_get_active(button))
 		return;
-	//g_debug("tile type radio toggled");
 
 	/* get current setting from size widget */
 	dialog_data->size_cache[dialog_data->tile_index]=
@@ -381,9 +383,11 @@ difficulty_radio_cb(GtkToggleButton *button, gpointer user_data)
 	struct dialog_data *dialog_data=(struct dialog_data*)user_data;
 	int i=0;
 
+	/* ignore early callback when default is set */
+	if (GTK_WIDGET_REALIZED(button) == FALSE)
+		return;
 	if (!gtk_toggle_button_get_active(button))
 		return;
-	//g_debug("diff. radio toggled");
 
 	/* find which button was selected */
 	for(i=0; i < NUM_DIFFICULTY; ++i) {
