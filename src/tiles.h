@@ -32,6 +32,8 @@ enum {
 struct gameinfo {
 	int type;			// type of tile
 	int size;			// size of game
+	int diff_index;		// difficulty index: 0:Beginner,1:Easy,....
+	double difficulty;	// actual difficulty: from 0 to 10
 };
 
 
