@@ -31,20 +31,17 @@ extern struct board board;
 /*
  * Deallocate click mesh structure
  */
-static void
-clear_click_mesh(void)
+void
+click_mesh_destroy(struct click_mesh *click_mesh)
 {
 	int i;
-	int num_tiles;		// total number of mesh tiles
 
-	num_tiles= board.click_mesh->ntiles;
-	for(i=0; i < num_tiles; ++i) {
-		/* free list for tile i */
-		g_slist_free(board.click_mesh->tiles[i]);
+	for(i=0; i < click_mesh->ntiles; ++i) {
+		/* free list of lines for tile i */
+		g_slist_free(click_mesh->tiles[i]);
 	}
-	g_free(board.click_mesh->tiles);	/* free mesh tile array */
-	g_free(board.click_mesh);			/* free click_mesh struct */
-	board.click_mesh= NULL;
+	g_free(click_mesh->tiles);
+	g_free(click_mesh);
 }
 
 
@@ -65,7 +62,7 @@ setup_click_mesh(void)
 
 	/* empty click_mesh first if necessary */
 	if (board.click_mesh != NULL)
-		clear_click_mesh();
+		click_mesh_destroy(&board);
 
 	/* new click_mesh */
 	click_mesh= (struct click_mesh*)g_malloc(sizeof(struct click_mesh));
