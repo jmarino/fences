@@ -18,6 +18,8 @@
 
 #include "i18n.h"
 #include "gamedata.h"
+#include "draw.h"
+#include "geometry.h"
 
 
 #define PREVIEW_IMAGE_SIZE		160
@@ -35,6 +37,8 @@ struct dialog_data {
 	int diff_index;
 	GtkWidget *image;
 	GdkPixmap *preview;
+	GtkWidget *size;
+	GtkWidget *size_container;
 };
 
 
@@ -163,8 +167,6 @@ static GtkWidget*
 build_penrose_game_properties(void)
 {
 	GtkWidget *combo;
-	GtkWidget *radio;
-	GtkWidget *label;
 	int i;
 	const gchar *sizes[]={N_("Small"),
 						  N_("Medium"),
@@ -174,11 +176,43 @@ build_penrose_game_properties(void)
 
 	combo= gtk_combo_box_new_text();
 	for(i=0; i < 5; ++i) {
-		gtk_combo_box_append_text(combo, sizes[i]);
+		gtk_combo_box_append_text(GTK_COMBO_BOX(combo), sizes[i]);
 	}
-	gtk_combo_box_set_active(combo, 2);
+	gtk_combo_box_set_active(GTK_COMBO_BOX(combo), 2);
 
 	return combo;
+}
+
+
+/*
+ * Build gamesize widget for all different tile types
+ */
+static GtkWidget*
+build_gamesize_widget(struct dialog_data *dialog_data)
+{
+	GtkWidget *widget=NULL;
+
+	switch(dialog_data->tile_index) {
+	case 0:	/* square tile */
+		widget= build_square_game_properties();
+		break;
+	case 1: /* penrose tile */
+		widget= build_penrose_game_properties();
+		break;
+	case 2: /*  */
+		widget= build_penrose_game_properties();
+		break;
+	case 3: /*  */
+		widget= build_penrose_game_properties();
+		break;
+	case 4: /*  */
+		widget= build_penrose_game_properties();
+		break;
+	default:
+		g_message("(build_gamesize_widget)unknown tile type:%d", dialog_data->tile_index);
+	}
+
+	return widget;
 }
 
 
@@ -204,6 +238,13 @@ tiletype_radio_cb(GtkToggleButton *button, gpointer user_data)
 	/* redraw tile to new type */
 	draw_preview_image(dialog_data);
 	gtk_widget_queue_draw(dialog_data->image);
+	/* change tile size widget */
+	gtk_widget_destroy(dialog_data->size);
+	dialog_data->size= build_gamesize_widget(dialog_data);
+	gtk_box_pack_start(GTK_BOX(dialog_data->size_container), dialog_data->size,
+					   FALSE, FALSE, 0);
+	gtk_widget_show(dialog_data->size);
+	gtk_widget_queue_draw(dialog_data->size_container);
 }
 
 
@@ -220,7 +261,7 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 	GtkWidget *radio;
 	GtkWidget *image;
 	GdkPixmap *pixmap;
-	GtkWidget *widget;
+	GtkWidget *label;
 	int i;
 	const gchar *tiles[]={N_("Square"),
 						  N_("Penrose"),
@@ -277,12 +318,13 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 	hbox= gtk_hbox_new(FALSE, 15);
 	gtk_container_set_border_width(GTK_CONTAINER(hbox), 5);
 	gtk_box_pack_start(GTK_BOX(mainvbox), hbox, FALSE, FALSE, 0);
-	widget= gtk_label_new(_("Game Size:"));
-	gtk_box_pack_start(GTK_BOX(hbox), widget, FALSE, FALSE, 0);
+	label= gtk_label_new(_("Game Size:"));
+	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	dialog_data->size= build_gamesize_widget(dialog_data);
+	gtk_box_pack_start(GTK_BOX(hbox), dialog_data->size, FALSE, FALSE, 0);
 
-	//widget= build_square_game_properties();
-	widget= build_penrose_game_properties();
-	gtk_box_pack_start(GTK_BOX(hbox), widget, FALSE, FALSE, 0);
+	/* store container that hold size widget, i.e. hbox */
+	dialog_data->size_container= hbox;
 
 	return frame;
 }
@@ -365,7 +407,6 @@ fencesgui_newgame_dialog(struct board *board)
 	gint response;
 	GtkBox *dlg_vbox;
 	GtkWidget *widget;
-	GtkWidget *frame;
 	struct dialog_data dialog_data;
 
 	/* setup dialog_data */
