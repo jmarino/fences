@@ -48,8 +48,8 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_da
 	struct board *board=(struct board*)user_data;
 
 	/* check game state to decide what to do */
-	if (board.game_state == GAMESTATE_FINISHED ||
-		board.game_state == GAMESTATE_NOGAME) {
+	if (board->game_state == GAMESTATE_FINISHED ||
+		board->game_state == GAMESTATE_NOGAME) {
 		//return TRUE;
 	}
 
