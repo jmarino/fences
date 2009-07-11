@@ -381,15 +381,12 @@ initialize_loop(struct loop *loop)
 	/* select a ramdom square to start the loop (not touching the 0 square) */
 	for(;;) {
 		sq= geo->squares +  g_random_int_range(0, geo->nsquares);
-		for(i=0; i < sq->nvertex; ++i) {
-			vertex= sq->vertex[i];
-			for(j=0; j < vertex->nlines; ++j) {
-				if (loop->mask[vertex->lines[j]->id] == FALSE)
-					break;
-			}
-			if (j < vertex->nlines) break;
+		/* check that lines around square are not already disabled */
+		for(i=0; i < sq->nsides; ++i) {
+			if (loop->mask[sq->sides[i]->id] == FALSE)
+				break;
 		}
-		if (i == sq->nsides) break;
+		if (i == sq->nsides) break;	// none disabled -> done
 	}
 
 	/* set lines around starting square */
