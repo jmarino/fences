@@ -148,10 +148,10 @@ draw_preview_image(struct dialog_data *dialog_data)
 
 
 /*
- * Build properties for Square game
+ * Build game size widget using a spin
  */
 static GtkWidget*
-build_square_game_properties(const struct dialog_data *dialog_data)
+build_game_size_spin(const struct dialog_data *dialog_data)
 {
 	GtkWidget *spin;
 	GtkObject *adj;
@@ -164,10 +164,10 @@ build_square_game_properties(const struct dialog_data *dialog_data)
 
 
 /*
- * Build properties for Penrose game
+ * Build game size widget using a combo box
  */
 static GtkWidget*
-build_penrose_game_properties(const struct dialog_data *dialog_data)
+build_game_size_combo(const struct dialog_data *dialog_data)
 {
 	GtkWidget *combo;
 	int i;
@@ -197,19 +197,19 @@ build_gamesize_widget(struct dialog_data *dialog_data)
 
 	switch(dialog_data->tile_index) {
 	case 0:	/* square tile */
-		widget= build_square_game_properties(dialog_data);
+		widget= build_game_size_spin(dialog_data);
 		break;
 	case 1: /* penrose tile */
-		widget= build_penrose_game_properties(dialog_data);
+		widget= build_game_size_combo(dialog_data);
 		break;
-	case 2: /*  */
-		widget= build_penrose_game_properties(dialog_data);
+	case 2: /* triangle tile */
+		widget= build_game_size_spin(dialog_data);
 		break;
 	case 3: /*  */
-		widget= build_penrose_game_properties(dialog_data);
+		widget= build_game_size_combo(dialog_data);
 		break;
 	case 4: /*  */
-		widget= build_penrose_game_properties(dialog_data);
+		widget= build_game_size_combo(dialog_data);
 		break;
 	default:
 		g_message("(build_gamesize_widget)unknown tile type:%d", dialog_data->tile_index);
@@ -236,7 +236,7 @@ size_widget_get_value(const struct dialog_data *dialog_data)
 		if (value < 0) value= 2;
 		break;
 	case 2: /* triangle tile */
-		value= gtk_combo_box_get_active(GTK_COMBO_BOX(dialog_data->size));
+		value= gtk_spin_button_get_value(GTK_COMBO_BOX(dialog_data->size));
 		if (value < 0) value= 2;
 		break;
 	case 3: /*  */
