@@ -115,8 +115,8 @@ draw_preview_image(struct dialog_data *dialog_data)
 		gameinfo.size= 1;
 		break;
 	case 2: /* triangle tile */
-		gameinfo.type= TILE_TYPE_PENROSE;
-		gameinfo.size= 2;
+		gameinfo.type= TILE_TYPE_TRIANGULAR;
+		gameinfo.size= 5;
 		break;
 	case 3: /*  */
 		gameinfo.type= TILE_TYPE_PENROSE;
@@ -457,7 +457,7 @@ extract_game_info(const struct dialog_data *dialog_data, struct gameinfo *info)
 		info->type= TILE_TYPE_PENROSE;
 		break;
 	case 2: /* triangle tile */
-		info->type= TILE_TYPE_PENROSE;
+		info->type= TILE_TYPE_TRIANGULAR;
 		break;
 	case 3: /*  */
 		info->type= TILE_TYPE_PENROSE;
@@ -493,6 +493,10 @@ setup_dialog_data(const struct gameinfo *info, struct dialog_data *dialog_data)
 	case TILE_TYPE_PENROSE:
 		dialog_data->tile_index= 1;
 		dialog_data->size_cache[1]= info->size;
+		break;
+	case TILE_TYPE_TRIANGULAR:
+		dialog_data->tile_index= 2;
+		dialog_data->size_cache[2]= info->size;
 		break;
 	default:
 		g_message("(setup_dialog_data) unknown tile type: %d", info->type);

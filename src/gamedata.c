@@ -276,7 +276,7 @@ build_board_geometry(struct gameinfo *gameinfo)
 		geo= build_penrose_tile_geometry(gameinfo);
 		break;
 	case TILE_TYPE_TRIANGULAR:
-		g_message("triangular tile type not defined yet");
+		geo= build_triangular_tile_geometry(gameinfo);
 		break;
 	default:
 		g_message("(build_board_geometry) unknown tile type: %d", gameinfo->type);

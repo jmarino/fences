@@ -37,7 +37,8 @@ fences_SOURCES = \
 	gui.c gui.h \
 	history.c history.h \
 	benchmark.c benchmark.h \
-	newgame-dialog.c
+	newgame-dialog.c \
+	triangle-tile.c
 
 fences_LDFLAGS = 
 

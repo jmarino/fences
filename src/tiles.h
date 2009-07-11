@@ -45,5 +45,7 @@ struct geometry* build_square_tile_geometry(const struct gameinfo *info);
 /* penrose-tile.c */
 struct geometry* build_penrose_tile_geometry(const struct gameinfo *info);
 
+/* triangular-tile.c */
+struct geometry* build_triangular_tile_geometry(const struct gameinfo *info);
 
 #endif
