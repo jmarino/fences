@@ -705,6 +705,52 @@ solve_cross_lines(struct solution *sol)
 }
 
 
+/*
+ * Assume a situation where we just found one big open loop, and not all
+ * squares have been handled. Normally, we would then cross out the
+ * connecting line. However, if the only unhandled squares are touching the
+ * connecting line and would be handled by turning this line ON, we can't
+ * cross it out.
+ * Returns: TRUE if the situation described is detected, line should not
+ * be crossed out.
+ */
+static gboolean
+bottleneck_is_final_line(struct solution *sol, struct line *lin)
+{
+	struct square *sq;
+	int num=0;
+	int num_unhandled=0;
+	int id;
+	int i, j;
+	int nlines_on;
+
+	/* check line touches at least 1 numbered and unhandled square */
+	for(i=0; i < lin->nsquares; ++i) {
+		id= lin->sq[i]->id;
+		if (sol->numbers[id] != -1 && sol->sq_handled[id] == FALSE) ++num;
+	}
+	if (num == 0) return FALSE;
+
+	/* check if setting line would handle unhandled squares */
+	for(i=0; i < lin->nsquares; ++i) {
+		sq= lin->sq[i];
+		if (sol->sq_handled[sq->id]) continue;
+		nlines_on= 0;
+		for(j=0; j < sq->nsides; ++j)
+			if (sol->states[ sq->sides[j]->id ] == LINE_ON) ++nlines_on;
+		/* would line handle square? */
+		if (sol->numbers[sq->id] != nlines_on + 1) return FALSE;
+	}
+
+	/* finally check if unhandled squares are the only ones left */
+	for(i=0; i < sol->geo->nsquares; ++i) {
+		if (sol->numbers[i] != -1 && sol->sq_handled[i] == FALSE)
+			++num_unhandled;
+	}
+	if (num != num_unhandled) return FALSE;
+
+	return TRUE;
+}
 
 
 /*
@@ -715,6 +761,7 @@ void
 solve_bottleneck(struct solution *sol)
 {
 	int i;
+
 	struct line *end1;
 	struct line *end2;
 	struct line *next;
@@ -788,9 +835,14 @@ solve_bottleneck(struct solution *sol)
 		/* check if ends are within a line away */
 		next= find_line_connecting_lines(end1, dir1, end2, dir2);
 		if (next != NULL && STATE(next) != LINE_CROSSED) {
-			/* avoid creating artificial solutions */
-			if (length == nlines_on && all_handled) {
-				return;
+			/* we have just one big open loop */
+			if (length == nlines_on) {
+				/* avoid creating artificial solutions */
+				if (all_handled) return;
+				/* assume a situation where the only un-handled square(s)
+				   would be handled by setting this line. In this situation,
+				   we can't cross out this line. */
+				if (bottleneck_is_final_line(sol, next)) return;
 			}
 			CROSS_LINE(next);
 
