@@ -236,7 +236,7 @@ size_widget_get_value(const struct dialog_data *dialog_data)
 		if (value < 0) value= 2;
 		break;
 	case 2: /* triangle tile */
-		value= gtk_spin_button_get_value(GTK_COMBO_BOX(dialog_data->size));
+		value= gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size));
 		if (value < 0) value= 2;
 		break;
 	case 3: /*  */
