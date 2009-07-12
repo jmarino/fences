@@ -70,7 +70,7 @@ triangular_calculate_sizes(struct geometry *geo, int dim)
 		geo->on_line_width= 2*geo->off_line_width;
 	geo->cross_line_width= geo->off_line_width*2;
 	geo->cross_radius= MIN(geo->sq_width, geo->sq_height)/15.;
-	geo->font_scale= 1.;
+	geo->font_scale= 0.7;
 }
 
 
