@@ -22,7 +22,8 @@
 enum {
 	TILE_TYPE_SQUARE,
 	TILE_TYPE_PENROSE,
-	TILE_TYPE_TRIANGULAR
+	TILE_TYPE_TRIANGULAR,
+	TILE_TYPE_QBERT
 };
 
 
@@ -47,5 +48,9 @@ struct geometry* build_penrose_tile_geometry(const struct gameinfo *info);
 
 /* triangular-tile.c */
 struct geometry* build_triangular_tile_geometry(const struct gameinfo *info);
+
+/* qbert-tile.c */
+struct geometry* build_qbert_tile_geometry(const struct gameinfo *info);
+
 
 #endif
