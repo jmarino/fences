@@ -317,7 +317,7 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 	geo->lines= g_realloc(geo->lines, geo->nlines*sizeof(struct line));
 
 	/* build inter-connections */
-	geometry_connect_elements_qbert(geo);
+	geometry_connect_skeleton(geo);
 
 	/* define sizes of drawing bits */
 	qbert_calculate_sizes(geo, dimy);

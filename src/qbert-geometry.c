@@ -385,7 +385,7 @@ geometry_measure_squares(struct geometry *geo)
  * extract that info and generate a fully connected geometry.
  */
 void
-geometry_connect_elements_qbert(struct geometry *geo)
+geometry_connect_skeleton(struct geometry *geo)
 {
 	/* connect vertices and lines */
 	geometry_connect_vertex_lines(geo);
