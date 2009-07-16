@@ -229,8 +229,8 @@ qbert_calculate_sizes(struct geometry *geo, int dim)
 	if (geo->on_line_width < 2*geo->off_line_width)
 		geo->on_line_width= 2*geo->off_line_width;
 	geo->cross_line_width= geo->off_line_width*2;
-	geo->cross_radius= MIN(geo->sq_width, geo->sq_height)/15.;
-	geo->font_scale= 1.;
+	geo->cross_radius= geo->sq_width/10.0;
+	geo->font_scale= 1.5;
 }
 
 
