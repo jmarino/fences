@@ -25,7 +25,7 @@ fences_SOURCES = \
 	geometry.c geometry.h \
 	gamedata.c gamedata.h \
 	click-mesh.c \
-	geometry_tools.c geometry_tools.h \
+	mesh-tools.c \
 	penrose-tile.c tiles.h \
 	square-tile.c \
 	build-loop.c build-loop.h \

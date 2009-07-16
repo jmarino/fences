@@ -17,7 +17,6 @@
 #include <glib.h>
 
 #include "gamedata.h"
-#include "geometry_tools.h"
 
 
 #define WIDTH_MESH	10

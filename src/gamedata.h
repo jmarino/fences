@@ -91,5 +91,9 @@ void gamedata_create_new_game(struct board *board, struct gameinfo *info);
 void click_mesh_destroy(struct click_mesh *click_mesh);
 struct click_mesh* click_mesh_setup(const struct geometry *geo);
 
+/* mesh-tools.c */
+gboolean is_area_inside_box(struct point *area, struct point *box, int debug);
+gboolean is_point_inside_area(struct point *point, struct point *area);
+
 
 #endif

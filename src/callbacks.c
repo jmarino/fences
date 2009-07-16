@@ -23,7 +23,6 @@
 
 #include "callbacks.h"
 #include "gamedata.h"
-#include "geometry_tools.h"
 #include "draw.h"
 #include "history.h"
 #include "gui.h"
