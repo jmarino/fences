@@ -299,44 +299,6 @@ geometry_measure_squares(struct geometry *geo)
 
 
 /*
- * Create new geometry
- */
-struct geometry*
-geometry_create_new(int nsquares, int nvertex, int nlines, int max_numlines)
-{
-	struct geometry *geo;
-	int i;
-
-	/* Allocate memory for geometry data */
-	geo= (struct geometry*)g_malloc(sizeof(struct geometry));
-	geo->nsquares= nsquares;
-	geo->nvertex= nvertex;
-	geo->nlines= nlines;
-	geo->squares= (struct square*)g_malloc(geo->nsquares*sizeof(struct square));
-	geo->vertex= (struct vertex*)g_malloc(geo->nvertex*sizeof(struct vertex));
-	geo->lines= (struct line*)g_malloc(geo->nlines*sizeof(struct line));
-	geo->numpos= (struct point *)g_malloc(max_numlines*sizeof(struct point));
-	geo->numbers= (char *)g_malloc(2*max_numlines*sizeof(char));
-	for(i=0; i < max_numlines; ++i)
-		snprintf(geo->numbers + 2*i, 2, "%1d", i);
-	geo->sq_width= 0.;
-	geo->sq_height= 0.;
-	geo->on_line_width= 0.;
-	geo->off_line_width= 0.;
-	geo->cross_line_width= 0.;
-	geo->cross_radius= 0.;
-	geo->font_size= 0.;
-	geo->font_scale= 1.;
-	geo->max_numlines= max_numlines;
-	geo->board_size= 0.;
-	geo->board_margin= 0.;
-	geo->game_size= 0.;
-
-	return geo;
-}
-
-
-/*
  * Initialize lines in geometry structure
  */
 void
@@ -353,35 +315,6 @@ geometry_initialize_lines(struct geometry *geo)
 		lin->fx_frame= 0;
 		++lin;
 	}
-}
-
-
-/*
- * Free memory used by a geometry structure
- */
-void
-geometry_destroy(struct geometry *geo)
-{
-	int i;
-
-	for(i=0; i < geo->nsquares; ++i) {
-		g_free(geo->squares[i].vertex);
-		g_free(geo->squares[i].sides);
-	}
-	for(i=0; i < geo->nvertex; ++i) {
-		g_free(geo->vertex[i].lines);
-		g_free(geo->vertex[i].sq);
-	}
-	for(i=0; i < geo->nlines; ++i) {
-		g_free(geo->lines[i].in);
-		g_free(geo->lines[i].out);
-	}
-	g_free(geo->squares);
-	g_free(geo->vertex);
-	g_free(geo->lines);
-	g_free(geo->numbers);
-	g_free(geo->numpos);
-	g_free(geo);
 }
 
 
