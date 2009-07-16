@@ -23,6 +23,10 @@
 #include "geometry.h"
 
 
+/* minimum distance square to be considered the same point */
+static double DISTANCE_RESOLUTION_SQUARED=0.0;
+
+
 /*
  * Connect each vertex to the lines it touches.
  * Before this point only lines had references to which vertices they touch.
@@ -369,6 +373,151 @@ geometry_measure_squares(struct geometry *geo)
 		}
 		++sq;
 	}
+}
+
+
+/*
+ * Adds vertex to list in skeleton geometry.
+ * Returns a pointer to already exisiting vertex if it is already in the list.
+ * Returns a pointer to a newly added vertex otherwise.
+ */
+static struct vertex*
+geometry_add_vertex(struct geometry *geo, struct point *point)
+{
+	int i;
+	struct vertex *vertex;
+	double x, y;
+
+	/* search backwards to optimize */
+	vertex= geo->vertex + (geo->nvertex - 1);
+	for(i=0; i < geo->nvertex; ++i) {
+		x= point->x - vertex->pos.x;
+		y= point->y - vertex->pos.y;
+		if ( x*x + y*y < DISTANCE_RESOLUTION_SQUARED)
+			break;
+		--vertex;
+	}
+	if (i == geo->nvertex) {		/* not found, create new */
+		vertex= geo->vertex + geo->nvertex;
+		vertex->id= geo->nvertex;
+		vertex->pos.x= point->x;
+		vertex->pos.y= point->y;
+		vertex->nlines= 0;
+		vertex->lines= NULL;
+		vertex->nsquares= 0;
+		vertex->sq= NULL;
+		++geo->nvertex;
+	}
+
+	return vertex;
+}
+
+
+/*
+ * Adds line to list in skeleton geometry.
+ * Returns a pointer to already exisiting line if it is already in the list.
+ * Returns a pointer to a newly added line otherwise.
+ */
+static struct line*
+geometry_add_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
+{
+	int i;
+	struct line *lin;
+
+	/* search backwards to optimize */
+	lin= geo->lines + (geo->nlines - 1);
+	for(i=0; i < geo->nlines; ++i) {
+		if ((lin->ends[0] == v1 && lin->ends[1] == v2) ||
+			(lin->ends[1] == v1 && lin->ends[0] == v2))
+			break;
+		--lin;
+	}
+	if (i == geo->nlines) {		/* not found, create new */
+		lin= geo->lines + geo->nlines;
+		lin->id= geo->nlines;
+		lin->ends[0]= v1;
+		lin->ends[1]= v2;
+		lin->nsquares= 0;
+		lin->sq[0]= NULL;
+		lin->sq[1]= NULL;
+		lin->nin= 0;
+		lin->in= NULL;
+		lin->nout= 0;
+		lin->out= NULL;
+		lin->fx_status= 0;
+		lin->fx_frame= 0;
+		++geo->nlines;
+	}
+
+	return lin;
+}
+
+
+/*
+ * Add tile to list of tiles in skeleton geometry.
+ * Add vertices and lines as required (avoiding repetitions).
+ * IMPORTANT: the points given must wrap around the tile in order,
+ * either clockwise or counter-clockwise.
+ * Lines are created with info about which squares and vertices they touch.
+ * Only lines are connected in this manner because in a skeleton geometry
+ * it's only the lines that have room to store this data (they always
+ * touch 2 squares and vertices).
+ */
+void
+geometry_add_tile(struct geometry *geo, struct point *pts, int npts)
+{
+	struct square *sq;
+	struct vertex *vertex;
+	struct vertex *vertex_first;
+	struct vertex *vertex_prev=NULL;
+	struct line *lin;
+	int i;
+
+	sq= geo->squares + geo->nsquares;
+	sq->id= geo->nsquares;
+	sq->nvertex= 0;
+	sq->vertex= NULL;
+	sq->nsides= 0;
+	sq->sides= NULL;
+	sq->fx_status= 0;
+	sq->fx_frame= 0;
+	++geo->nsquares;
+
+	/* add first vertex */
+	vertex_first= geometry_add_vertex(geo, pts);
+	vertex_prev= vertex_first;
+
+	/* add rest of vertices */
+	for (i=1; i < npts; ++i) {
+		vertex= geometry_add_vertex(geo, pts + i);
+
+		/* add line connecting last two points*/
+		lin= geometry_add_line(geo, vertex_prev, vertex);
+		/* store sq in line */
+		g_assert(lin->nsquares < 2);	/* no more than 2 squares touching line */
+		lin->sq[lin->nsquares]= sq;
+		++lin->nsquares;
+
+		vertex_prev= vertex;
+	}
+
+	/* connect last point to first */
+	lin= geometry_add_line(geo, vertex, vertex_first);
+	g_assert(lin->nsquares < 2);		/* no more than 2 squares touching line */
+	lin->sq[lin->nsquares]= sq;
+	++lin->nsquares;
+}
+
+
+/*
+ * Set distance resolution to use.
+ * Two points that are closer than this distance are considered the same point.
+ * We store its square for efficiency.
+ */
+void
+geometry_set_distance_resolution(double distance)
+{
+	DISTANCE_RESOLUTION_SQUARED= distance * distance;
 }
 
 
