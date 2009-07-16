@@ -248,6 +248,8 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 	int num_y;
 	double side;
 	int nrhomb_max;
+	int nvertex_max;
+	int nlines_max;
 	double x0;
 	double xoffset;
 	double y0;
@@ -286,7 +288,9 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 					   (sqrt(3.0)* side * side / 2.0));
 
 	/* create geometry with plenty of space for lines and vertex */
-	geo= geometry_create_new(nrhomb_max, nrhomb_max*4, nrhomb_max*4, 4);
+	nvertex_max= (int)(nrhomb_max*1.3);	/* found by trial-and-error (size 5>) */
+	nlines_max= (int)(nrhomb_max*2.2);	/* found by trial-and-error (size 5>) */
+	geo= geometry_create_new(nrhomb_max, nvertex_max, nlines_max, 4);
 	geo->board_size= QBERT_BOARD_SIZE;
 	geo->board_margin= QBERT_BOARD_MARGIN;
 	geo->game_size= QBERT_BOARD_SIZE - 2*QBERT_BOARD_MARGIN;
@@ -302,9 +306,10 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 		}
 	}
 
-	g_message("|| nsquares: %d (%d)", geo->nsquares, nrhomb_max);
-	g_message("|| nlines: %d (%d)", geo->nlines, 4*nrhomb_max);
-	g_message("|| nvertex: %d (%d)", geo->nvertex, 4*nrhomb_max);
+	/* make sure we didn't underestimate max numbers */
+	g_assert(geo->nsquares <= nrhomb_max);
+	g_assert(geo->nvertex <= nvertex_max);
+	g_assert(geo->nlines <= nlines_max);
 
 	/* realloc to actual number of squares, vertices and lines */
 	geo->squares= g_realloc(geo->squares, geo->nsquares*sizeof(struct square));
