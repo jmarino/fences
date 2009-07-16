@@ -156,7 +156,8 @@ build_game_size_spin(const struct dialog_data *dialog_data)
 	GtkWidget *spin;
 	GtkObject *adj;
 
-	adj= gtk_adjustment_new(dialog_data->size_cache[0], 5, 25, 1, 5, 0);
+	adj= gtk_adjustment_new(dialog_data->size_cache[dialog_data->tile_index],
+							5, 25, 1, 5, 0);
 	spin= gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 0);
 
 	return spin;
@@ -181,7 +182,8 @@ build_game_size_combo(const struct dialog_data *dialog_data)
 	for(i=0; i < 5; ++i) {
 		gtk_combo_box_append_text(GTK_COMBO_BOX(combo), sizes[i]);
 	}
-	gtk_combo_box_set_active(GTK_COMBO_BOX(combo), dialog_data->size_cache[1]);
+	gtk_combo_box_set_active(GTK_COMBO_BOX(combo),
+							 dialog_data->size_cache[dialog_data->tile_index]);
 
 	return combo;
 }
