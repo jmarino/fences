@@ -262,24 +262,24 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 	   i.e., vertical has whole number of side's */
 	y0= QBERT_GAME_SIZE/side;
 	num_y= (int)round(y0);
+	/* if it's closer to ceil, then use it to estimate side, if not then clip. */
 	if ((int)ceil(y0) == num_y) {
 		side= QBERT_GAME_SIZE/ceil(y0);
-		g_message("Y changed. new side: %lf", side);
 	}
 
+	/* points within this epsilon^2 are the same point */
 	QBERT_EPSILON= (side/10.0)*(side/10.0);
 
 	/* number of units that fit wide and tall */
 	dimx= (int)ceil(num_x / 2.0);
 	dimy= (int)( QBERT_GAME_SIZE / (side*3.0/2.0) + 1.0 );
 
-	g_message("dims: %dx%d ;   side: %lf", dimx, dimy, side);
-
 	/* coordinates of unit on top left (center of unit coords) */
 	x0= QBERT_BOARD_MARGIN + sqrt(3.0) * side / 2.0;
 	x0+= (QBERT_GAME_SIZE - num_x*(side*sqrt(3.0)/2.0)) / 2.0;
 	y0= QBERT_BOARD_MARGIN + side;
 	y0+= (QBERT_GAME_SIZE - num_y*side) / 2.0;
+	/* found by trial-and-error, makes the game look better */
 	if (num_y % 3 == 1) y0-= side;
 
 	/* estimate max number of rhombs from game area */
