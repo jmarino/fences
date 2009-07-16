@@ -15,6 +15,7 @@
  */
 
 #include <glib.h>
+#include <math.h>
 
 #include "geometry.h"
 #include "tiles.h"
@@ -26,36 +27,6 @@
 #define TRIANGULAR_GAME_SIZE	(TRIANGULAR_BOARD_SIZE - 2*TRIANGULAR_BOARD_MARGIN)
 
 
-
-/*
- * Connect sides around triangle
- */
-static void
-connect_lines_to_square(struct square *sq)
-{
-	int i, i2;
-	struct line *lin;
-
-	/* iterate over all sides of square */
-	for(i=0; i < sq->nsides; ++i) {
-		i2= (i+1) % sq->nsides;
-		lin= sq->sides[i];
-
-		/* multiple assignations may happen (squares sharing a line) */
-		lin->ends[0]= sq->vertex[i];
-		lin->ends[1]= sq->vertex[i2];
-
-		/* add current square to list of squares touching line */
-		if (lin->nsquares == 0) {	// no squares assigned yet
-			lin->sq[0]= sq;
-			lin->nsquares= 1;
-		} else if (lin->nsquares == 1 && lin->sq[0] != sq) {
-			// one was already assigned -> add if different
-			lin->sq[1]= sq;
-			lin->nsquares= 2;
-		}
-	}
-}
 
 
 /*
@@ -82,120 +53,74 @@ struct geometry*
 build_triangular_tile_geometry(const struct gameinfo *info)
 {
 	struct geometry *geo;
-	int i, j, k;
+	int i, j;
+	int ntiles;
+	int nvertex;
+	int nlines;
+	double xpos;
 	double ypos;
-	double xpos0;
-	struct vertex *ver;
-	struct square *sq;
-	int id;
+	double xoffset;
+	double yoffset;
 	int dimx=info->size;
 	int dimy=info->size;
 	double height;		// y distance between two points
-	double offsety;
 	double side;
-	int pos;
+	struct point pts[3];
 
 	/* see how many triangles fit wide */
 	side= ((double)TRIANGULAR_GAME_SIZE)/(dimx + 1.0/2.0);
 	height= side * sqrt(3.0)/2.0;
-	offsety= TRIANGULAR_GAME_SIZE - (dimy * height);
-	offsety/= 2.0;
+	yoffset= TRIANGULAR_GAME_SIZE - (dimy * height);
+	yoffset= yoffset/2.0 + TRIANGULAR_BOARD_MARGIN;
+	xoffset= TRIANGULAR_BOARD_MARGIN + side/2.0;
 
 	/* dimx until now is number of sides wide,
 	   now we turn it into number of triangles*/
 	dimx= 2 * dimx;
 
 	/* create new geometry (ntriangles, nvertex, nlines) */
-	geo= geometry_create_new(dimx*dimy,			/* ntiles */
-							 (dimx/2 + 1)*(dimy + 1), 	/* nvertex */
-							 dimx/2*(dimy + 1)
-							 + (dimx + 1)*dimy,			/* nlines */
-							 3);
+	ntiles= dimx*dimy;
+	nvertex= (dimx/2 + 1)*(dimy + 1);
+	nlines= dimx/2*(dimy + 1) + (dimx + 1)*dimy;
+	geo= geometry_create_new(ntiles, nvertex, nlines, 3);
 	geo->board_size= TRIANGULAR_BOARD_SIZE;
 	geo->board_margin= TRIANGULAR_BOARD_MARGIN;
 	geo->game_size= TRIANGULAR_GAME_SIZE;
+	geometry_set_distance_resolution(side/10.0);
 
-	/* initialize vertices */
-	ver= geo->vertex;
-	for(j=0; j < dimy + 1; ++j) {
-		ypos= height*j + TRIANGULAR_BOARD_MARGIN + offsety;
-		xpos0= TRIANGULAR_BOARD_MARGIN;
-		if (j % 2 == 0) xpos0+= side / 2.0;
-		for(i=0; i < dimx/2 + 1; ++i) {
-			ver->id= j*(dimy + 1) + i;
-			ver->nlines= 0;		// value will be set in 'join_lines'
-			ver->lines= NULL;
-			ver->nsquares= 0;
-			ver->sq= NULL;
-			ver->pos.x= xpos0 + side*i;
-			ver->pos.y= ypos;
-			++ver;
-		}
-	}
-
-	/* initialize lines */
-	geometry_initialize_lines(geo);
-
-	/* initialize triangles */
-	sq= geo->squares;
-	id= 0;
+	/* iterate through triangles creating skeleton geometry
+	   (skeleton geometry: lines hold all the topology info) */
+	geo->nsquares= 0;
+	geo->nlines= 0;
+	geo->nvertex= 0;
 	for(j=0; j < dimy; ++j) {
+		ypos= yoffset + height*j;
 		for(i=0; i < dimx; ++i) {
-			sq->id= id;
-			/* set vertices */
-			sq->nvertex= 3;
-			sq->vertex= (struct vertex **)g_malloc(3 * sizeof(void*));
-			/* two cases: upright triangle, upside-down triangle */
-			pos= j*(dimx/2 + 1) + i/2;		// top (or top left) vertex
-			if ((i + j) % 2 == 0) {		/* upright triangle */
-				sq->vertex[0]= geo->vertex + pos + (j%2);// top
-				sq->vertex[1]= geo->vertex + pos + dimx/2 + 2;	// bot right
-				sq->vertex[2]= geo->vertex + pos + dimx/2 + 1;	// bot left
-			} else {					/* upside-down triangle */
-				sq->vertex[0]= geo->vertex + pos;// top left
-				sq->vertex[1]= geo->vertex + pos + 1;	// top right
-				sq->vertex[2]= geo->vertex + pos + dimx/2 + 2 - (j%2);	// bottom
+			xpos= xoffset + (side/2.0)*i;
+			if ((i+j)%2 == 0) {			/* upright triangle */
+				pts[0].x= xpos;					/* top */
+				pts[0].y= ypos;
+				pts[1].x= xpos + side/2.0;		/* bot right */
+				pts[1].y= ypos + height;
+				pts[2].x= xpos - side/2.0;		/* bot left */
+				pts[2].y= ypos + height;
+			} else {					/* upside down triangle */
+				pts[0].x= xpos - side/2.0;		/* top left */
+				pts[0].y= ypos;
+				pts[1].x= xpos + side/2.0;		/* top right */
+				pts[1].y= ypos;
+				pts[2].x= xpos;					/* bottom */
+				pts[2].y= ypos + height;
 			}
-
-			/* calculate position of center of triangle */
-			sq->center.x= sq->vertex[0]->pos.x;
-			sq->center.y= sq->vertex[0]->pos.y;
-			for(k=1; k < sq->nvertex; ++k) {
-				sq->center.x+= sq->vertex[k]->pos.x;
-				sq->center.y+= sq->vertex[k]->pos.y;
-			}
-			sq->center.x= sq->center.x/(double)sq->nvertex;
-			sq->center.y= sq->center.y/(double)sq->nvertex;
-
-			// set lines on edges of square
-			sq->nsides= 3;
-			sq->sides= (struct line **)g_malloc(3 * sizeof(void *));
-			/* two cases: upright triangle, upside-down triangle */
-			if ((i + j) % 2 == 0) {		/* upright triangle */
-				sq->sides[0]= geo->lines + dimx/2 + j*(dimx+1+dimx/2)+i+1; // right
-				sq->sides[1]= geo->lines + (j+1)*(dimx+1+dimx/2)+i/2;// bot
-				sq->sides[2]= geo->lines + dimx/2 + j*(dimx+1+dimx/2)+ i; // left
-			} else {					/* upside-down triangle */
-				sq->sides[0]= geo->lines + j*(dimx+1+dimx/2)+i/2;//top
-				sq->sides[1]= geo->lines + j*(dimx+1+dimx/2)+dimx/2+i+1;//right
-				sq->sides[2]= geo->lines + j*(dimx+1+dimx/2)+dimx/2+i;//left
-			}
-
-			/* connect lines to square and vertices */
-			connect_lines_to_square(sq);
-
-			/* ini FX status */
-			sq->fx_status= 0;
-			sq->fx_frame= 0;
-
-			++sq;
-			++id;
+			/* add tile to skeleton geometry */
+			geometry_add_tile(geo, pts, 3);
 		}
 	}
 
 	/* DEBUG: print out details about a few triangles */
-	/*g_message("nvertex:%d, nsquares:%d, nlines:%d", geo->nvertex,
-			  geo->nsquares, geo->nlines);
+	//g_message("nvertex:%d, nsquares:%d, nlines:%d", geo->nvertex,
+	//		  geo->nsquares, geo->nlines);
+	/*
 	for(i=0; i < 8; ++i) {
 		sq= geo->squares + i;
 		printf("Triangle: %d (nvertex:%d, nsides:%d)\n", sq->id, sq->nvertex,
@@ -208,8 +133,13 @@ build_triangular_tile_geometry(const struct gameinfo *info)
 			printf("**** %d\n", sq->sides[j]->id);
 			}*/
 
+	/* sanity check: see if we got the numbers we expected */
+	g_assert(geo->nsquares == ntiles);
+	g_assert(geo->nvertex == nvertex);
+	g_assert(geo->nlines == nlines);
+
 	/* finalize geometry data: tie everything together */
-	geometry_connect_elements(geo);
+	geometry_connect_skeleton(geo);
 
 	/* define sizes of drawing bits */
 	triangular_calculate_sizes(geo, dimy);
