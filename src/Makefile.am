@@ -23,6 +23,7 @@ fences_SOURCES = \
 	callbacks.c callbacks.h \
 	draw.c draw.h \
 	geometry.c geometry.h \
+	geometry-legacy.c \
 	gamedata.c gamedata.h \
 	click-mesh.c \
 	geometry_tools.c geometry_tools.h \
@@ -39,8 +40,7 @@ fences_SOURCES = \
 	benchmark.c benchmark.h \
 	newgame-dialog.c \
 	triangle-tile.c \
-	qbert-tile.c \
-	qbert-geometry.c
+	qbert-tile.c
 
 fences_LDFLAGS = 
 
