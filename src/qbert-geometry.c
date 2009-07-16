@@ -123,31 +123,20 @@ geometry_go_around_square(struct square *sq, struct line *lin)
 	int ndir;
 	int i;
 
-	start_vertex= NULL;
+	start_vertex= lin->ends[1];
 	vertex= lin->ends[1];
 	ndir= lin->nout;
 	dir= lin->out;
 
-	while(vertex != start_vertex) {
-		if (start_vertex == NULL)	/* make sure we enter loop */
-			start_vertex= lin->ends[1];
-
-		/* connect lines to square (if not there already) */
-		for(i=0; i < sq->nsides; ++i)
-			if (sq->sides[i] == lin) break;
-		if (i == sq->nsides) {
-			sq->sides[sq->nsides]= lin;
-			++sq->nsides;
-		}
-		/* connect vertex & square (if not there already) */
-		for(i=0; i < sq->nvertex; ++i)
-			if (sq->vertex[i] == vertex) break;
-		if (i == sq->nvertex) {
-			sq->vertex[sq->nvertex]= vertex;
-			++(sq->nvertex);
-			vertex->sq[vertex->nsquares]= sq;
-			++(vertex->nsquares);
-		}
+	do {
+		/* connect lines to square */
+		sq->sides[sq->nsides]= lin;
+		++sq->nsides;
+		/* connect vertex & square */
+		sq->vertex[sq->nvertex]= vertex;
+		++(sq->nvertex);
+		vertex->sq[vertex->nsquares]= sq;
+		++(vertex->nsquares);
 
 		/* find next line that touches square */
 		for(i=0; i < ndir; ++i) {
@@ -168,7 +157,7 @@ geometry_go_around_square(struct square *sq, struct line *lin)
 			dir= lin->in;
 			vertex= lin->ends[0];
 		}
-	}
+	} while(vertex != start_vertex);
 }
 
 
@@ -232,13 +221,32 @@ geometry_connect_squares(struct geometry *geo)
 
 	/* try each line and follow it around the squares it touches
 	   while doing this, set square's sides & vertex, and set
-	   vertex's squares */
+	   vertex's squares
+	   NOTE: sq->fx_status is reused (shamelessly) as a mask to know
+	   which squares have been already handled. */
 	lin= geo->lines;
 	for(i=0; i < geo->nlines; ++i) {
-		geometry_go_around_square(lin->sq[0], lin);
-		if (lin->nsquares == 2)
-			geometry_go_around_square(lin->sq[1], lin);
+		sq= lin->sq[0];
+		if (sq->fx_status == 0) {
+			geometry_go_around_square(sq, lin);
+			sq->fx_status= 1;
+		}
+		if (lin->nsquares == 2) {
+			sq= lin->sq[1];
+			if (sq->fx_status == 0) {
+				geometry_go_around_square(sq, lin);
+				sq->fx_status= 1;
+			}
+		}
 		++lin;
+	}
+
+	/* reset fx_status, which was used as a mask */
+	sq= geo->squares;
+	for(i=0; i < geo->nsquares; ++i) {
+		g_assert(sq->fx_status == 1);
+		sq->fx_status= 0;
+		++sq;
 	}
 }
 
