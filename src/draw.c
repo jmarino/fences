@@ -154,6 +154,21 @@ draw_bounds(cairo_t *cr)
 
 
 /*
+ * DEBUG: Hack to display margin in game board
+ */
+static void
+draw_margin(cairo_t *cr)
+{
+	/* debug: draw rectangle for margin */
+	cairo_set_line_width (cr, OFF_LINE_WIDTH);
+	cairo_set_source_rgba(cr, 0, 1., 0, 0.4);
+	cairo_rectangle(cr, board.geo->board_margin, board.geo->board_margin,
+					board.geo->game_size, board.geo->game_size);
+	cairo_stroke(cr);
+}
+
+
+/*
  * Select color according to FX status and frame
  */
 static void
@@ -221,6 +236,7 @@ draw_board(cairo_t *cr, struct geometry *geo, struct game *game)
 	//draw_square_centers(cr);
 	//draw_linesquares(cr);
 	//draw_bounds(cr);
+	//draw_margin(cr);
 
 	/* Draw OFF lines first */
 	cairo_set_source_rgb(cr, 150/256., 150/256., 150/256.);
