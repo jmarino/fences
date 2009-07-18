@@ -408,10 +408,11 @@ penrose_tile_to_geometry(GSList *penrose, double side)
 	int nlines;
 
 	/* create new geometry (ntiles, nvertex, nlines) */
-	/* NOTE: oversize nvertex and nlines. Will adjust below */
+	/* NOTE: oversize nvertex and nlines. Will adjust below
+	   Oversize factors determined by trial and error. */
 	ntiles= g_slist_length(penrose);
-	nvertex= ntiles*4;
-	nlines= ntiles*4;
+	nvertex= (int)(ntiles*1.5);
+	nlines= (int)(ntiles*2.5);
 	geo= geometry_create_new(ntiles, nvertex, nlines, 4);
 	geo->board_size= PENROSE_BOARD_SIZE;
 	geo->board_margin= PENROSE_BOARD_MARGIN;
@@ -442,9 +443,9 @@ penrose_tile_to_geometry(GSList *penrose, double side)
 	geo->vertex= g_realloc(geo->vertex, geo->nvertex*sizeof(struct vertex));
 	geo->lines= g_realloc(geo->lines, geo->nlines*sizeof(struct line));
 
-	//printf("ntiles: %d (%d)\n", geo->nsquares, ntiles);
-	//printf("nvertex: %d (%d)\n", geo->nvertex, nvertex);
-	//printf("nlines actual: %d (%d)\n", geo->nlines, nlines);
+	/*printf("ntiles: %d (%d) %d\n", geo->nsquares, ntiles);
+	printf("nvertex: %d (%d) %d\n", geo->nvertex, nvertex);
+	printf("nlines: %d (%d) %d\n", geo->nlines, nlines);*/
 
 	/* finalize geometry data: tie everything together */
 	geometry_connect_skeleton(geo);
