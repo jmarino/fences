@@ -28,37 +28,6 @@
 
 
 /*
- * Connect sides of square
- */
-static void
-connect_lines_to_square(struct square *sq)
-{
-	int i, i2;
-	struct line *lin;
-
-	/* iterate over all sides of square */
-	for(i=0; i < sq->nsides; ++i) {
-		i2= (i+1) % sq->nsides;
-		lin= sq->sides[i];
-
-		/* multiple assignations may happen (squares sharing a line) */
-		lin->ends[0]= sq->vertex[i];
-		lin->ends[1]= sq->vertex[i2];
-
-		/* add current square to list of squares touching line */
-		if (lin->nsquares == 0) {	// no squares assigned yet
-			lin->sq[0]= sq;
-			lin->nsquares= 1;
-		} else if (lin->nsquares == 1 && lin->sq[0] != sq) {
-			// one was already assigned -> add if different
-			lin->sq[1]= sq;
-			lin->nsquares= 2;
-		}
-	}
-}
-
-
-/*
  * Calculate sizes of drawing details
  */
 static void
@@ -82,84 +51,60 @@ struct geometry*
 build_square_tile_geometry(const struct gameinfo *info)
 {
 	struct geometry *geo;
-	int i, j, k;
+	int i, j;
+	double xpos;
 	double ypos;
-	struct vertex *ver;
-	struct square *sq;
-	int id;
 	int dim=info->size;		/** HACK ** FIXME: allow rectangular games */
+	double side;
+	int ntiles;
+	int nvertex;
+	int nlines;
+	struct point pts[4];
+
+	/* calculate lenght of square side */
+	side= ((double)SQUARE_GAME_SIZE)/dim;
 
 	/* create new geometry (nsquares, nvertex, nlines) */
-	geo= geometry_create_new(dim*dim, (dim + 1)*(dim + 1), 2*dim*(dim + 1), 4);
+	ntiles= dim*dim;
+	nvertex= (dim + 1)*(dim + 1);
+	nlines= 2*dim*(dim + 1);
+	geo= geometry_create_new(ntiles, nvertex, nlines, 4);
 	geo->board_size= SQUARE_BOARD_SIZE;
 	geo->board_margin= SQUARE_BOARD_MARGIN;
 	geo->game_size= SQUARE_GAME_SIZE;
+	geometry_set_distance_resolution(side/10.0);
 
-	/* initialize vertices */
-	ver= geo->vertex;
-	for(j=0; j < dim + 1; ++j) {
-		ypos= ((double)SQUARE_GAME_SIZE)/dim*j + SQUARE_BOARD_MARGIN;
-		for(i=0; i < dim + 1; ++i) {
-			ver->id= j*(dim + 1) + i;
-			ver->nlines= 0;		// value will be set in 'join_lines'
-			ver->lines= NULL;
-			ver->nsquares= 0;
-			ver->sq= NULL;
-			ver->pos.x= ((double)SQUARE_GAME_SIZE)/dim*i + SQUARE_BOARD_MARGIN;
-			ver->pos.y= ypos;
-			++ver;
+	/* iterate through squares creating skeleton geometry
+	   (skeleton geometry: lines hold all the topology info) */
+	geo->nsquares= 0;
+	geo->nlines= 0;
+	geo->nvertex= 0;
+	for(j=0; j < dim; ++j) {
+		ypos= SQUARE_BOARD_MARGIN + side*j;
+		for(i=0; i < dim; ++i) {
+			xpos= SQUARE_BOARD_MARGIN + side*i;
+			/* xpos,ypos -> coord of top left vertex */
+			pts[0].x= xpos;					/* top left*/
+			pts[0].y= ypos;
+			pts[1].x= xpos + side;			/* top right */
+			pts[1].y= ypos;
+			pts[2].x= xpos + side;			/* bot right */
+			pts[2].y= ypos + side;
+			pts[3].x= xpos;					/* bot left */
+			pts[3].y= ypos + side;
+
+			/* add tile to skeleton geometry */
+			geometry_add_tile(geo, pts, 4);
 		}
 	}
 
-	/* initialize lines */
-	geometry_initialize_lines(geo);
-
-	/* initialize squares */
-	sq= geo->squares;
-	id= 0;
-	for(j=0; j<dim; ++j) {
-		for(i=0; i<dim; ++i) {
-			sq->id= id;
-			/* set vertices */
-			sq->nvertex= 4;
-			sq->vertex= (struct vertex **)g_malloc(4 * sizeof(void*));
-			sq->vertex[0]= geo->vertex + j*(dim+1)+i;	// top left
-			sq->vertex[1]= geo->vertex + j*(dim+1)+i+1;	// top right
-			sq->vertex[2]= geo->vertex + (j+1)*(dim+1)+i+1;	// bot right
-			sq->vertex[3]= geo->vertex + (j+1)*(dim+1)+i;	// bot left
-
-			/* calculate position of center of square */
-			sq->center.x= sq->vertex[0]->pos.x;
-			sq->center.y= sq->vertex[0]->pos.y;
-			for(k=1; k < sq->nvertex; ++k) {
-				sq->center.x+= sq->vertex[k]->pos.x;
-				sq->center.y+= sq->vertex[k]->pos.y;
-			}
-			sq->center.x= sq->center.x/(double)sq->nvertex;
-			sq->center.y= sq->center.y/(double)sq->nvertex;
-
-			// set lines on edges of square
-			sq->nsides= 4;
-			sq->sides= (struct line **)g_malloc(4 * sizeof(void *));
-			sq->sides[0]= geo->lines + j*(dim+dim+1)+i;
-			sq->sides[1]= geo->lines + j*(dim+dim+1)+dim+i+1;
-			sq->sides[2]= geo->lines + (j+1)*(dim+dim+1)+i;
-			sq->sides[3]= geo->lines + j*(dim+dim+1)+dim+i;
-
-			/* connect lines to square and vertices */
-			connect_lines_to_square(sq);
-
-			/* ini FX status */
-			sq->fx_status= 0;
-			sq->fx_frame= 0;
-
-			++sq;
-			++id;
-		}
-	}
+	/* sanity check: see if we got the numbers we expected */
+	g_assert(geo->nsquares == ntiles);
+	g_assert(geo->nvertex == nvertex);
+	g_assert(geo->nlines == nlines);
 
 	/* finalize geometry data: tie everything together */
-	geometry_connect_elements(geo);
+	geometry_connect_skeleton(geo);
 
 	/* define sizes of drawing bits */
 	square_calculate_sizes(geo, dim);
