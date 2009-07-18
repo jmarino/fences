@@ -380,102 +380,16 @@ get_romb_vertices(struct romb *romb, struct point *vertex)
 
 
 /*
- * Check if coordinates of vertex are unique (not in the list of previous vertices)
+ * Calculate sizes of drawing details
  */
-gboolean
-is_vertex_unique(struct point *v, struct vertex *vertex, int nvertex)
+static void
+penrose_calculate_sizes(struct geometry *geo)
 {
-	int i;
-	double x, y;
-
-	for(i=0; i < nvertex; ++i) {
-		x= v->x - vertex[i].pos.x;
-		y= v->y - vertex[i].pos.y;
-		if ( x*x + y*y < separate_distance )
-			return FALSE;
-	}
-
-	return TRUE;
-}
-
-
-/*
- * Find vertex on vertex list by vertex coordinates
- */
-struct vertex*
-find_dot_by_coords(struct point *v, struct geometry *geo)
-{
-	int i;
-	double x, y;
-
-	for(i=0; i < geo->nvertex; ++i) {
-		x= v->x - geo->vertex[i].pos.x;
-		y= v->y - geo->vertex[i].pos.y;
-		if ( x*x + y*y < separate_distance )
-			return geo->vertex + i;
-	}
-
-	g_debug("find_dot_by_coords: vertex not found on dot list");
-	return NULL;
-}
-
-
-/*
- * Square has vertices already set. Now set lines.
- */
-void
-set_lines_on_square(struct square *sq, struct geometry *geo)
-{
-	struct vertex *d1;
-	struct vertex *d2;
-	struct line *lin;
-	int i, j;
-	double x, y;
-
-	for(i=0; i < 4; ++i) {
-		j= (i + 1) % 4;
-		d1= sq->vertex[i];
-		d2= sq->vertex[j];
-
-		/* align points in line so first point has smallest y (top point) */
-		if (d2->pos.y < d1->pos.y) {
-			d2= sq->vertex[i];
-			d1= sq->vertex[j];
-		}
-
-		/* look for line in line list */
-		for(j=0; j < geo->nlines; ++j) {
-			x= d1->pos.x - geo->lines[j].ends[0]->pos.x;
-			y= d1->pos.y - geo->lines[j].ends[0]->pos.y;
-			if ( x*x + y*y < separate_distance ) {
-				/* if top point matches: try bottom point */
-				x= d2->pos.x - geo->lines[j].ends[1]->pos.x;
-				y= d2->pos.y - geo->lines[j].ends[1]->pos.y;
-				if ( x*x + y*y < separate_distance )
-					break;	// line found!
-			}
-		}
-
-		/* set square and line fields accordingly */
-		if (j < geo->nlines) { // line found
-			lin= geo->lines + j;
-			sq->sides[i]= lin;
-			// sq is not already in line -> add it
-			if (lin->nsquares == 1 && lin->sq[0] != sq) {
-				lin->sq[1]= sq;
-				lin->nsquares= 2;
-			}
-		} else {		// line NOT found, add it
-			lin= geo->lines + geo->nlines;
-			sq->sides[i]= lin;
-			lin->id= geo->nlines;
-			lin->ends[0]= d1;
-			lin->ends[1]= d2;
-			lin->sq[0]= sq;
-			lin->nsquares= 1;
-			++geo->nlines;
-		}
-	}
+	geo->on_line_width= geo->board_size/250.;
+	geo->off_line_width= geo->board_size/1000.;
+	geo->cross_line_width= geo->off_line_width*1.5;
+	geo->cross_radius= MIN(geo->sq_width, geo->sq_height)/5.;
+	geo->font_scale= 2.;
 }
 
 
@@ -483,91 +397,60 @@ set_lines_on_square(struct square *sq, struct geometry *geo)
  * Transform list of rombs to geometry data
  */
 static struct geometry*
-penrose_tile_to_geometry(GSList *penrose)
+penrose_tile_to_geometry(GSList *penrose, double side)
 {
 	struct geometry *geo;
-	struct vertex *v;
-	struct square *sq;
-	int nvertex;
 	GSList *list;
-	struct point vertex[4];
-	int i, j;
-	int nsquares;
+	struct point pts[4];
+	int i;
+	int ntiles;
+	int nvertex;
+	int nlines;
 
-	/* create new geometry (nsquares, nvertex, nlines) */
+	/* create new geometry (ntiles, nvertex, nlines) */
 	/* NOTE: oversize nvertex and nlines. Will adjust below */
-	nsquares= g_slist_length(penrose);
-	geo= geometry_create_new(nsquares, nsquares*4, nsquares*4, 4);
+	ntiles= g_slist_length(penrose);
+	nvertex= ntiles*4;
+	nlines= ntiles*4;
+	geo= geometry_create_new(ntiles, nvertex, nlines, 4);
 	geo->board_size= PENROSE_BOARD_SIZE;
 	geo->board_margin= PENROSE_BOARD_MARGIN;
 	geo->game_size= geo->board_size - 2*geo->board_margin;
+	geometry_set_distance_resolution(side/10.0);
 
-	/* Compile vertices (and count how many) */
+
+	/* iterate through tiles creating skeleton geometry
+	   (skeleton geometry: lines hold all the topology info) */
+	geo->nsquares= 0;
+	geo->nlines= 0;
+	geo->nvertex= 0;
 	list= penrose;
-	v= geo->vertex;
-	nvertex= 0;
-	while(list != NULL) {
-		get_romb_vertices((struct romb*)list->data, vertex);
-		for(i=0; i < 4; ++i) {
-			if (is_vertex_unique(&vertex[i], geo->vertex, nvertex)) {
-				v->id= nvertex;
-				v->nlines= 0; // value will be set later
-				v->lines= NULL;
-				v->nsquares= 0;
-				v->sq= NULL;
-				v->pos.x= vertex[i].x;
-				v->pos.y= vertex[i].y;
-				++nvertex;
-				++v;
-			}
-		}
+	for(i=0; i < ntiles; ++i) {
+		/* get vertices of tile (rhomb) and add it to skeleton geometry */
+		get_romb_vertices((struct romb*)list->data, pts);
+		geometry_add_tile(geo, pts, 4);
+
 		list= g_slist_next(list);
 	}
 
-	/* change to actual number of vertices */
-	geo->nvertex= nvertex;
-	geo->vertex= g_realloc(geo->vertex, nvertex*sizeof(struct vertex));
+	/* make sure we didn't underestimate max numbers */
+	g_assert(geo->nsquares <= ntiles);
+	g_assert(geo->nvertex <= nvertex);
+	g_assert(geo->nlines <= nlines);
 
-	/* initialize lines */
-	geometry_initialize_lines(geo);
-
-	/* initialize squares (rombs) */
-	list= penrose;
-	sq= geo->squares;
-	geo->nlines= 0;		// we'll add them as we find them
-	for(i=0; i < geo->nsquares; ++i) {
-		sq->id= i;
-		sq->nvertex= 4;
-		sq->vertex= (struct vertex **)g_malloc(4 * sizeof(void*));
-
-		/* set square (romb) vertex pointers */
-		get_romb_vertices((struct romb*)list->data, vertex);
-		for(j=0; j < 4; ++j) {
-			sq->vertex[j]= find_dot_by_coords(&vertex[j], geo);
-		}
-
-		/* calculate position of center of square (romb) */
-		memcpy(&sq->center, &((struct romb*)list->data)->center, sizeof(struct point));
-
-		/* set lines on edges of square (romb) */
-		sq->nsides= 4;
-		sq->sides= (struct line **)g_malloc(4 * sizeof(void *));
-		set_lines_on_square(sq, geo);
-
-		/* ini FX status */
-		sq->fx_status= 0;
-		sq->fx_frame= 0;
-
-		++sq;
-		list= g_slist_next(list);
-	}
-
-	/* reallocate to actual number of lines */
+	/* realloc to actual number of vertices and lines */
+	geo->vertex= g_realloc(geo->vertex, geo->nvertex*sizeof(struct vertex));
 	geo->lines= g_realloc(geo->lines, geo->nlines*sizeof(struct line));
 
-	//printf("nsquares: %d (%d)\n", geo->nsquares, 4*geo->nsquares);
-	//printf("nvertex: %d\n", geo->nvertex);
-	//printf("nlines actual: %d\n", geo->nlines);
+	//printf("ntiles: %d (%d)\n", geo->nsquares, ntiles);
+	//printf("nvertex: %d (%d)\n", geo->nvertex, nvertex);
+	//printf("nlines actual: %d (%d)\n", geo->nlines, nlines);
+
+	/* finalize geometry data: tie everything together */
+	geometry_connect_skeleton(geo);
+
+	/* define sizes of drawing bits */
+	penrose_calculate_sizes(geo);
 
 	return geo;
 }
@@ -599,20 +482,6 @@ create_tile_seed(double side)
 	}
 
 	return penrose;
-}
-
-
-/*
- * Calculate sizes of drawing details
- */
-static void
-penrose_calculate_sizes(struct geometry *geo)
-{
-	geo->on_line_width= geo->board_size/250.;
-	geo->off_line_width= geo->board_size/1000.;
-	geo->cross_line_width= geo->off_line_width*1.5;
-	geo->cross_radius= MIN(geo->sq_width, geo->sq_height)/5.;
-	geo->font_scale= 2.;
 }
 
 
@@ -682,7 +551,7 @@ build_penrose_tile_geometry(const struct gameinfo *info)
 	/* get side size and number of folds */
 	nfolds= penrose_calculate_params(size_index, &side);
 
-	/* Create the seed (increase size to account for 4 foldings) */
+	/* Create the seed (increase size to account for foldings) */
 	penrose= create_tile_seed(side*pow(RATIO, nfolds));
 
 	/* unfold list of shapes */
@@ -700,13 +569,7 @@ build_penrose_tile_geometry(const struct gameinfo *info)
 	/***TODO***/
 
 	/* transform tile into geometry data (points, lines & squares) */
-	geo= penrose_tile_to_geometry(penrose);
-
-	/* finalize geometry data: tie everything together */
-	geometry_connect_elements(geo);
-
-	/* define sizes of drawing bits */
-	penrose_calculate_sizes(geo);
+	geo= penrose_tile_to_geometry(penrose, side);
 
 	/* debug: draw to file */
 	//draw_penrose_tile(penrose);
