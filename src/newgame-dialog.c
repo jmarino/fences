@@ -118,9 +118,9 @@ draw_preview_image(struct dialog_data *dialog_data)
 		gameinfo.type= TILE_TYPE_TRIANGULAR;
 		gameinfo.size= 5;
 		break;
-	case 3: /*  */
-		gameinfo.type= TILE_TYPE_PENROSE;
-		gameinfo.size= 2;
+	case 3: /* qbert tile */
+		gameinfo.type= TILE_TYPE_QBERT;
+		gameinfo.size= 8;
 		break;
 	case 4: /*  */
 		gameinfo.type= TILE_TYPE_PENROSE;
@@ -156,7 +156,8 @@ build_game_size_spin(const struct dialog_data *dialog_data)
 	GtkWidget *spin;
 	GtkObject *adj;
 
-	adj= gtk_adjustment_new(dialog_data->size_cache[0], 5, 25, 1, 5, 0);
+	adj= gtk_adjustment_new(dialog_data->size_cache[dialog_data->tile_index],
+							5, 25, 1, 5, 0);
 	spin= gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 0);
 
 	return spin;
@@ -181,7 +182,8 @@ build_game_size_combo(const struct dialog_data *dialog_data)
 	for(i=0; i < 5; ++i) {
 		gtk_combo_box_append_text(GTK_COMBO_BOX(combo), sizes[i]);
 	}
-	gtk_combo_box_set_active(GTK_COMBO_BOX(combo), dialog_data->size_cache[1]);
+	gtk_combo_box_set_active(GTK_COMBO_BOX(combo),
+							 dialog_data->size_cache[dialog_data->tile_index]);
 
 	return combo;
 }
@@ -205,8 +207,8 @@ build_gamesize_widget(struct dialog_data *dialog_data)
 	case 2: /* triangle tile */
 		widget= build_game_size_spin(dialog_data);
 		break;
-	case 3: /*  */
-		widget= build_game_size_combo(dialog_data);
+	case 3: /* qbert tile */
+		widget= build_game_size_spin(dialog_data);
 		break;
 	case 4: /*  */
 		widget= build_game_size_combo(dialog_data);
@@ -239,8 +241,8 @@ size_widget_get_value(const struct dialog_data *dialog_data)
 		value= gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size));
 		if (value < 0) value= 2;
 		break;
-	case 3: /*  */
-		value= gtk_combo_box_get_active(GTK_COMBO_BOX(dialog_data->size));
+	case 3: /* qbert tile */
+		value= gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size));
 		if (value < 0) value= 2;
 		break;
 	case 4: /*  */
@@ -310,7 +312,7 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 	const gchar *tiles[]={N_("Square"),
 						  N_("Penrose"),
 						  N_("Triangular"),
-						  N_("Rhombus"),
+						  N_("Qbert"),
 						  N_("Hexagon")};
 
 	/* preview image */
@@ -459,8 +461,8 @@ extract_game_info(const struct dialog_data *dialog_data, struct gameinfo *info)
 	case 2: /* triangle tile */
 		info->type= TILE_TYPE_TRIANGULAR;
 		break;
-	case 3: /*  */
-		info->type= TILE_TYPE_PENROSE;
+	case 3: /* qbert tile */
+		info->type= TILE_TYPE_QBERT;
 		break;
 	case 4: /*  */
 		info->type= TILE_TYPE_PENROSE;
@@ -497,6 +499,10 @@ setup_dialog_data(const struct gameinfo *info, struct dialog_data *dialog_data)
 	case TILE_TYPE_TRIANGULAR:
 		dialog_data->tile_index= 2;
 		dialog_data->size_cache[2]= info->size;
+		break;
+	case TILE_TYPE_QBERT:
+		dialog_data->tile_index= 3;
+		dialog_data->size_cache[3]= info->size;
 		break;
 	default:
 		g_message("(setup_dialog_data) unknown tile type: %d", info->type);

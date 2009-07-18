@@ -23,89 +23,22 @@
 #include "geometry.h"
 
 
-
-/*
- * Recursively fill in 'in' and 'out' lists of lines for each line
- */
-static void
-join_lines_recursive(struct geometry *geo, int line_id, int *line_handled)
-{
-	struct line **list;
-	struct vertex *v;
-	int i;
-
-	/* NOTE: now we do the check before we call: faster */
-	/* check if this line has been already handled */
-	/*if (line_handled[line_id]) {
-		g_debug("***rec: line %d already handled", line_id);
-		return;
-	}*/
-
-	/* find lines touching ends[0] */
-	list= geo->lines[line_id].in;
-	v= geo->lines[line_id].ends[0];
-	for(i=0; i < v->nlines; ++i) {
-		if (v->lines[i]->id != line_id) {
-			*list= v->lines[i];
-			++list;
-		}
-	}
-
-	/* find lines touching ends[1] */
-	list= geo->lines[line_id].out;
-	v= geo->lines[line_id].ends[1];
-	for(i=0; i < v->nlines; ++i) {
-		if (v->lines[i]->id != line_id) {
-			*list= v->lines[i];
-			++list;
-		}
-	}
-
-	/* mark current line as handled */
-	line_handled[line_id]= 1;
-
-	/* call recursively on all lines that current line touches */
-	list= geo->lines[line_id].in;
-	for(i=0; i < geo->lines[line_id].nin; ++i) {
-		if (line_handled[list[i]->id] == 0) // only lines not handled yet
-			join_lines_recursive(geo, list[i]->id, line_handled);
-	}
-	list= geo->lines[line_id].out;
-	for(i=0; i < geo->lines[line_id].nout; ++i) {
-		if (line_handled[list[i]->id] == 0) // only lines not handled yet
-			join_lines_recursive(geo, list[i]->id, line_handled);
-	}
-}
-
+/* minimum distance square to be considered the same point */
+static double DISTANCE_RESOLUTION_SQUARED=0.0;
 
 
 /*
- * Count how many squares touch each vertex
+ * Connect each vertex to the lines it touches.
+ * Before this point only lines had references to which vertices they touch.
+ * This function builds the opposite references: tracks which lines each
+ * vertex touches.
  */
 static void
-geometry_count_squares_touching_vertex(struct geometry *geo)
-{
-	int i, j;
-	struct square *sq;
-
-	/* iterate over squares increasing the square count of each of its vertices */
-	sq= geo->squares;
-	for(i=0; i < geo->nsquares; ++i) {
-		for(j=0; j < sq->nvertex; ++j)
-			++(sq->vertex[j]->nsquares);
-		++sq;
-	}
-}
-
-
-/*
- * Count how many squares touch each vertex
- */
-static void
-geometry_count_lines_touching_vertex(struct geometry *geo)
+geometry_connect_vertex_lines(struct geometry *geo)
 {
 	int i;
 	struct line *lin;
+	struct vertex *vertex;
 
 	/* iterate over lines and count how many lines touch each vertex */
 	lin= geo->lines;
@@ -114,58 +47,21 @@ geometry_count_lines_touching_vertex(struct geometry *geo)
 		++(lin->ends[1]->nlines);
 		++lin;
 	}
-}
 
-
-/*
- * Build networks.
- * Connect lines to each other (fill the in and out fields), vertices to squares,
- * and vertices to lines
- */
-static void
-geometry_build_networks(struct geometry *geo)
-{
-	struct line *lin;
-	struct square *sq;
-	struct vertex *vertex;
-	int line_handled[geo->nlines];
-	int i, j;
-
-	/* count how many lines touch each vertex */
-	geometry_count_lines_touching_vertex(geo);
-
-	/* count how many squares touch each vertex */
-	geometry_count_squares_touching_vertex(geo);
-
-	/* allocate space for each line's in & out arrays */
-	lin= geo->lines;
-	for(i=0; i < geo->nlines; ++i) {
-		/* store space for ins (lines touching vertex - 1) */
-		lin->nin= lin->ends[0]->nlines - 1;
-		lin->in= (struct line **)g_malloc0(lin->nin*sizeof(void*));
-		/* store space for outs (lines touching vertex - 1) */
-		lin->nout= lin->ends[1]->nlines - 1;
-		lin->out= (struct line **)g_malloc0(lin->nout*sizeof(void*));
-		++lin;
-	}
-
-	/* allocate space for each vertex's list of lines and squares */
+	/* allocate space for each vertex's list of lines */
 	vertex= geo->vertex;
 	for(i=0; i < geo->nvertex; ++i) {
-		/* DEBUG: check that all vertices at least have one line */
-		if (vertex->nlines == 0)
-			g_debug("vertex %d is isolated, has no lines associated", i);
-		if (vertex->nsquares == 0)
-			g_debug("vertex %d is isolated, has no squares associated", i);
+		/* sanity check: all vertices must have at least two lines */
+		if (vertex->nlines < 2) {
+			g_message("CRITICAL: vertex %d has %d lines associated (needs at least 2)",
+					  i, vertex->nlines);
+		}
 		vertex->lines= (struct line **)g_malloc(vertex->nlines*sizeof(void*));
-		vertex->sq= (struct square **)g_malloc(vertex->nsquares*sizeof(void*));
-		vertex->nsquares= 0;	// we use this as a counter in the loop below
-		vertex->nlines= 0;
+		vertex->nlines= 0;		/* reset to be used as a counter in loop below */
 		++vertex;
 	}
 
-	/* iterate over lines, adding them to the vertices they touch
-	   and allocate space for ins and outs */
+	/* iterate over lines, adding themselves to the vertices they touch */
 	lin= geo->lines;
 	for(i=0; i < geo->nlines; ++i) {
 		/* first end (in end) */
@@ -178,26 +74,208 @@ geometry_build_networks(struct geometry *geo)
 		++(vertex->nlines);
 		++lin;
 	}
+}
 
-	/* iterate over squares adding them to their vertex list */
-	sq= geo->squares;
-	for(i=0; i < geo->nsquares; ++i) {
-		for(j=0; j < sq->nvertex; ++j) {
-			vertex= sq->vertex[j];
-			vertex->sq[vertex->nsquares]= sq;
+
+/*
+ * Create and populate in & out arrays for each line.
+ */
+static void
+geometry_fill_inout(struct geometry *geo)
+{
+	struct line *lin;
+	struct vertex *vertex;
+	int i, j;
+
+	/* populate the in & out arrays of each line */
+	lin= geo->lines;
+	for(i=0; i < geo->nlines; ++i) {
+		/* store space for ins (lines touching vertex - 1) */
+		vertex= lin->ends[0];
+		lin->nin= 0;
+		lin->in= (struct line **)g_malloc0((vertex->nlines - 1)*sizeof(void*));
+		for(j=0; j < vertex->nlines; ++j) {
+			if (vertex->lines[j] == lin) continue;
+			lin->in[lin->nin]= vertex->lines[j];
+			++lin->nin;
+		}
+		/* store space for outs (lines touching vertex - 1) */
+		vertex= lin->ends[1];
+		lin->nout= 0;
+		lin->out= (struct line **)g_malloc0((vertex->nlines - 1)*sizeof(void*));
+		for(j=0; j < vertex->nlines; ++j) {
+			if (vertex->lines[j] == lin) continue;
+			lin->out[lin->nout]= vertex->lines[j];
+			++lin->nout;
+		}
+		++lin;
+	}
+}
+
+
+/*
+ * Go around square that touches line, connecting vertices and lines to square.
+ * Add vertices and lines to square.
+ * Add square to vertices.
+ */
+static void
+geometry_go_around_square(struct square *sq, struct line *lin)
+{
+	struct vertex *start_vertex;
+	struct vertex *vertex;
+	struct line **dir=NULL;
+	int ndir;
+	int i;
+
+	start_vertex= lin->ends[1];
+	vertex= lin->ends[1];
+	ndir= lin->nout;
+	dir= lin->out;
+
+	do {
+		/* connect lines to square */
+		sq->sides[sq->nsides]= lin;
+		++sq->nsides;
+		/* connect vertex & square */
+		sq->vertex[sq->nvertex]= vertex;
+		++(sq->nvertex);
+		vertex->sq[vertex->nsquares]= sq;
+		++(vertex->nsquares);
+
+		/* find next line that touches square */
+		for(i=0; i < ndir; ++i) {
+			lin= dir[i];
+			if (lin->sq[0] == sq
+				|| (lin->nsquares == 2 && lin->sq[1] == sq)) break;
+		}
+		g_assert(i < ndir);	/* we must always find a line */
+
+		/* find common vertex */
+		if (lin->ends[0] == vertex) {
+			ndir= lin->nout;
+			dir= lin->out;
+			vertex= lin->ends[1];
+		} else {
+			g_assert(lin->ends[1] == vertex); /* sanity check */
+			ndir= lin->nin;
+			dir= lin->in;
+			vertex= lin->ends[0];
+		}
+	} while(vertex != start_vertex);
+}
+
+
+/*
+ * Connect each square to the vertex and lines it touches. Also connect
+ * each vertex to the squares it touches.
+ * Before this point only lines had references to which squares they touch.
+ * This function builds tracks which lines each square touches, which vertex
+ * each square touches, and which squares each vertex touches.
+ */
+static void
+geometry_connect_squares(struct geometry *geo)
+{
+	int i, j;
+	struct line *lin;
+	struct vertex *vertex;
+	struct square *sq;
+	int direction;
+
+	/* count number of vertex and number of lines touching each square
+	   NOTE: notice that sq->nvertex and vertex->nsquares are counted twice.
+	   We're over-counting them by a factor of 2. */
+	lin= geo->lines;
+	for(i=0; i < geo->nlines; ++i) {
+		vertex= lin->ends[0];
+		for(j=0; j < lin->nsquares; ++j) {
+			sq= lin->sq[j];
+			++(sq->nvertex);
+			++(sq->nsides);
 			++(vertex->nsquares);
 		}
+		vertex= lin->ends[1];
+		for(j=0; j < lin->nsquares; ++j) {
+			sq= lin->sq[j];
+			++(sq->nvertex);
+			++(sq->nsides);
+			++(vertex->nsquares);
+		}
+		++lin;
+	}
+
+	/* allocate space for squares in each vertex.
+	   Compensate for over-counting nsquares (factor 2) */
+	vertex= geo->vertex;
+	for(i=0; i < geo->nvertex; ++i) {
+		vertex->sq= (struct square **)g_malloc0((vertex->nsquares/2)*sizeof(void*));
+		vertex->nsquares= 0;	/* to be used as counter below */
+		++vertex;
+	}
+
+	/* allocate space for vertices and lines in each square.
+	   Compensate for over-counting nvertex (factor 2) */
+	sq= geo->squares;
+	for(i=0; i < geo->nsquares; ++i) {
+		sq->vertex= (struct vertex **)g_malloc0((sq->nvertex/2)*sizeof(void*));
+		sq->nvertex= 0;			/* to be used as counter below */
+		sq->sides= (struct line **)g_malloc0((sq->nsides/2)*sizeof(void*));
+		sq->nsides= 0;			/* to be used as counter below */
 		++sq;
 	}
 
-	/* connect lines, i.e., fill 'in' & 'out' lists */
-	memset(line_handled, 0, sizeof(int) * geo->nlines);
-	join_lines_recursive(geo, 0, line_handled);
-
-	/* DEBUG: check all lines were handled */
+	/* try each line and follow it around the squares it touches
+	   while doing this, set square's sides & vertex, and set
+	   vertex's squares
+	   NOTE: sq->fx_status is reused (shamelessly) as a mask to know
+	   which squares have been already handled. */
+	lin= geo->lines;
 	for(i=0; i < geo->nlines; ++i) {
-		if (line_handled[i] == 0)
-			g_debug("after connect lines: line %d not handled\n", i);
+		sq= lin->sq[0];
+		if (sq->fx_status == 0) {
+			geometry_go_around_square(sq, lin);
+			sq->fx_status= 1;
+		}
+		if (lin->nsquares == 2) {
+			sq= lin->sq[1];
+			if (sq->fx_status == 0) {
+				geometry_go_around_square(sq, lin);
+				sq->fx_status= 1;
+			}
+		}
+		++lin;
+	}
+
+	/* reset fx_status, which was used as a mask */
+	sq= geo->squares;
+	for(i=0; i < geo->nsquares; ++i) {
+		g_assert(sq->fx_status == 1);
+		sq->fx_status= 0;
+		++sq;
+	}
+}
+
+
+/*
+ * Calculate the center point of each tile
+ */
+static void
+geometry_calculate_tile_centers(struct geometry *geo)
+{
+	int i, j;
+	struct square *sq;
+
+	sq= geo->squares;
+	for(i=0; i < geo->nsquares; ++i) {
+		/* calculate position of center of square */
+		sq->center.x= sq->vertex[0]->pos.x;
+		sq->center.y= sq->vertex[0]->pos.y;
+		for(j=1; j < sq->nvertex; ++j) {
+			sq->center.x+= sq->vertex[j]->pos.x;
+			sq->center.y+= sq->vertex[j]->pos.y;
+		}
+		sq->center.x= sq->center.x/(double)sq->nvertex;
+		sq->center.y= sq->center.y/(double)sq->nvertex;
+		++sq;
 	}
 }
 
@@ -299,6 +377,186 @@ geometry_measure_squares(struct geometry *geo)
 
 
 /*
+ * Adds vertex to list in skeleton geometry.
+ * Returns a pointer to already exisiting vertex if it is already in the list.
+ * Returns a pointer to a newly added vertex otherwise.
+ */
+static struct vertex*
+geometry_add_vertex(struct geometry *geo, struct point *point)
+{
+	int i;
+	struct vertex *vertex;
+	double x, y;
+
+	/* search backwards to optimize */
+	vertex= geo->vertex + (geo->nvertex - 1);
+	for(i=0; i < geo->nvertex; ++i) {
+		x= point->x - vertex->pos.x;
+		y= point->y - vertex->pos.y;
+		if ( x*x + y*y < DISTANCE_RESOLUTION_SQUARED)
+			break;
+		--vertex;
+	}
+	if (i == geo->nvertex) {		/* not found, create new */
+		vertex= geo->vertex + geo->nvertex;
+		vertex->id= geo->nvertex;
+		vertex->pos.x= point->x;
+		vertex->pos.y= point->y;
+		vertex->nlines= 0;
+		vertex->lines= NULL;
+		vertex->nsquares= 0;
+		vertex->sq= NULL;
+		++geo->nvertex;
+	}
+
+	return vertex;
+}
+
+
+/*
+ * Adds line to list in skeleton geometry.
+ * Returns a pointer to already exisiting line if it is already in the list.
+ * Returns a pointer to a newly added line otherwise.
+ */
+static struct line*
+geometry_add_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
+{
+	int i;
+	struct line *lin;
+
+	/* search backwards to optimize */
+	lin= geo->lines + (geo->nlines - 1);
+	for(i=0; i < geo->nlines; ++i) {
+		if ((lin->ends[0] == v1 && lin->ends[1] == v2) ||
+			(lin->ends[1] == v1 && lin->ends[0] == v2))
+			break;
+		--lin;
+	}
+	if (i == geo->nlines) {		/* not found, create new */
+		lin= geo->lines + geo->nlines;
+		lin->id= geo->nlines;
+		lin->ends[0]= v1;
+		lin->ends[1]= v2;
+		lin->nsquares= 0;
+		lin->sq[0]= NULL;
+		lin->sq[1]= NULL;
+		lin->nin= 0;
+		lin->in= NULL;
+		lin->nout= 0;
+		lin->out= NULL;
+		lin->fx_status= 0;
+		lin->fx_frame= 0;
+		++geo->nlines;
+	}
+
+	return lin;
+}
+
+
+/*
+ * Add tile to list of tiles in skeleton geometry.
+ * Add vertices and lines as required (avoiding repetitions).
+ * IMPORTANT: the points given must wrap around the tile in order,
+ * either clockwise or counter-clockwise.
+ * Lines are created with info about which squares and vertices they touch.
+ * Only lines are connected in this manner because in a skeleton geometry
+ * it's only the lines that have room to store this data (they always
+ * touch 2 squares and vertices).
+ */
+void
+geometry_add_tile(struct geometry *geo, struct point *pts, int npts)
+{
+	struct square *sq;
+	struct vertex *vertex;
+	struct vertex *vertex_first;
+	struct vertex *vertex_prev=NULL;
+	struct line *lin;
+	int i;
+
+	sq= geo->squares + geo->nsquares;
+	sq->id= geo->nsquares;
+	sq->nvertex= 0;
+	sq->vertex= NULL;
+	sq->nsides= 0;
+	sq->sides= NULL;
+	sq->fx_status= 0;
+	sq->fx_frame= 0;
+	++geo->nsquares;
+
+	/* add first vertex */
+	vertex_first= geometry_add_vertex(geo, pts);
+	vertex_prev= vertex_first;
+
+	/* add rest of vertices */
+	for (i=1; i < npts; ++i) {
+		vertex= geometry_add_vertex(geo, pts + i);
+
+		/* add line connecting last two points*/
+		lin= geometry_add_line(geo, vertex_prev, vertex);
+		/* store sq in line */
+		g_assert(lin->nsquares < 2);	/* no more than 2 squares touching line */
+		lin->sq[lin->nsquares]= sq;
+		++lin->nsquares;
+
+		vertex_prev= vertex;
+	}
+
+	/* connect last point to first */
+	lin= geometry_add_line(geo, vertex, vertex_first);
+	g_assert(lin->nsquares < 2);		/* no more than 2 squares touching line */
+	lin->sq[lin->nsquares]= sq;
+	++lin->nsquares;
+}
+
+
+/*
+ * Set distance resolution to use.
+ * Two points that are closer than this distance are considered the same point.
+ * We store its square for efficiency.
+ */
+void
+geometry_set_distance_resolution(double distance)
+{
+	DISTANCE_RESOLUTION_SQUARED= distance * distance;
+}
+
+
+/*
+ * A fully connected geometry is formed from a simple skeleton geometry
+ * The skeleton geometry has:
+ *  - All tiles defined:
+ *    * only id is set
+ *  - All vertex defined
+ *    * id and pos are set
+ *  - All lines defined
+ *    * id, ends and sq fields are set
+ * The info about connections is contained in the lines. This function will
+ * extract that info and generate a fully connected geometry.
+ */
+void
+geometry_connect_skeleton(struct geometry *geo)
+{
+	/* connect vertices and lines */
+	geometry_connect_vertex_lines(geo);
+
+	/* create and populate in & out arrays in each line */
+	geometry_fill_inout(geo);
+
+	/* connect squares to lines and vertices */
+	geometry_connect_squares(geo);
+
+	/* find square centers */
+	geometry_calculate_tile_centers(geo);
+
+	/* define area of influence of each line */
+	geometry_define_line_infarea(geo);
+
+	/* measure minimum square dimensions */
+	geometry_measure_squares(geo);
+}
+
+
+/*
  * Create new geometry
  */
 struct geometry*
@@ -337,26 +595,6 @@ geometry_create_new(int nsquares, int nvertex, int nlines, int max_numlines)
 
 
 /*
- * Initialize lines in geometry structure
- */
-void
-geometry_initialize_lines(struct geometry *geo)
-{
-	int i;
-	struct line *lin;
-
-	lin= geo->lines;
-	for (i= 0; i < geo->nlines; ++i) {
-		lin->id= i;
-		lin->nsquares= 0;
-		lin->fx_status= 0;
-		lin->fx_frame= 0;
-		++lin;
-	}
-}
-
-
-/*
  * Free memory used by a geometry structure
  */
 void
@@ -382,21 +620,4 @@ geometry_destroy(struct geometry *geo)
 	g_free(geo->numbers);
 	g_free(geo->numpos);
 	g_free(geo);
-}
-
-
-/*
- * Finalize geometry data. Connect all elements together.
- */
-void
-geometry_connect_elements(struct geometry *geo)
-{
-	/* interconnect all the lines, vertices and squares */
-	geometry_build_networks(geo);
-
-	/* define area of influence of each line */
-	geometry_define_line_infarea(geo);
-
-	/* measure minimum square dimensions */
-	geometry_measure_squares(geo);
 }
