@@ -30,123 +30,6 @@
 #define QBERT_GAME_RIGHT	(QBERT_BOARD_SIZE - QBERT_BOARD_MARGIN + 1.0)
 
 
-static double QBERT_EPSILON=0.0;
-
-
-
-/*
- * Find vertex in list of vertices
- * Returns pointer to vertex structure or NULL if not found.
- */
-static struct vertex*
-qbert_find_vertex(struct geometry *geo, struct point *point)
-{
-	int i;
-	struct vertex *vertex;
-	double x, y;
-
-	if (geo->nvertex == 0) return NULL;
-
-	/* search backwards to optimize */
-	vertex= geo->vertex + (geo->nvertex - 1);
-	for(i=0; i < geo->nvertex; ++i) {
-		x= point->x - vertex->pos.x;
-		y= point->y - vertex->pos.y;
-		if ( x*x + y*y < QBERT_EPSILON)
-			return vertex;
-		--vertex;
-	}
-	return NULL;
-}
-
-
-/*
- * Find line in list of lines
- * Returns pointer to line structure or NULL if not found.
- */
-static struct line*
-qbert_find_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
-{
-	int i;
-	struct line *lin;
-
-	if (geo->nlines == 0) return NULL;
-
-	/* search backwards to optimize */
-	lin= geo->lines + (geo->nlines - 1);
-	for(i=0; i < geo->nlines; ++i) {
-		if ((lin->ends[0] == v1 && lin->ends[1] == v2) ||
-			(lin->ends[1] == v1 && lin->ends[0] == v2))
-			return lin;
-		--lin;
-	}
-	return NULL;
-}
-
-
-/*
- * Add tile to list of tiles in geometry
- * Add vertices as required.
- * Add and connect lines as required
- */
-static void
-qbert_add_tile(struct geometry *geo, struct point *pts)
-{
-	struct square *sq;
-	struct vertex *vertex;
-	struct vertex *vlist[4];
-	struct line *lin;
-	int i, i2;
-
-	sq= geo->squares + geo->nsquares;
-	sq->id= geo->nsquares;
-	sq->nvertex= 0;
-	sq->vertex= NULL;
-	sq->nsides= 0;
-	sq->sides= NULL;
-	sq->fx_status= sq->fx_frame= 0;
-	++geo->nsquares;
-
-	/* add vertices */
-	for (i=0; i < 4; ++i) {
-		vertex= qbert_find_vertex(geo, pts + i);
-		if (vertex == NULL) {
-			vertex= geo->vertex + geo->nvertex;
-			vertex->id= geo->nvertex;
-			vertex->pos.x= pts[i].x;
-			vertex->pos.y= pts[i].y;
-			vertex->nlines= 0;
-			vertex->lines= NULL;
-			vertex->nsquares= 0;
-			vertex->sq= NULL;
-			++geo->nvertex;
-		}
-		vlist[i]= vertex;
-	}
-	/* add lines */
-	for (i=0; i < 4; ++i) {
-		i2= (i + 1) % 4;
-		lin= qbert_find_line(geo, vlist[i], vlist[i2]);
-		if (lin == NULL) {
-			lin= geo->lines + geo->nlines;
-			lin->id= geo->nlines;
-			lin->ends[0]= vlist[i];
-			lin->ends[1]= vlist[i2];
-			lin->nsquares= 0;
-			lin->nin= 0;
-			lin->in= NULL;
-			lin->nout= 0;
-			lin->out= NULL;
-			lin->fx_status= lin->fx_frame= 0;
-			++geo->nlines;
-		}
-		/* connect square to line */
-		g_assert(lin->nsquares < 2);
-		lin->sq[lin->nsquares]= sq;
-		++lin->nsquares;
-	}
-}
-
 
 /*
  * Check that all 4 vertex of rhomb are inside game area.
@@ -185,7 +68,7 @@ qbert_fill_unit_with_rhombs(struct geometry *geo, struct point *pos, double side
 	pts[3].y= pos->y + side / 2.0;
 	if (qbert_is_rhomb_inside(pts)) {
 		//g_message("  rhomb 1");
-		qbert_add_tile(geo, pts);
+		geometry_add_tile(geo, pts, 4);
 	}
 
 	/* bottom (vertex clockwise starting in the center) */
@@ -199,7 +82,7 @@ qbert_fill_unit_with_rhombs(struct geometry *geo, struct point *pos, double side
 	pts[3].y= pos->y + side / 2.0;
 	if (qbert_is_rhomb_inside(pts)) {
 		//g_message("  rhomb 2");
-		qbert_add_tile(geo, pts);
+		geometry_add_tile(geo, pts, 4);
 	}
 
 	/* rhomb top left (vertex clockwise starting in the center) */
@@ -213,7 +96,7 @@ qbert_fill_unit_with_rhombs(struct geometry *geo, struct point *pos, double side
 	pts[3].y= pos->y - side;
 	if (qbert_is_rhomb_inside(pts)) {
 		//g_message("  rhomb 3");
-		qbert_add_tile(geo, pts);
+		geometry_add_tile(geo, pts, 4);
 	}
 }
 
@@ -267,9 +150,6 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 		side= QBERT_GAME_SIZE/ceil(y0);
 	}
 
-	/* points within this epsilon^2 are the same point */
-	QBERT_EPSILON= (side/10.0)*(side/10.0);
-
 	/* number of units that fit wide and tall */
 	dimx= (int)ceil(num_x / 2.0);
 	dimy= (int)( QBERT_GAME_SIZE / (side*3.0/2.0) + 1.0 );
@@ -294,6 +174,7 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 	geo->board_size= QBERT_BOARD_SIZE;
 	geo->board_margin= QBERT_BOARD_MARGIN;
 	geo->game_size= QBERT_BOARD_SIZE - 2*QBERT_BOARD_MARGIN;
+	geometry_set_distance_resolution(side/10.0);
 
 	/* create rhombs (3 rhombs in each unit) */
 	geo->nsquares= geo->nlines= geo->nvertex= 0;
