@@ -281,6 +281,9 @@ build_board_geometry(struct gameinfo *gameinfo)
 	case TILE_TYPE_QBERT:
 		geo= build_qbert_tile_geometry(gameinfo);
 		break;
+	case TILE_TYPE_HEX:
+		geo= build_hex_tile_geometry(gameinfo);
+		break;
 	default:
 		g_message("(build_board_geometry) unknown tile type: %d", gameinfo->type);
 	};

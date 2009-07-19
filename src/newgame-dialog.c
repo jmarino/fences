@@ -123,8 +123,8 @@ draw_preview_image(struct dialog_data *dialog_data)
 		gameinfo.size= 8;
 		break;
 	case 4: /*  */
-		gameinfo.type= TILE_TYPE_PENROSE;
-		gameinfo.size= 2;
+		gameinfo.type= TILE_TYPE_HEX;
+		gameinfo.size= 5;
 		break;
 	default:
 		g_message("(draw_prewiew_image) unknown tile type: %d", dialog_data->tile_index);
@@ -210,8 +210,8 @@ build_gamesize_widget(struct dialog_data *dialog_data)
 	case 3: /* qbert tile */
 		widget= build_game_size_spin(dialog_data);
 		break;
-	case 4: /*  */
-		widget= build_game_size_combo(dialog_data);
+	case 4: /* hexagonal tile */
+		widget= build_game_size_spin(dialog_data);
 		break;
 	default:
 		g_message("(build_gamesize_widget)unknown tile type:%d", dialog_data->tile_index);
@@ -245,8 +245,8 @@ size_widget_get_value(const struct dialog_data *dialog_data)
 		value= gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size));
 		if (value < 0) value= 2;
 		break;
-	case 4: /*  */
-		value= gtk_combo_box_get_active(GTK_COMBO_BOX(dialog_data->size));
+	case 4: /* hexagonal tile */
+		value= gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size));
 		if (value < 0) value= 2;
 		break;
 	default:
@@ -465,7 +465,7 @@ extract_game_info(const struct dialog_data *dialog_data, struct gameinfo *info)
 		info->type= TILE_TYPE_QBERT;
 		break;
 	case 4: /*  */
-		info->type= TILE_TYPE_PENROSE;
+		info->type= TILE_TYPE_HEX;
 		break;
 	default:
 		g_message("(extract_game_info) unknown tile type: %d", dialog_data->tile_index);
@@ -504,6 +504,9 @@ setup_dialog_data(const struct gameinfo *info, struct dialog_data *dialog_data)
 		dialog_data->tile_index= 3;
 		dialog_data->size_cache[3]= info->size;
 		break;
+	case TILE_TYPE_HEX:
+		dialog_data->tile_index= 4;
+		dialog_data->size_cache[4]= info->size;
 	default:
 		g_message("(setup_dialog_data) unknown tile type: %d", info->type);
 	}

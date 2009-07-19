@@ -39,7 +39,8 @@ fences_SOURCES = \
 	benchmark.c benchmark.h \
 	newgame-dialog.c \
 	triangle-tile.c \
-	qbert-tile.c
+	qbert-tile.c \
+	hex-tile.c
 
 fences_LDFLAGS = 
 
