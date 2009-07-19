@@ -29,6 +29,52 @@
 
 
 /*
+ * Relate tile index (in dialog) to tile type
+ */
+static int index2tiletype[NUMBER_TILE_TYPE]={
+	TILE_TYPE_SQUARE,
+	TILE_TYPE_PENROSE,
+	TILE_TYPE_TRIANGULAR,
+	TILE_TYPE_QBERT,
+	TILE_TYPE_HEX
+};
+
+
+/*
+ * Size widget type
+ */
+enum {
+	SIZE_WIDGET_SPIN,
+	SIZE_WIDGET_COMBO
+};
+static int size_widget_type[]={
+	SIZE_WIDGET_SPIN,	// square
+	SIZE_WIDGET_COMBO,	// penrose
+	SIZE_WIDGET_SPIN,	// triangular
+	SIZE_WIDGET_SPIN,	// qbert
+	SIZE_WIDGET_SPIN	// hexagonal
+};
+
+/* Default widget sizes */
+static int default_sizes[]={
+	7,		// square
+	2,		// penrose
+	7,		// triangular
+	7,		// qbert
+	7		// hexagonal
+};
+
+/* Sizes of board to show in the preview */
+static const int preview_sizes[]={
+	5,		// square
+	1,		// penrose
+	5,		// triangular
+	8,		// qbert
+	5		// hexagonal
+};
+
+
+/*
  * Data associated with dialog
  */
 struct dialog_data {
@@ -104,30 +150,10 @@ draw_preview_image(struct dialog_data *dialog_data)
 	struct gameinfo gameinfo;
 
 	/* create geometry for current tile type */
-	switch(dialog_data->tile_index) {
-	case 0:	/* square tile */
-		gameinfo.type= TILE_TYPE_SQUARE;
-		gameinfo.size= 5;
-		break;
-	case 1: /* penrose tile */
-		gameinfo.type= TILE_TYPE_PENROSE;
-		gameinfo.size= 1;
-		break;
-	case 2: /* triangle tile */
-		gameinfo.type= TILE_TYPE_TRIANGULAR;
-		gameinfo.size= 5;
-		break;
-	case 3: /* qbert tile */
-		gameinfo.type= TILE_TYPE_QBERT;
-		gameinfo.size= 8;
-		break;
-	case 4: /*  */
-		gameinfo.type= TILE_TYPE_HEX;
-		gameinfo.size= 5;
-		break;
-	default:
-		g_message("(draw_prewiew_image) unknown tile type: %d", dialog_data->tile_index);
-	};
+	gameinfo.type= index2tiletype[dialog_data->tile_index];
+	gameinfo.size= preview_sizes[dialog_data->tile_index];
+
+	/* build preview geometry */
 	fences_benchmark_start();
 	geo= build_board_geometry(&gameinfo);
 	g_message("time: %lf", fences_benchmark_stop());
@@ -196,24 +222,16 @@ build_gamesize_widget(struct dialog_data *dialog_data)
 {
 	GtkWidget *widget=NULL;
 
-	switch(dialog_data->tile_index) {
-	case 0:	/* square tile */
+	switch(size_widget_type[dialog_data->tile_index]) {
+	case SIZE_WIDGET_SPIN:
 		widget= build_game_size_spin(dialog_data);
 		break;
-	case 1: /* penrose tile */
+	case SIZE_WIDGET_COMBO:
 		widget= build_game_size_combo(dialog_data);
 		break;
-	case 2: /* triangle tile */
-		widget= build_game_size_spin(dialog_data);
-		break;
-	case 3: /* qbert tile */
-		widget= build_game_size_spin(dialog_data);
-		break;
-	case 4: /* hexagonal tile */
-		widget= build_game_size_spin(dialog_data);
-		break;
 	default:
-		g_message("(build_gamesize_widget)unknown tile type:%d", dialog_data->tile_index);
+		g_message("(build_gamesize_widget) unknown size widget type: %d",
+				  size_widget_type[dialog_data->tile_index]);
 	}
 
 	return widget;
@@ -228,28 +246,17 @@ size_widget_get_value(const struct dialog_data *dialog_data)
 {
 	int value=0;
 
-	switch(dialog_data->tile_index) {
-	case 0:	/* square tile */
+	switch(size_widget_type[dialog_data->tile_index]) {
+	case SIZE_WIDGET_SPIN:
 		value= (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size));
 		break;
-	case 1: /* penrose tile */
+	case SIZE_WIDGET_COMBO:
 		value= gtk_combo_box_get_active(GTK_COMBO_BOX(dialog_data->size));
 		if (value < 0) value= 2;
 		break;
-	case 2: /* triangle tile */
-		value= gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size));
-		if (value < 0) value= 2;
-		break;
-	case 3: /* qbert tile */
-		value= gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size));
-		if (value < 0) value= 2;
-		break;
-	case 4: /* hexagonal tile */
-		value= gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size));
-		if (value < 0) value= 2;
-		break;
 	default:
-		g_message("(size_widget_get_value) unknown tile type: %d", dialog_data->tile_index);
+		g_message("(size_widget_get_value) unknown size widget type: %d",
+				  size_widget_type[dialog_data->tile_index]);
 	};
 	return value;
 }
@@ -450,25 +457,7 @@ extract_game_info(const struct dialog_data *dialog_data, struct gameinfo *info)
 {
 	int i;
 
-	switch(dialog_data->tile_index) {
-	case 0:	/* square tile */
-		info->type= TILE_TYPE_SQUARE;
-		break;
-	case 1: /* penrose tile */
-		info->type= TILE_TYPE_PENROSE;
-		break;
-	case 2: /* triangle tile */
-		info->type= TILE_TYPE_TRIANGULAR;
-		break;
-	case 3: /* qbert tile */
-		info->type= TILE_TYPE_QBERT;
-		break;
-	case 4: /*  */
-		info->type= TILE_TYPE_HEX;
-		break;
-	default:
-		g_message("(extract_game_info) unknown tile type: %d", dialog_data->tile_index);
-	};
+	info->type= index2tiletype[dialog_data->tile_index];
 	info->size= size_widget_get_value(dialog_data);
 	info->diff_index= dialog_data->diff_index;
 }
@@ -481,34 +470,21 @@ extract_game_info(const struct dialog_data *dialog_data, struct gameinfo *info)
 static void
 setup_dialog_data(const struct gameinfo *info, struct dialog_data *dialog_data)
 {
-	const int default_cache[]={7, 2, 2 ,2 ,2};
+
+	int i;
 
 	/* copy default size cache */
-	memcpy(dialog_data->size_cache, default_cache, NUMBER_TILE_TYPE*sizeof(int));
+	memcpy(dialog_data->size_cache, default_sizes, NUMBER_TILE_TYPE*sizeof(int));
 
-	switch(info->type) {
-	case TILE_TYPE_SQUARE:
-		dialog_data->tile_index= 0;
-		dialog_data->size_cache[0]= info->size;
-		break;
-	case TILE_TYPE_PENROSE:
-		dialog_data->tile_index= 1;
-		dialog_data->size_cache[1]= info->size;
-		break;
-	case TILE_TYPE_TRIANGULAR:
-		dialog_data->tile_index= 2;
-		dialog_data->size_cache[2]= info->size;
-		break;
-	case TILE_TYPE_QBERT:
-		dialog_data->tile_index= 3;
-		dialog_data->size_cache[3]= info->size;
-		break;
-	case TILE_TYPE_HEX:
-		dialog_data->tile_index= 4;
-		dialog_data->size_cache[4]= info->size;
-	default:
-		g_message("(setup_dialog_data) unknown tile type: %d", info->type);
+	for(i=0; i < NUMBER_TILE_TYPE; ++i) {
+		if (index2tiletype[i] == info->type) {
+			dialog_data->tile_index= i;
+			break;
+		}
 	}
+	g_assert(i < NUMBER_TILE_TYPE);
+
+	dialog_data->size_cache[i]= info->size;
 	dialog_data->diff_index= info->diff_index;
 	dialog_data->size= NULL;
 }
