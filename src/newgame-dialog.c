@@ -25,7 +25,6 @@
 
 #define PREVIEW_IMAGE_SIZE		160
 
-#define NUM_TILE_TYPE		5
 #define NUM_DIFFICULTY		6
 
 
@@ -33,7 +32,7 @@
  * Data associated with dialog
  */
 struct dialog_data {
-	GtkWidget *tile_button[NUM_TILE_TYPE];
+	GtkWidget *tile_button[NUMBER_TILE_TYPE];
 	GtkWidget *diff_button[NUM_DIFFICULTY];
 	int tile_index;
 	int diff_index;
@@ -41,7 +40,7 @@ struct dialog_data {
 	GdkPixmap *preview;
 	GtkWidget *size;
 	GtkWidget *size_container;
-	int size_cache[NUM_TILE_TYPE];
+	int size_cache[NUMBER_TILE_TYPE];
 };
 
 
@@ -276,7 +275,7 @@ tiletype_radio_cb(GtkToggleButton *button, gpointer user_data)
 		size_widget_get_value(dialog_data);
 
 	/* find which button was selected */
-	for(i=0; i < NUM_TILE_TYPE; ++i) {
+	for(i=0; i < NUMBER_TILE_TYPE; ++i) {
 		if (GTK_WIDGET(button) == dialog_data->tile_button[i]) break;
 	}
 	dialog_data->tile_index= i;
@@ -339,7 +338,7 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 	g_signal_connect(G_OBJECT(radio), "toggled",
 					 G_CALLBACK(tiletype_radio_cb), dialog_data);
 	dialog_data->tile_button[0]= radio;
-	for(i=1; i < NUM_TILE_TYPE; ++i) {
+	for(i=1; i < NUMBER_TILE_TYPE; ++i) {
 		radio= gtk_radio_button_new_with_label_from_widget(
 			GTK_RADIO_BUTTON(radio), tiles[i]);
 		gtk_box_pack_start(GTK_BOX(vbox), radio, FALSE, FALSE, 0);
@@ -485,7 +484,7 @@ setup_dialog_data(const struct gameinfo *info, struct dialog_data *dialog_data)
 	const int default_cache[]={7, 2, 2 ,2 ,2};
 
 	/* copy default size cache */
-	memcpy(dialog_data->size_cache, default_cache, NUM_TILE_TYPE*sizeof(int));
+	memcpy(dialog_data->size_cache, default_cache, NUMBER_TILE_TYPE*sizeof(int));
 
 	switch(info->type) {
 	case TILE_TYPE_SQUARE:
