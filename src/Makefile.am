@@ -40,7 +40,8 @@ fences_SOURCES = \
 	newgame-dialog.c \
 	triangle-tile.c \
 	qbert-tile.c \
-	hex-tile.c
+	hex-tile.c \
+	snub-tile.c
 
 fences_LDFLAGS = 
 

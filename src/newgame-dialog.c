@@ -36,9 +36,17 @@ static int index2tiletype[NUMBER_TILE_TYPE]={
 	TILE_TYPE_PENROSE,
 	TILE_TYPE_TRIANGULAR,
 	TILE_TYPE_QBERT,
-	TILE_TYPE_HEX
+	TILE_TYPE_HEX,
+	TILE_TYPE_SNUB
 };
 
+const gchar *tiletype_name[]={N_("Square"),
+							  N_("Penrose"),
+							  N_("Triangular"),
+							  N_("Qbert"),
+							  N_("Hexagon"),
+							  N_("Snub")
+};
 
 /*
  * Size widget type
@@ -52,7 +60,8 @@ static int size_widget_type[]={
 	SIZE_WIDGET_COMBO,	// penrose
 	SIZE_WIDGET_SPIN,	// triangular
 	SIZE_WIDGET_SPIN,	// qbert
-	SIZE_WIDGET_SPIN	// hexagonal
+	SIZE_WIDGET_SPIN,	// hexagonal
+	SIZE_WIDGET_COMBO	// snub
 };
 
 /* Default widget sizes */
@@ -61,7 +70,8 @@ static int default_sizes[]={
 	2,		// penrose
 	7,		// triangular
 	7,		// qbert
-	7		// hexagonal
+	7,		// hexagonal
+	2		// snub
 };
 
 /* Sizes of board to show in the preview */
@@ -70,7 +80,8 @@ static const int preview_sizes[]={
 	1,		// penrose
 	5,		// triangular
 	8,		// qbert
-	5		// hexagonal
+	5,		// hexagonal
+	1		// snub
 };
 
 
@@ -315,11 +326,6 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 	GdkPixmap *pixmap;
 	GtkWidget *label;
 	int i;
-	const gchar *tiles[]={N_("Square"),
-						  N_("Penrose"),
-						  N_("Triangular"),
-						  N_("Qbert"),
-						  N_("Hexagon")};
 
 	/* preview image */
 	pixmap= gdk_pixmap_new(NULL, PREVIEW_IMAGE_SIZE, PREVIEW_IMAGE_SIZE, 24);
@@ -340,14 +346,14 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 	/* vbox with game types (radios) */
 	vbox= gtk_vbox_new(FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
-	radio= gtk_radio_button_new_with_label(NULL, tiles[0]);
+	radio= gtk_radio_button_new_with_label(NULL, tiletype_name[0]);
 	gtk_box_pack_start(GTK_BOX(vbox), radio, FALSE, FALSE, 0);
 	g_signal_connect(G_OBJECT(radio), "toggled",
 					 G_CALLBACK(tiletype_radio_cb), dialog_data);
 	dialog_data->tile_button[0]= radio;
 	for(i=1; i < NUMBER_TILE_TYPE; ++i) {
 		radio= gtk_radio_button_new_with_label_from_widget(
-			GTK_RADIO_BUTTON(radio), tiles[i]);
+			GTK_RADIO_BUTTON(radio), tiletype_name[i]);
 		gtk_box_pack_start(GTK_BOX(vbox), radio, FALSE, FALSE, 0);
 		g_signal_connect(G_OBJECT(radio), "toggled",
 						 G_CALLBACK(tiletype_radio_cb), dialog_data);
