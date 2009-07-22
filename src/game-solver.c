@@ -308,7 +308,7 @@ solve_maxnumber_squares(struct solution *sol)
 				}
 				for(k=2; k < sq2->nsides - 1; ++k) {
 					k2= (pos2 + k) % sq2->nsides;
-					if (STATE(sq->sides[k2]) != LINE_ON)
+					if (STATE(sq2->sides[k2]) != LINE_ON)
 						SET_LINE(sq2->sides[k2]);
 				}
 				/* cross any lines from vertex that are not part of sq or sq2 */
