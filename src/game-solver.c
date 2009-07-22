@@ -734,7 +734,7 @@ bottleneck_is_final_line(struct solution *sol, struct line *lin)
 	/* check if setting line would handle unhandled squares */
 	for(i=0; i < lin->nsquares; ++i) {
 		sq= lin->sq[i];
-		if (sol->sq_handled[sq->id]) continue;
+		if (sol->numbers[sq->id] == -1 || sol->sq_handled[sq->id]) continue;
 		nlines_on= 0;
 		for(j=0; j < sq->nsides; ++j)
 			if (sol->states[ sq->sides[j]->id ] == LINE_ON) ++nlines_on;
