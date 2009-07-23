@@ -31,10 +31,6 @@
 
 
 
-/* defined in gamedata.c */
-extern struct board board;
-
-
 /* UI definition file */
 #define XML_FILE "fences.ui"
 
@@ -56,6 +52,7 @@ int
 main (int argc, char *argv[])
 {
 	GtkWidget *window;
+	struct board *board;
 
 
 #ifdef ENABLE_NLS
@@ -71,17 +68,17 @@ main (int argc, char *argv[])
 	gdk_threads_enter();
 
 	/* Init board */
-	initialize_board();
+	board= initialize_board();
 
 	gtk_set_locale ();
 	gtk_init (&argc, &argv);
 
 	/* create main window */
-	window= gui_setup_main_window(XML_FILE, &board);
+	window= gui_setup_main_window(XML_FILE, board);
 	gtk_widget_show (window);
 
 	/* initialize gui */
-	gui_initialize(window, &board);
+	gui_initialize(window, board);
 
 	/* start draw thread */
 	//start_draw_thread(g_object_get_data(G_OBJECT(window), "drawarea"));
@@ -90,7 +87,7 @@ main (int argc, char *argv[])
 	gdk_threads_leave();
 
 	/* clean up */
-	fences_exit_cleanup(&board);
+	fences_exit_cleanup(board);
 
 	return 0;
 }

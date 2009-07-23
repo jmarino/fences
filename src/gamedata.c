@@ -212,7 +212,7 @@ generate_example_game(struct geometry *geo)
 /*
  * Initialize board
  */
-void
+struct board *
 initialize_board(void)
 {
 	/* Setup coordinate size of board */
@@ -242,6 +242,8 @@ initialize_board(void)
 	board.game= create_empty_gamedata(board.geo);
 	//board.game= generate_example_game(board.geo);
 	//printf("nlines: %d\nnsquares: %d\n", board.geo->nlines, board.geo->nsquares);
+
+	return &board;
 }
 
 

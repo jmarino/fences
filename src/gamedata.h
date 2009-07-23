@@ -81,7 +81,7 @@ void find_smallest_numbered_square(struct geometry *geo, struct game *game);
 struct game* create_empty_gamedata(struct geometry *geo);
 void free_gamedata(struct game *game);
 void game_set_line(int id, int state);
-void initialize_board(void);
+struct board* initialize_board(void);
 void gamedata_clear_game(struct board *board);
 struct geometry *build_board_geometry(struct gameinfo *gameinfo);
 void gamedata_destroy_current_game(struct board *board);
