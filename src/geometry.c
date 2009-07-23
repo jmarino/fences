@@ -39,6 +39,7 @@ geometry_connect_vertex_lines(struct geometry *geo)
 	int i;
 	struct line *lin;
 	struct vertex *vertex;
+	struct line **ptr;
 
 	/* iterate over lines and count how many lines touch each vertex */
 	lin= geo->lines;
@@ -48,7 +49,13 @@ geometry_connect_vertex_lines(struct geometry *geo)
 		++lin;
 	}
 
-	/* allocate space for each vertex's list of lines */
+	/* allocate space for each vertex's list of lines.
+	   To optimize we allocate one single chunk of memory and point each vertex
+	   to a position in it. Mem required is (2*nlines) since each line touches
+	   two vertices.
+	   NOTE: 'lines' pointer of first vertex points to start of memory chunk
+	*/
+	ptr= (struct line **)g_malloc((geo->nlines*2)*sizeof(void*));
 	vertex= geo->vertex;
 	for(i=0; i < geo->nvertex; ++i) {
 		/* sanity check: all vertices must have at least two lines */
@@ -56,7 +63,8 @@ geometry_connect_vertex_lines(struct geometry *geo)
 			g_message("CRITICAL: vertex %d has %d lines associated (needs at least 2)",
 					  i, vertex->nlines);
 		}
-		vertex->lines= (struct line **)g_malloc(vertex->nlines*sizeof(void*));
+		vertex->lines= ptr;
+		ptr= ptr + vertex->nlines;
 		vertex->nlines= 0;		/* reset to be used as a counter in loop below */
 		++vertex;
 	}
@@ -606,8 +614,8 @@ geometry_destroy(struct geometry *geo)
 		g_free(geo->tiles[i].vertex);
 		g_free(geo->tiles[i].sides);
 	}
+	g_free(geo->vertex[0].lines);
 	for(i=0; i < geo->nvertex; ++i) {
-		g_free(geo->vertex[i].lines);
 		g_free(geo->vertex[i].tiles);
 	}
 	for(i=0; i < geo->nlines; ++i) {
