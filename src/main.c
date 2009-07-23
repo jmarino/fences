@@ -78,7 +78,7 @@ main (int argc, char *argv[])
 	gtk_widget_show (window);
 
 	/* initialize gui */
-	gui_initialize(window, board);
+	gui_initialize(board);
 
 	/* start draw thread */
 	//start_draw_thread(g_object_get_data(G_OBJECT(window), "drawarea"));

@@ -175,29 +175,6 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 
 
 /*
- * Initialize gui aspects after game data and main window have been setup
- */
-void
-gui_initialize(GtkWidget *window, struct board *board)
-{
-	gboolean state;
-	GObject *object;
-
-	/* set state of undo */
-	if (g_list_next(board->history) != NULL) state= TRUE;
-	else state= FALSE;
-	object= g_object_get_data(G_OBJECT(window), "undo-action");
-	gtk_action_set_sensitive(GTK_ACTION(object), state);
-
-	/* set state of redo */
-	if (g_list_previous(board->history) != NULL) state= TRUE;
-	else state= FALSE;
-	object= g_object_get_data(G_OBJECT(window), "redo-action");
-	gtk_action_set_sensitive(GTK_ACTION(object), state);
-}
-
-
-/*
  * Warning dialog for game about to be cleared
  */
 gboolean
@@ -305,4 +282,14 @@ fencesgui_show_about_dialog(struct board *board)
 						  "title", _("About fences"),
 						  "authors", authors,
 						  NULL);
+}
+
+
+/*
+ * Initialize gui aspects after game data and main window have been setup
+ */
+void
+gui_initialize(struct board *board)
+{
+	fencesgui_set_undoredo_state(board);
 }
