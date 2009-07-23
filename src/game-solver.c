@@ -58,10 +58,10 @@ static inline gboolean
 line_touches_tile(struct line *lin, struct tile *tile)
 {
 	if (lin->ntiles == 1) {
-		if (lin->tile[0] == tile) return TRUE;
+		if (lin->tiles[0] == tile) return TRUE;
 	} else {
-		if (lin->tile[0] == tile ||
-		    lin->tile[1] == tile) return TRUE;
+		if (lin->tiles[0] == tile ||
+		    lin->tiles[1] == tile) return TRUE;
 	}
 	return FALSE;
 }
@@ -287,7 +287,7 @@ solve_maxnumber_tiles(struct solution *sol)
 			/* at this point vertex touches at least 2 tiles (not in a corner) */
 			/* find neighbor tile with MAX_NUMBER */
 			for(k=0; k < vertex->ntiles; ++k) {
-				tile2= vertex->tile[k];
+				tile2= vertex->tiles[k];
 				if (tile2 == tile) continue; // ignore current tile
 				if ( MAX_NUMBER(tile2) )
 					break;
@@ -726,14 +726,14 @@ bottleneck_is_final_line(struct solution *sol, struct line *lin)
 
 	/* check line touches at least 1 numbered and unhandled tile */
 	for(i=0; i < lin->ntiles; ++i) {
-		id= lin->tile[i]->id;
+		id= lin->tiles[i]->id;
 		if (sol->numbers[id] != -1 && sol->tile_handled[id] == FALSE) ++num;
 	}
 	if (num == 0) return FALSE;
 
 	/* check if setting line would handle unhandled tiles */
 	for(i=0; i < lin->ntiles; ++i) {
-		tile= lin->tile[i];
+		tile= lin->tiles[i];
 		if (sol->numbers[tile->id] == -1 || sol->tile_handled[tile->id]) continue;
 		nlines_on= 0;
 		for(j=0; j < tile->nsides; ++j)

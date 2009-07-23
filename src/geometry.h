@@ -35,7 +35,7 @@ struct vertex {
 	int nlines;		// number of lines touching dot
 	struct line **lines;	// lines touching dot
 	int ntiles;		// number of tiles vertex touches
-	struct tile **tile;		// tiles vertex touches
+	struct tile **tiles;		// tiles vertex touches
 };
 
 
@@ -61,7 +61,7 @@ struct line {
 	int id;			// id of line (line number)
 	struct vertex *ends[2];	// coords of ends of line
 	int ntiles;				// Number of tiles touching this line (either 1 or 2)
-	struct tile *tile[2];		// tiles at each side of line
+	struct tile *tiles[2];		// tiles at each side of line
 	int nin;		// number of lines in
 	int nout;		// number of lines out
 	struct line **in;	// lines in

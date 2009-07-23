@@ -121,10 +121,10 @@ draw_linetiles(cairo_t *cr)
 		x= (lin->ends[0]->pos.x + lin->ends[1]->pos.x)/2.;
 		y= (lin->ends[0]->pos.y + lin->ends[1]->pos.y)/2.;
 		cairo_move_to(cr, x, y);
-		cairo_line_to(cr, lin->tile[0]->center.x, lin->tile[0]->center.y);
+		cairo_line_to(cr, lin->tiles[0]->center.x, lin->tiles[0]->center.y);
 		if (lin->ntiles == 2) {
 			cairo_move_to(cr, x, y);
-			cairo_line_to(cr, lin->tile[1]->center.x, lin->tile[1]->center.y);
+			cairo_line_to(cr, lin->tiles[1]->center.x, lin->tiles[1]->center.y);
 		}
 		++lin;
 	}

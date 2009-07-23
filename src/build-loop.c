@@ -54,8 +54,8 @@ tile_has_corner(struct tile *tile, struct loop *loop)
 		for(j=0; j < vertex->nlines; ++j) {
 			lin= vertex->lines[j];
 			/* ignore lines that belong to tile 'tile' */
-			if (lin->tile[0] == tile ||
-			    (lin->ntiles == 2 && lin->tile[1] == tile))
+			if (lin->tiles[0] == tile ||
+			    (lin->ntiles == 2 && lin->tiles[1] == tile))
 				continue;
 			/* count lines ON for vertex */
 			if (loop->state[ lin->id ] == LINE_ON) {
@@ -203,7 +203,7 @@ loop_find_new_shoulder(struct loop *loop)
 		/* select random tile out of chosen line */
 		count= g_random_int_range(0, lin->ntiles);
 		for (i=0; i < lin->ntiles; ++i) {
-			if (is_tile_available(lin->tile[count], loop, index))
+			if (is_tile_available(lin->tiles[count], loop, index))
 				break;
 			count= (count +1)%lin->ntiles;
 		}
@@ -216,7 +216,7 @@ loop_find_new_shoulder(struct loop *loop)
 		}
 
 		/* set new found tile as growing tile */
-		tile= lin->tile[count];
+		tile= lin->tiles[count];
 		toggle_tile_lines(loop, tile);
 		loop->tile= tile;
 		loop->nexits= 0;
@@ -295,7 +295,7 @@ build_loop(struct loop *loop, gboolean trace)
 		}
 
 		/* pick next tile to grow in */
-		tile= (lin->tile[0] != loop->tile) ? lin->tile[0] : lin->tile[1];
+		tile= (lin->tiles[0] != loop->tile) ? lin->tiles[0] : lin->tiles[1];
 		if (is_tile_available(tile, loop, index) == FALSE) {
 			loop->mask[index]= FALSE;
 			--loop->navailable;

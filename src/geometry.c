@@ -139,14 +139,14 @@ geometry_go_around_tile(struct tile *tile, struct line *lin)
 		/* connect vertex & tile */
 		tile->vertex[tile->nvertex]= vertex;
 		++(tile->nvertex);
-		vertex->tile[vertex->ntiles]= tile;
+		vertex->tiles[vertex->ntiles]= tile;
 		++(vertex->ntiles);
 
 		/* find next line that touches tile */
 		for(i=0; i < ndir; ++i) {
 			lin= dir[i];
-			if (lin->tile[0] == tile
-				|| (lin->ntiles == 2 && lin->tile[1] == tile)) break;
+			if (lin->tiles[0] == tile
+				|| (lin->ntiles == 2 && lin->tiles[1] == tile)) break;
 		}
 		g_assert(i < ndir);	/* we must always find a line */
 
@@ -188,14 +188,14 @@ geometry_connect_tiles(struct geometry *geo)
 	for(i=0; i < geo->nlines; ++i) {
 		vertex= lin->ends[0];
 		for(j=0; j < lin->ntiles; ++j) {
-			tile= lin->tile[j];
+			tile= lin->tiles[j];
 			++(tile->nvertex);
 			++(tile->nsides);
 			++(vertex->ntiles);
 		}
 		vertex= lin->ends[1];
 		for(j=0; j < lin->ntiles; ++j) {
-			tile= lin->tile[j];
+			tile= lin->tiles[j];
 			++(tile->nvertex);
 			++(tile->nsides);
 			++(vertex->ntiles);
@@ -207,7 +207,7 @@ geometry_connect_tiles(struct geometry *geo)
 	   Compensate for over-counting ntiles (factor 2) */
 	vertex= geo->vertex;
 	for(i=0; i < geo->nvertex; ++i) {
-		vertex->tile= (struct tile **)g_malloc0((vertex->ntiles/2)*sizeof(void*));
+		vertex->tiles= (struct tile **)g_malloc0((vertex->ntiles/2)*sizeof(void*));
 		vertex->ntiles= 0;	/* to be used as counter below */
 		++vertex;
 	}
@@ -230,13 +230,13 @@ geometry_connect_tiles(struct geometry *geo)
 	   which tiles have been already handled. */
 	lin= geo->lines;
 	for(i=0; i < geo->nlines; ++i) {
-		tile= lin->tile[0];
+		tile= lin->tiles[0];
 		if (tile->fx_status == 0) {
 			geometry_go_around_tile(tile, lin);
 			tile->fx_status= 1;
 		}
 		if (lin->ntiles == 2) {
-			tile= lin->tile[1];
+			tile= lin->tiles[1];
 			if (tile->fx_status == 0) {
 				geometry_go_around_tile(tile, lin);
 				tile->fx_status= 1;
@@ -296,14 +296,14 @@ geometry_define_line_infarea(struct geometry *geo)
 		v1= lin->ends[0];
 		lin->inf[0].x= v1->pos.x;
 		lin->inf[0].y= v1->pos.y;
-		tile= lin->tile[0];
+		tile= lin->tiles[0];
 		lin->inf[1].x= tile->center.x;
 		lin->inf[1].y= tile->center.y;
 		v1= lin->ends[1];
 		lin->inf[2].x= v1->pos.x;
 		lin->inf[2].y= v1->pos.y;
 		if (lin->ntiles == 2) {
-			tile= lin->tile[1];
+			tile= lin->tiles[1];
 			lin->inf[3].x= tile->center.x;
 			lin->inf[3].y= tile->center.y;
 		} else {	// edge line, must manufacture 4th point
@@ -405,7 +405,7 @@ geometry_add_vertex(struct geometry *geo, struct point *point)
 		vertex->nlines= 0;
 		vertex->lines= NULL;
 		vertex->ntiles= 0;
-		vertex->tile= NULL;
+		vertex->tiles= NULL;
 		++geo->nvertex;
 	}
 
@@ -438,8 +438,8 @@ geometry_add_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
 		lin->ends[0]= v1;
 		lin->ends[1]= v2;
 		lin->ntiles= 0;
-		lin->tile[0]= NULL;
-		lin->tile[1]= NULL;
+		lin->tiles[0]= NULL;
+		lin->tiles[1]= NULL;
 		lin->nin= 0;
 		lin->in= NULL;
 		lin->nout= 0;
@@ -495,7 +495,7 @@ geometry_add_tile(struct geometry *geo, struct point *pts, int npts)
 		lin= geometry_add_line(geo, vertex_prev, vertex);
 		/* store tile in line */
 		g_assert(lin->ntiles < 2);	/* no more than 2 tiles touching line */
-		lin->tile[lin->ntiles]= tile;
+		lin->tiles[lin->ntiles]= tile;
 		++lin->ntiles;
 
 		vertex_prev= vertex;
@@ -504,7 +504,7 @@ geometry_add_tile(struct geometry *geo, struct point *pts, int npts)
 	/* connect last point to first */
 	lin= geometry_add_line(geo, vertex, vertex_first);
 	g_assert(lin->ntiles < 2);		/* no more than 2 tiles touching line */
-	lin->tile[lin->ntiles]= tile;
+	lin->tiles[lin->ntiles]= tile;
 	++lin->ntiles;
 }
 
@@ -608,7 +608,7 @@ geometry_destroy(struct geometry *geo)
 	}
 	for(i=0; i < geo->nvertex; ++i) {
 		g_free(geo->vertex[i].lines);
-		g_free(geo->vertex[i].tile);
+		g_free(geo->vertex[i].tiles);
 	}
 	for(i=0; i < geo->nlines; ++i) {
 		g_free(geo->lines[i].in);
