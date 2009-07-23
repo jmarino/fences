@@ -151,7 +151,7 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 
 	/* connect some signals */
 	g_signal_connect(drawarea, "configure-event",
-					 G_CALLBACK(drawarea_configure), NULL);
+					 G_CALLBACK(drawarea_configure), board);
 	//g_signal_connect(drawarea, "check-resize", G_CALLBACK(drawarea_resize),
 	//		 NULL);
 	g_signal_connect(drawarea, "expose_event", G_CALLBACK(board_expose),
@@ -160,7 +160,7 @@ gui_setup_main_window(const char *xml_file, struct board *board)
 
 	/* capture any key pressed in the window */
 	g_signal_connect ((gpointer) window, "key-press-event",
-					  G_CALLBACK (window_keypressed), drawarea);
+					  G_CALLBACK (window_keypressed), board);
 
 	/* catch mouse clicks on game board */
 	gtk_widget_add_events(drawarea,

@@ -27,8 +27,6 @@
 #include "history.h"
 #include "gui.h"
 
-/* defined in gamedata.c */
-extern struct board board;
 
 
 /*
@@ -110,41 +108,45 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_da
  * Callback when key is pressed
  */
 gboolean
-window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
+window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
+	struct board *board=(struct board *)user_data;
+	GtkWidget *drawarea;
+
+	drawarea= GTK_WIDGET(board->drawarea);
 	//printf("key: %d\n", event->keyval);
 
 	if (event->keyval == GDK_b) {
 		draw_benchmark(drawarea);
 	}
 	if (event->keyval == GDK_l) {
-		build_new_loop(board.geo, board.game, TRUE);
-		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
+		build_new_loop(board->geo, board->game, TRUE);
+		gtk_widget_queue_draw(drawarea);
 	}
 	if (event->keyval == GDK_S) {
-		test_solve_game(board.geo, board.game);
-		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
+		test_solve_game(board->geo, board->game);
+		gtk_widget_queue_draw(drawarea);
 	}
 	if (event->keyval == GDK_s) {
-		test_solve_game_trace(board.geo, board.game);
-		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
+		test_solve_game_trace(board->geo, board->game);
+		gtk_widget_queue_draw(drawarea);
 	}
 	if (event->keyval == GDK_f) {
-		brute_force_test(board.geo, board.game);
-		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
+		brute_force_test(board->geo, board->game);
+		gtk_widget_queue_draw(drawarea);
 	}
 	if (event->keyval == GDK_n) {
-		free_gamedata(board.game);
-		board.game= build_new_game(board.geo, 0);
+		free_gamedata(board->game);
+		board->game= build_new_game(board->geo, 0);
 
-		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
+		gtk_widget_queue_draw(drawarea);
 	}
 	if (event->keyval == GDK_c) {
 		/* clear board */
 		int i;
-		for(i=0; i < board.geo->nlines; ++i)
-			board.game->states[i]= LINE_OFF;
-		gtk_widget_queue_draw(GTK_WIDGET(drawarea));
+		for(i=0; i < board->geo->nlines; ++i)
+			board->game->states[i]= LINE_OFF;
+		gtk_widget_queue_draw(drawarea);
 	}
 	//(void)g_timeout_add(200, (GSourceFunc)timer_function, drawarea);
 
@@ -158,18 +160,20 @@ window_keypressed(GtkWidget *widget, GdkEventKey *event, gpointer drawarea)
 gboolean
 drawarea_configure(GtkWidget *drawarea, GdkEventConfigure *event, gpointer user_data)
 {
+	struct board *board=(struct board *)user_data;
+
 	//printf("configure: %d, %d\n", event->width, event->height);
 
 	/* setup pixel scales: to go from field coords to pixels on screen */
-	board.width_pxscale= event->width/(double)board.geo->board_size;
-	board.height_pxscale= event->height/(double)board.geo->board_size;
+	board->width_pxscale= event->width/(double)board->geo->board_size;
+	board->height_pxscale= event->height/(double)board->geo->board_size;
 
 	/*
 	 * Recalculate font size and extent boxes of square numbers
 	 * This has to be done after every window resize because the
 	 * accuracy of the measurements depends on the pixel size.
 	 */
-	draw_measure_font(drawarea, event->width, event->height, board.geo);
+	draw_measure_font(drawarea, event->width, event->height, board->geo);
 
 	return TRUE;
 }
