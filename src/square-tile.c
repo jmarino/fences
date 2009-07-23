@@ -38,7 +38,7 @@ square_calculate_sizes(struct geometry *geo, int dim)
 	if (geo->on_line_width < 2*geo->off_line_width)
 		geo->on_line_width= 2*geo->off_line_width;
 	geo->cross_line_width= geo->off_line_width*2;
-	geo->cross_radius= MIN(geo->sq_width, geo->sq_height)/15.;
+	geo->cross_radius= MIN(geo->tile_width, geo->tile_height)/15.;
 	geo->font_scale= 1.;
 }
 
@@ -61,10 +61,10 @@ build_square_tile_geometry(const struct gameinfo *info)
 	int nlines;
 	struct point pts[4];
 
-	/* calculate lenght of square side */
+	/* calculate length of tile side */
 	side= ((double)SQUARE_GAME_SIZE)/dim;
 
-	/* create new geometry (nsquares, nvertex, nlines) */
+	/* create new geometry (ntiles, nvertex, nlines) */
 	ntiles= dim*dim;
 	nvertex= (dim + 1)*(dim + 1);
 	nlines= 2*dim*(dim + 1);
@@ -74,9 +74,9 @@ build_square_tile_geometry(const struct gameinfo *info)
 	geo->game_size= SQUARE_GAME_SIZE;
 	geometry_set_distance_resolution(side/10.0);
 
-	/* iterate through squares creating skeleton geometry
+	/* iterate through tiles creating skeleton geometry
 	   (skeleton geometry: lines hold all the topology info) */
-	geo->nsquares= 0;
+	geo->ntiles= 0;
 	geo->nlines= 0;
 	geo->nvertex= 0;
 	for(j=0; j < dim; ++j) {
@@ -99,7 +99,7 @@ build_square_tile_geometry(const struct gameinfo *info)
 	}
 
 	/* sanity check: see if we got the numbers we expected */
-	g_assert(geo->nsquares == ntiles);
+	g_assert(geo->ntiles == ntiles);
 	g_assert(geo->nvertex == nvertex);
 	g_assert(geo->nlines == nlines);
 

@@ -388,7 +388,7 @@ penrose_calculate_sizes(struct geometry *geo)
 	geo->on_line_width= geo->board_size/250.;
 	geo->off_line_width= geo->board_size/1000.;
 	geo->cross_line_width= geo->off_line_width*1.5;
-	geo->cross_radius= MIN(geo->sq_width, geo->sq_height)/5.;
+	geo->cross_radius= MIN(geo->tile_width, geo->tile_height)/5.;
 	geo->font_scale= 2.;
 }
 
@@ -422,7 +422,7 @@ penrose_tile_to_geometry(GSList *penrose, double side)
 
 	/* iterate through tiles creating skeleton geometry
 	   (skeleton geometry: lines hold all the topology info) */
-	geo->nsquares= 0;
+	geo->ntiles= 0;
 	geo->nlines= 0;
 	geo->nvertex= 0;
 	list= penrose;
@@ -435,7 +435,7 @@ penrose_tile_to_geometry(GSList *penrose, double side)
 	}
 
 	/* make sure we didn't underestimate max numbers */
-	g_assert(geo->nsquares <= ntiles);
+	g_assert(geo->ntiles <= ntiles);
 	g_assert(geo->nvertex <= nvertex);
 	g_assert(geo->nlines <= nlines);
 
@@ -443,7 +443,7 @@ penrose_tile_to_geometry(GSList *penrose, double side)
 	geo->vertex= g_realloc(geo->vertex, geo->nvertex*sizeof(struct vertex));
 	geo->lines= g_realloc(geo->lines, geo->nlines*sizeof(struct line));
 
-	/*printf("ntiles: %d (%d) %d\n", geo->nsquares, ntiles);
+	/*printf("ntiles: %d (%d) %d\n", geo->ntiles, ntiles);
 	printf("nvertex: %d (%d) %d\n", geo->nvertex, nvertex);
 	printf("nlines: %d (%d) %d\n", geo->nlines, nlines);*/
 
@@ -569,7 +569,7 @@ build_penrose_tile_geometry(const struct gameinfo *info)
 	/* clip rombs to make tile round */
 	/***TODO***/
 
-	/* transform tile into geometry data (points, lines & squares) */
+	/* transform tile into geometry data (points, lines & tiles) */
 	geo= penrose_tile_to_geometry(penrose, side);
 
 	/* debug: draw to file */

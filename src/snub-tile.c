@@ -198,7 +198,7 @@ snub_calculate_sizes(struct geometry *geo, int dim)
 	if (geo->on_line_width < 2*geo->off_line_width)
 		geo->on_line_width= 2*geo->off_line_width;
 	geo->cross_line_width= geo->off_line_width*2;
-	geo->cross_radius= geo->sq_width/10.0;
+	geo->cross_radius= geo->tile_width/10.0;
 	geo->font_scale= 0.8;
 }
 
@@ -249,7 +249,7 @@ build_snub_tile_geometry(const struct gameinfo *info)
 	geometry_set_distance_resolution(side/10.0);
 
 	/* create rhombs (3 rhombs in each unit) */
-	geo->nsquares= 0;
+	geo->ntiles= 0;
 	geo->nlines= 0;
 	geo->nvertex= 0;
 	for(j=0; j < num_eyes; ++j) {
@@ -261,7 +261,7 @@ build_snub_tile_geometry(const struct gameinfo *info)
 	}
 
 	/* make sure we didn't underestimate max numbers */
-	g_assert(geo->nsquares == ntiles);
+	g_assert(geo->ntiles == ntiles);
 	g_assert(geo->nvertex == nvertex);
 	g_assert(geo->nlines == nlines);
 

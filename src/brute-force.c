@@ -76,22 +76,22 @@ check_single_loop(struct solution *sol, struct line *start)
 	int nlines_on=0;
 	int direction=DIRECTION_IN;	// OUT would do too, supposed to be a loop
 	struct line *lin;
-	struct square *sq;
+	struct tile *tile;
 	struct geometry *geo=sol->geo;
 
-	/* check that all numbered squares are satisfied */
-	sq= geo->squares;
-	for(i=0; i < geo->nsquares ; ++i) {
-		/* only numbered squares */
+	/* check that all numbered tiles are satisfied */
+	tile= geo->tiles;
+	for(i=0; i < geo->ntiles ; ++i) {
+		/* only numbered tiles */
 		if (sol->numbers[i] == -1) continue;
-		/* count lines ON and compare with number in square */
+		/* count lines ON and compare with number in tile */
 		nlines_on= 0;
-		for(j=0; j < sq[i].nsides; ++j) {
-			if (STATE(sq[i].sides[j]) == LINE_ON)
+		for(j=0; j < tile[i].nsides; ++j) {
+			if (STATE(tile[i].sides[j]) == LINE_ON)
 				++nlines_on;
 		}
 		if (nlines_on != sol->numbers[i]) {
-			printf("square unhappy (%d): %d != %d\n", i, nlines_on, sol->numbers[i]);
+			printf("tile unhappy (%d): %d != %d\n", i, nlines_on, sol->numbers[i]);
 			return FALSE;
 		}
 	}

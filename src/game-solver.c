@@ -33,16 +33,16 @@
 
 
 /*
- * Find line that touches both given squares
- * NULL: if squares don't share any line
+ * Find line that touches both given tiles
+ * NULL: if tiles don't share any line
  */
 static struct line*
-find_shared_side(struct square *sq1, struct square *sq2, int *i, int *j)
+find_shared_side(struct tile *tile1, struct tile *tile2, int *i, int *j)
 {
-	for(*i=0; *i < sq1->nsides; ++(*i)) {
-		for(*j=0; *j < sq1->nsides; ++(*j)) {
-			if (sq1->sides[*i] == sq2->sides[*j]) {
-				return sq1->sides[*i];
+	for(*i=0; *i < tile1->nsides; ++(*i)) {
+		for(*j=0; *j < tile1->nsides; ++(*j)) {
+			if (tile1->sides[*i] == tile2->sides[*j]) {
+				return tile1->sides[*i];
 			}
 		}
 	}
@@ -52,34 +52,34 @@ find_shared_side(struct square *sq1, struct square *sq2, int *i, int *j)
 
 
 /*
- * Check if line touches square
+ * Check if line touches tile
  */
 static inline gboolean
-line_touches_square(struct line *lin, struct square *sq)
+line_touches_tile(struct line *lin, struct tile *tile)
 {
-	if (lin->nsquares == 1) {
-		if (lin->sq[0] == sq) return TRUE;
+	if (lin->ntiles == 1) {
+		if (lin->tile[0] == tile) return TRUE;
 	} else {
-		if (lin->sq[0] == sq ||
-		    lin->sq[1] == sq) return TRUE;
+		if (lin->tile[0] == tile ||
+		    lin->tile[1] == tile) return TRUE;
 	}
 	return FALSE;
 }
 
 
 /*
- * Is vertex a cornered with respect to one square
- * I.e. the vertex has no exits outside this square
+ * Is vertex a cornered with respect to one tile
+ * I.e. the vertex has no exits outside this tile
  */
 static gboolean
-is_vertex_cornered(struct solution *sol, struct square *sq,
+is_vertex_cornered(struct solution *sol, struct tile *tile,
 		   struct vertex *vertex)
 {
 	int i;
 
-	/* check lines coming out of vertex that don't belong to square */
+	/* check lines coming out of vertex that don't belong to tile */
 	for(i=0; i < vertex->nlines; ++i) {
-		if (line_touches_square(vertex->lines[i], sq))
+		if (line_touches_tile(vertex->lines[i], tile))
 			continue;
 		/* if line ON or OFF, vertex not cornered */
 		if (STATE(vertex->lines[i]) != LINE_CROSSED)
@@ -125,78 +125,78 @@ find_line_connecting_lines(struct line *end1, int dir1,
 
 
 /*
- * Go through all squares and cross sides of squares with a 0
+ * Go through all tiles and cross sides of tiles with a 0
  * Update sol->nchanges to number of lines crossed out
  */
 void
-solve_zero_squares(struct solution *sol)
+solve_zero_tiles(struct solution *sol)
 {
 	int i, j;
-	struct square *sq;
+	struct tile *tile;
 	struct geometry *geo=sol->geo;
 
-	sol->nchanges= sol->nsq_changes= 0;
-	for(i=0; i < geo->nsquares; ++i) {
-		/* only care about unhandled 0 squares */
-		if (sol->numbers[i] != 0 || sol->sq_handled[i]) continue;
-		/* cross sides of square */
-		sol->sq_handled[i]= TRUE;	// mark square as handled
-		sol->sq_changes[sol->nsq_changes]= i;
-		++sol->nsq_changes;
-		sq= geo->squares + i;
-		for(j=0; j < sq->nsides; ++j)
-			if (STATE(sq->sides[j]) == LINE_OFF)
-				CROSS_LINE(sq->sides[j]);
+	sol->nchanges= sol->ntile_changes= 0;
+	for(i=0; i < geo->ntiles; ++i) {
+		/* only care about unhandled 0 tiles */
+		if (sol->numbers[i] != 0 || sol->tile_handled[i]) continue;
+		/* cross sides of tile */
+		sol->tile_handled[i]= TRUE;	// mark tile as handled
+		sol->tile_changes[sol->ntile_changes]= i;
+		++sol->ntile_changes;
+		tile= geo->tiles + i;
+		for(j=0; j < tile->nsides; ++j)
+			if (STATE(tile->sides[j]) == LINE_OFF)
+				CROSS_LINE(tile->sides[j]);
 	}
 }
 
 
 /*
- * Iterate over all unhandled squares to find:
- *  - Numbered squares with enough crossed sides that a solution is trivial.
- *  - Any square with all lines either ON or CROSSED -> mark it handled.
+ * Iterate over all unhandled tiles to find:
+ *  - Numbered tiles with enough crossed sides that a solution is trivial.
+ *  - Any tile with all lines either ON or CROSSED -> mark it handled.
  */
 void
-solve_trivial_squares(struct solution *sol)
+solve_trivial_tiles(struct solution *sol)
 {
 	int i, j;
 	int lines_on;
 	int lines_crossed;
-	struct square *sq;
+	struct tile *tile;
 	struct geometry *geo=sol->geo;
 
-	sol->nchanges= sol->nsq_changes= 0;
-	for(i=0; i < geo->nsquares; ++i) {
-		/* only unhandled squares */
-		if (sol->sq_handled[i])
+	sol->nchanges= sol->ntile_changes= 0;
+	for(i=0; i < geo->ntiles; ++i) {
+		/* only unhandled tiles */
+		if (sol->tile_handled[i])
 			continue;
 
-		/* count lines ON and CROSSED around square */
-		sq= geo->squares + i;
+		/* count lines ON and CROSSED around tile */
+		tile= geo->tiles + i;
 		lines_on= 0;
 		lines_crossed= 0;
-		for(j=0; j < sq->nsides; ++j) {
-			if (STATE(sq->sides[j]) == LINE_CROSSED)
+		for(j=0; j < tile->nsides; ++j) {
+			if (STATE(tile->sides[j]) == LINE_CROSSED)
 				++lines_crossed;
-			else if (STATE(sq->sides[j]) == LINE_ON)
+			else if (STATE(tile->sides[j]) == LINE_ON)
 				++lines_on;
 		}
-		/* square has all lines either ON or CROSSED -> handled */
-		if (lines_on + lines_crossed == sq->nsides) {
-			sol->sq_handled[i]= TRUE;
+		/* tile has all lines either ON or CROSSED -> handled */
+		if (lines_on + lines_crossed == tile->nsides) {
+			sol->tile_handled[i]= TRUE;
 			continue;
 		}
 		/* enough lines crossed? -> set ON the OFF ones */
-		if ( sq->nsides - lines_crossed == NUMBER(sq) ) {
-			sol->sq_handled[i]= TRUE;
-			sol->sq_changes[sol->nsq_changes]= i;
-			++sol->nsq_changes;
-			for(j=0; j < sq->nsides; ++j) {
-				if (STATE(sq->sides[j]) == LINE_OFF)
-					SET_LINE(sq->sides[j]);
+		if ( tile->nsides - lines_crossed == NUMBER(tile) ) {
+			sol->tile_handled[i]= TRUE;
+			sol->tile_changes[sol->ntile_changes]= i;
+			++sol->ntile_changes;
+			for(j=0; j < tile->nsides; ++j) {
+				if (STATE(tile->sides[j]) == LINE_OFF)
+					SET_LINE(tile->sides[j]);
 			}
 		}
-		/* only allow one trivial square to be set at a time */
+		/* only allow one trivial tile to be set at a time */
 		if (sol->nchanges > 0) break;
 	}
 }
@@ -217,7 +217,7 @@ solve_trivial_vertex(struct solution *sol)
 	struct vertex *vertex;
 	struct geometry *geo=sol->geo;
 
-	sol->nchanges= sol->nsq_changes= 0;
+	sol->nchanges= sol->ntile_changes= 0;
 	vertex= geo->vertex;
 	for(i=0; i < geo->nvertex; ++i) {
 		lines_on= lines_off= 0;
@@ -242,34 +242,34 @@ solve_trivial_vertex(struct solution *sol)
 
 
 /*
- * Find squares with a number == nsides - 1
- * Check around all its vertices to see if it neighbors another square
+ * Find tiles with a number == nsides - 1
+ * Check around all its vertices to see if it neighbors another tile
  * with number == nsides
  * If another found: determine if they're side by side or diagonally and set
  * lines accordingly
  */
 void
-solve_maxnumber_squares(struct solution *sol)
+solve_maxnumber_tiles(struct solution *sol)
 {
 	int i, j, k, k2;
-	struct square *sq, *sq2=NULL;
+	struct tile *tile, *tile2=NULL;
 	int pos1, pos2;
 	struct vertex *vertex;
 	struct line *lin;
 	struct geometry *geo=sol->geo;
 	int cache;
 
-	sol->nchanges= sol->nsq_changes= 0;
-	/* iterate over all squares */
-	for(i=0; i < geo->nsquares; ++i) {
-		sq= geo->squares + i;
-		/* ignore handled squares or with number != sides - 1 */
-		if (sol->sq_handled[i] || sol->numbers[i] != sq->nsides - 1)
+	sol->nchanges= sol->ntile_changes= 0;
+	/* iterate over all tiles */
+	for(i=0; i < geo->ntiles; ++i) {
+		tile= geo->tiles + i;
+		/* ignore handled tiles or with number != sides - 1 */
+		if (sol->tile_handled[i] || sol->numbers[i] != tile->nsides - 1)
 			continue;
 
-		/* inspect vertices of square */
-		for(j=0; j < sq->nvertex; ++j) {
-			vertex= sq->vertex[j];
+		/* inspect vertices of tile */
+		for(j=0; j < tile->nvertex; ++j) {
+			vertex= tile->vertex[j];
 			cache= sol->nchanges;
 			/* vertex is in a corner -> enable lines touching it */
 			if (vertex->nlines == 2) {
@@ -277,72 +277,72 @@ solve_maxnumber_squares(struct solution *sol)
 					SET_LINE(vertex->lines[0]);
 				if (STATE(vertex->lines[1]) != LINE_ON)
 					SET_LINE(vertex->lines[1]);
-				/* any changes? -> record square */
+				/* any changes? -> record tile */
 				if (sol->nchanges > cache) {
-					sol->sq_changes[sol->nsq_changes]= i;
-					++sol->nsq_changes;
+					sol->tile_changes[sol->ntile_changes]= i;
+					++sol->ntile_changes;
 				}
 				continue;
 			}
-			/* at this point vertex touches at least 2 squares (not in a corner) */
-			/* find neighbor square with MAX_NUMBER */
-			for(k=0; k < vertex->nsquares; ++k) {
-				sq2= vertex->sq[k];
-				if (sq2 == sq) continue; // ignore current square
-				if ( MAX_NUMBER(sq2) )
+			/* at this point vertex touches at least 2 tiles (not in a corner) */
+			/* find neighbor tile with MAX_NUMBER */
+			for(k=0; k < vertex->ntiles; ++k) {
+				tile2= vertex->tile[k];
+				if (tile2 == tile) continue; // ignore current tile
+				if ( MAX_NUMBER(tile2) )
 					break;
 			}
-			if (k == vertex->nsquares) // no max neighbor
+			if (k == vertex->ntiles) // no max neighbor
 				continue;
 
-			/* find if the two MAX squares share a line */
-			lin= find_shared_side(sq, sq2, &pos1, &pos2);
-			if (lin != NULL) {	// shared side: side by side squares
+			/* find if the two MAX tiles share a line */
+			lin= find_shared_side(tile, tile2, &pos1, &pos2);
+			if (lin != NULL) {	// shared side: side by side tiles
 				if (STATE(lin) != LINE_ON)
 					SET_LINE(lin);
-				/* set all lines around squares except the ones touching lin */
-				for(k=2; k < sq->nsides - 1; ++k) {
-					k2= (pos1 + k) % sq->nsides;
-					if (STATE(sq->sides[k2]) != LINE_ON)
-						SET_LINE(sq->sides[k2]);
+				/* set all lines around tiles except the ones touching lin */
+				for(k=2; k < tile->nsides - 1; ++k) {
+					k2= (pos1 + k) % tile->nsides;
+					if (STATE(tile->sides[k2]) != LINE_ON)
+						SET_LINE(tile->sides[k2]);
 				}
-				for(k=2; k < sq2->nsides - 1; ++k) {
-					k2= (pos2 + k) % sq2->nsides;
-					if (STATE(sq2->sides[k2]) != LINE_ON)
-						SET_LINE(sq2->sides[k2]);
+				for(k=2; k < tile2->nsides - 1; ++k) {
+					k2= (pos2 + k) % tile2->nsides;
+					if (STATE(tile2->sides[k2]) != LINE_ON)
+						SET_LINE(tile2->sides[k2]);
 				}
-				/* cross any lines from vertex that are not part of sq or sq2 */
+				/* cross any lines from vertex that are not part of tile or tile2 */
 				for(k=0; k < vertex->nlines; ++k) {
-					if (line_touches_square(vertex->lines[k], sq) ||
-					    line_touches_square(vertex->lines[k], sq2))
+					if (line_touches_tile(vertex->lines[k], tile) ||
+					    line_touches_tile(vertex->lines[k], tile2))
 						continue;
 					if (STATE(vertex->lines[k]) != LINE_CROSSED)
 						CROSS_LINE(vertex->lines[k]);
 
 				}
-				/* lines changed -> record square */
+				/* lines changed -> record tile */
 				if (sol->nchanges > cache) {
-					sol->sq_changes[sol->nsq_changes]= i;
-					++sol->nsq_changes;
+					sol->tile_changes[sol->ntile_changes]= i;
+					++sol->ntile_changes;
 				}
-			} else {	// no shared side: diagonally opposed squares
-				/* set all lines around squares that don't touch vertex */
-				for(k=0; k < sq->nsides; ++k) {
-					if (sq->sides[k]->ends[0] == vertex ||
-					    sq->sides[k]->ends[1] == vertex) continue;
-					if (STATE(sq->sides[k]) != LINE_ON)
-						SET_LINE(sq->sides[k]);
+			} else {	// no shared side: diagonally opposed tiles
+				/* set all lines around tiles that don't touch vertex */
+				for(k=0; k < tile->nsides; ++k) {
+					if (tile->sides[k]->ends[0] == vertex ||
+					    tile->sides[k]->ends[1] == vertex) continue;
+					if (STATE(tile->sides[k]) != LINE_ON)
+						SET_LINE(tile->sides[k]);
 				}
-				for(k=0; k < sq2->nsides; ++k) {
-					if (sq2->sides[k]->ends[0] == vertex ||
-					    sq2->sides[k]->ends[1] == vertex) continue;
-					if (STATE(sq2->sides[k]) != LINE_ON)
-						SET_LINE(sq2->sides[k]);
+				for(k=0; k < tile2->nsides; ++k) {
+					if (tile2->sides[k]->ends[0] == vertex ||
+					    tile2->sides[k]->ends[1] == vertex) continue;
+					if (STATE(tile2->sides[k]) != LINE_ON)
+						SET_LINE(tile2->sides[k]);
 				}
-				/* lines changed -> record square */
+				/* lines changed -> record tile */
 				if (sol->nchanges > cache) {
-					sol->sq_changes[sol->nsq_changes]= i;
-					++sol->nsq_changes;
+					sol->tile_changes[sol->ntile_changes]= i;
+					++sol->ntile_changes;
 				}
 			}
 		}
@@ -351,36 +351,36 @@ solve_maxnumber_squares(struct solution *sol)
 
 
 /*
- * Applies to squares with a number == nsides - 1
- * If a square with number == (nsides - 1) has an incoming line in a vertex,
- * the line must go around the square and exit through a vertex one line away
+ * Applies to tiles with a number == nsides - 1
+ * If a tile with number == (nsides - 1) has an incoming line in a vertex,
+ * the line must go around the tile and exit through a vertex one line away
  * from the current vertex. This translates into:
- *  - set ON all lines around square that don't touch this vertex
- *  - line must go in to square, can't create a corner. Thus, cross any line
- *    going out from vertex that does not go into square
+ *  - set ON all lines around tile that don't touch this vertex
+ *  - line must go in to tile, can't create a corner. Thus, cross any line
+ *    going out from vertex that does not go into tile
  */
 void
 solve_maxnumber_incoming_line(struct solution *sol)
 {
 	int i, j, k;
-	struct square *sq;
+	struct tile *tile;
 	struct vertex *vertex;
 	int nlines_on;
 	struct line *lin=NULL;
 	struct geometry *geo=sol->geo;
 	int cache;
 
-	sol->nchanges= sol->nsq_changes= 0;
-	/* iterate over all squares */
-	for(i=0; i < geo->nsquares; ++i) {
-		sq= geo->squares + i;
-		/* ignore squares without number or number < nsides -1 */
-		if (sol->numbers[i] != sq->nsides - 1 || sol->sq_handled[i])
+	sol->nchanges= sol->ntile_changes= 0;
+	/* iterate over all tiles */
+	for(i=0; i < geo->ntiles; ++i) {
+		tile= geo->tiles + i;
+		/* ignore tiles without number or number < nsides -1 */
+		if (sol->numbers[i] != tile->nsides - 1 || sol->tile_handled[i])
 			continue;
 
-		/* inspect vertices of square */
-		for(j=0; j < sq->nvertex; ++j) {
-			vertex= sq->vertex[j];
+		/* inspect vertices of tile */
+		for(j=0; j < tile->nvertex; ++j) {
+			vertex= tile->vertex[j];
 			/* check that vertex has one ON line */
 			nlines_on= 0;
 			for(k=0; k < vertex->nlines; ++k) {
@@ -390,30 +390,30 @@ solve_maxnumber_incoming_line(struct solution *sol)
 				}
 			}
 			if (nlines_on != 1) continue;
-			/* make sure ON line is not part of square */
-			if (line_touches_square(lin, sq)) continue;
+			/* make sure ON line is not part of tile */
+			if (line_touches_tile(lin, tile)) continue;
 
 			cache= sol->nchanges;
 			/* cross lines going out from vertex that don't
-			 * touch square */
+			 * touch tile */
 			for(k=0; k < vertex->nlines; ++k) {
 				if (STATE(vertex->lines[k]) == LINE_OFF &&
-				    !line_touches_square(vertex->lines[k], sq)) {
+				    !line_touches_tile(vertex->lines[k], tile)) {
 					CROSS_LINE(vertex->lines[k]);
 				}
 			}
 
-			/* set lines in square not touching vertex ON */
-			for(k=0; k < sq->nsides; ++k) {
-				if (sq->sides[k]->ends[0] == vertex ||
-				    sq->sides[k]->ends[1] == vertex) continue;
-				if (STATE(sq->sides[k]) != LINE_ON)
-					SET_LINE(sq->sides[k]);
+			/* set lines in tile not touching vertex ON */
+			for(k=0; k < tile->nsides; ++k) {
+				if (tile->sides[k]->ends[0] == vertex ||
+				    tile->sides[k]->ends[1] == vertex) continue;
+				if (STATE(tile->sides[k]) != LINE_ON)
+					SET_LINE(tile->sides[k]);
 			}
-			/* lines changed? record square */
+			/* lines changed? record tile */
 			if (sol->nchanges > cache) {
-				sol->sq_changes[sol->nsq_changes]= i;
-				++sol->nsq_changes;
+				sol->tile_changes[sol->ntile_changes]= i;
+				++sol->ntile_changes;
 			}
 			break;
 		}
@@ -422,10 +422,10 @@ solve_maxnumber_incoming_line(struct solution *sol)
 
 
 /*
- * A vertex of a square with number == nsides - 1
- * One vertex of square doesn't have any lines ON and all other lines of
- * square are ON.
- * Vertex has only one possible output away from square.
+ * A vertex of a tile with number == nsides - 1
+ * One vertex of tile doesn't have any lines ON and all other lines of
+ * tile are ON.
+ * Vertex has only one possible output away from tile.
  *  - Turn exit line ON
  */
 void
@@ -434,23 +434,23 @@ solve_maxnumber_exit_line(struct solution *sol)
 	int i, j;
 	int pos=0;
 	int pos2=0;
-	struct square *sq;
+	struct tile *tile;
 	struct vertex *vertex;
 	int nlines_off;
 	struct geometry *geo=sol->geo;
 
-	sol->nchanges= sol->nsq_changes= 0;
-	/* iterate over all squares */
-	for(i=0; i < geo->nsquares; ++i) {
-		sq= geo->squares + i;
-		/* ignore handled squares, without number or number < nsides -1 */
-		if (sol->numbers[i] != sq->nsides - 1 || sol->sq_handled[i])
+	sol->nchanges= sol->ntile_changes= 0;
+	/* iterate over all tiles */
+	for(i=0; i < geo->ntiles; ++i) {
+		tile= geo->tiles + i;
+		/* ignore handled tiles, without number or number < nsides -1 */
+		if (sol->numbers[i] != tile->nsides - 1 || sol->tile_handled[i])
 			continue;
 
-		/* count lines OFF on square */
+		/* count lines OFF on tile */
 		nlines_off= 0;
-		for(j=0; j < sq->nsides; ++j) {
-			if (STATE(sq->sides[j]) == LINE_OFF) {
+		for(j=0; j < tile->nsides; ++j) {
+			if (STATE(tile->sides[j]) == LINE_OFF) {
 				++nlines_off;
 				pos2= pos;	// keep track of 2nd to last OFF line
 				pos= j;		// hold pos of last OFF line
@@ -460,24 +460,24 @@ solve_maxnumber_exit_line(struct solution *sol)
 		if (nlines_off != 2) continue;
 
 		/* find shared vertex between pos and pos2 lines */
-		if (sq->sides[pos]->ends[0] == sq->sides[pos2]->ends[0] ||
-			sq->sides[pos]->ends[0] == sq->sides[pos2]->ends[1]) {
-			vertex= sq->sides[pos]->ends[0];
-		} else if (sq->sides[pos]->ends[1] == sq->sides[pos2]->ends[0] ||
-			sq->sides[pos]->ends[1] == sq->sides[pos2]->ends[1]) {
-			vertex= sq->sides[pos]->ends[1];
+		if (tile->sides[pos]->ends[0] == tile->sides[pos2]->ends[0] ||
+			tile->sides[pos]->ends[0] == tile->sides[pos2]->ends[1]) {
+			vertex= tile->sides[pos]->ends[0];
+		} else if (tile->sides[pos]->ends[1] == tile->sides[pos2]->ends[0] ||
+			tile->sides[pos]->ends[1] == tile->sides[pos2]->ends[1]) {
+			vertex= tile->sides[pos]->ends[1];
 		} else {
 			continue;	// no shared vertex, not a candidate
 		}
 
-		/* count lines OFF going out from vertex and not part of square */
+		/* count lines OFF going out from vertex and not part of tile */
 		nlines_off= 0;
 		for(j=0; j < vertex->nlines; ++j) {
 			/* if any line is ON, stop right here */
 			if (STATE(vertex->lines[j]) == LINE_ON)
 				break;
 			if (STATE(vertex->lines[j]) == LINE_OFF &&
-				!line_touches_square(vertex->lines[j], sq)) {
+				!line_touches_tile(vertex->lines[j], tile)) {
 				++nlines_off;
 				pos= j;
 			}
@@ -486,15 +486,15 @@ solve_maxnumber_exit_line(struct solution *sol)
 
 		/* only one line OFF -> set it ON */
 		SET_LINE(vertex->lines[pos]);
-		sol->sq_changes[sol->nsq_changes]= i;
-		++sol->nsq_changes;
+		sol->tile_changes[sol->ntile_changes]= i;
+		++sol->ntile_changes;
 		break;
 	}
 }
 
 
 /*
- * Find squares with (number == nsides - 1) || (number == 1)
+ * Find tiles with (number == nsides - 1) || (number == 1)
  * If one corner has no exit:
  *	- (nsides - 1) set both lines
  *	- (1) cross both lines
@@ -503,31 +503,31 @@ void
 solve_corner(struct solution *sol)
 {
 	int i, j, k;
-	struct square *sq;
+	struct tile *tile;
 	struct vertex *vertex;
 	struct geometry *geo=sol->geo;
 	int cache;
 
-	sol->nchanges= sol->nsq_changes= 0;
-	/* iterate over all squares */
-	for(i=0; i < geo->nsquares; ++i) {
-		sq= geo->squares + i;
-		/* ignore handled squares, unnumbered squares or number != nsides -1 */
-		if (sol->sq_handled[i] ||
-		    (sol->numbers[i] != sq->nsides - 1 && sol->numbers[i] != 1))
+	sol->nchanges= sol->ntile_changes= 0;
+	/* iterate over all tiles */
+	for(i=0; i < geo->ntiles; ++i) {
+		tile= geo->tiles + i;
+		/* ignore handled tiles, unnumbered tiles or number != nsides -1 */
+		if (sol->tile_handled[i] ||
+		    (sol->numbers[i] != tile->nsides - 1 && sol->numbers[i] != 1))
 			continue;
 
 		cache= sol->nchanges;
-		/* inspect vertices of square */
-		for(j=0; j < sq->nvertex; ++j) {
-			vertex= sq->vertex[j];
+		/* inspect vertices of tile */
+		for(j=0; j < tile->nvertex; ++j) {
+			vertex= tile->vertex[j];
 
 			/* check vertex is a no-exit corner */
-			if (is_vertex_cornered(sol, sq, vertex) == FALSE)
+			if (is_vertex_cornered(sol, tile, vertex) == FALSE)
 				continue;
 			/* ON or CROSS corner lines */
 			for(k=0; k < vertex->nlines; ++k) {
-				if (line_touches_square(vertex->lines[k], sq) == FALSE)
+				if (line_touches_tile(vertex->lines[k], tile) == FALSE)
 					continue;
 				if (sol->numbers[i] == 1) {
 					if (STATE(vertex->lines[k]) != LINE_CROSSED)
@@ -538,25 +538,25 @@ solve_corner(struct solution *sol)
 				}
 			}
 		}
-		/* any line changes? record square */
+		/* any line changes? record tile */
 		if (sol->nchanges > cache) {
-			sol->sq_changes[sol->nsq_changes]= i;
-			++sol->nsq_changes;
+			sol->tile_changes[sol->ntile_changes]= i;
+			++sol->ntile_changes;
 		}
 	}
 }
 
 
 /*
- * Find numbered squares with (number - lines_on) == 1
+ * Find numbered tiles with (number - lines_on) == 1
  * If a vertex has one incoming line and only available lines are part of the
- * square, cross all the rest lines of square
+ * tile, cross all the rest lines of tile
  */
 void
-solve_squares_net_1(struct solution *sol)
+solve_tiles_net_1(struct solution *sol)
 {
 	int i, j, k;
-	struct square *sq;
+	struct tile *tile;
 	int nlines_on;
 	int num_exits;
 	struct line *lin=NULL;
@@ -564,26 +564,26 @@ solve_squares_net_1(struct solution *sol)
 	struct geometry *geo=sol->geo;
 	int cache;
 
-	sol->nchanges= sol->nsq_changes= 0;
-	/* iterate over all squares */
-	for(i=0; i < geo->nsquares; ++i) {
-		sq= geo->squares + i;
-		/* ignore handled squares and unnumbered squares */
-		if (sol->sq_handled[i] || sol->numbers[i] == -1)
+	sol->nchanges= sol->ntile_changes= 0;
+	/* iterate over all tiles */
+	for(i=0; i < geo->ntiles; ++i) {
+		tile= geo->tiles + i;
+		/* ignore handled tiles and unnumbered tiles */
+		if (sol->tile_handled[i] || sol->numbers[i] == -1)
 			continue;
 
-		/* count lines ON around square */
+		/* count lines ON around tile */
 		nlines_on= 0;
-		for(j=0; j < sq->nsides; ++j) {
-			if (STATE(sq->sides[j]) == LINE_ON)
+		for(j=0; j < tile->nsides; ++j) {
+			if (STATE(tile->sides[j]) == LINE_ON)
 				++nlines_on;
 		}
-		if (NUMBER(sq) - nlines_on != 1) continue;
+		if (NUMBER(tile) - nlines_on != 1) continue;
 
 		cache= sol->nchanges;
-		/* inspect vertices of square */
-		for(j=0; j < sq->nvertex; ++j) {
-			vertex= sq->vertex[j];
+		/* inspect vertices of tile */
+		for(j=0; j < tile->nvertex; ++j) {
+			vertex= tile->vertex[j];
 			/* check we have one incoming line ON */
 			nlines_on= 0;
 			num_exits= 0;
@@ -593,28 +593,28 @@ solve_squares_net_1(struct solution *sol)
 					++nlines_on;
 					continue;
 				}
-				/* OFF line not on square */
+				/* OFF line not on tile */
 				if (STATE(vertex->lines[k]) == LINE_OFF &&
-				    line_touches_square(vertex->lines[k], sq) == FALSE) {
+				    line_touches_tile(vertex->lines[k], tile) == FALSE) {
 					++num_exits;
 				}
 			}
-			if (nlines_on != 1 || line_touches_square(lin, sq) == TRUE ||
+			if (nlines_on != 1 || line_touches_tile(lin, tile) == TRUE ||
 			    num_exits > 0)
 				continue;
 
 			/* cross all lines away from this vertex */
-			for(k=0; k < sq->nsides; ++k) {
-				if (sq->sides[k]->ends[0] == vertex ||
-				    sq->sides[k]->ends[1] == vertex) continue;
-				if (STATE(sq->sides[k]) == LINE_OFF)
-					CROSS_LINE(sq->sides[k]);
+			for(k=0; k < tile->nsides; ++k) {
+				if (tile->sides[k]->ends[0] == vertex ||
+				    tile->sides[k]->ends[1] == vertex) continue;
+				if (STATE(tile->sides[k]) == LINE_OFF)
+					CROSS_LINE(tile->sides[k]);
 			}
 		}
-		/* any line changes? record square */
+		/* any line changes? record tile */
 		if (sol->nchanges > cache) {
-			sol->sq_changes[sol->nsq_changes]= i;
-			++sol->nsq_changes;
+			sol->tile_changes[sol->ntile_changes]= i;
+			++sol->ntile_changes;
 		}
 	}
 }
@@ -625,7 +625,7 @@ solve_squares_net_1(struct solution *sol)
  * Find vertices with 2 lines ON, vertex busy -> cross any OFF line left.
  * Find vertices with all but one crossed (0 ON and 1 OFF) -> cross it.
  * Repeat process until no more lines are crossed out.
- * Find squares with enough lines ON, cross out any OFF lines around it.
+ * Find tiles with enough lines ON, cross out any OFF lines around it.
  * **NOTE: this function should only modify 'sol->states' field, so it can be
  * used with solve strategies that do temporary changes.
  */
@@ -637,41 +637,41 @@ solve_cross_lines(struct solution *sol)
 	int num_off;
 	int pos=0;
 	struct vertex *vertex;
-	struct square *sq;
+	struct tile *tile;
 	struct geometry *geo=sol->geo;
 	int old_count=-1;
 	int cache;
 
-	sol->nchanges= sol->nsq_changes= 0;
-	/* go through all squares */
-	for(i=0; i < geo->nsquares; ++i) {
-		/* only unhandled squares */
-		if (sol->sq_handled[i]) continue;
+	sol->nchanges= sol->ntile_changes= 0;
+	/* go through all tiles */
+	for(i=0; i < geo->ntiles; ++i) {
+		/* only unhandled tiles */
+		if (sol->tile_handled[i]) continue;
 
-		/* count lines ON around square */
-		sq= geo->squares + i;
+		/* count lines ON around tile */
+		tile= geo->tiles + i;
 		num_on= 0;
-		for(j=0; j < sq->nsides; ++j) {
-			if (STATE(sq->sides[j]) == LINE_ON)
+		for(j=0; j < tile->nsides; ++j) {
+			if (STATE(tile->sides[j]) == LINE_ON)
 				++num_on;
 		}
-		if (sol->numbers[i] == -1) { // unnumbered squares
-			/* square has less than nsides-1 ON, ignore */
-			if (num_on != sq->nsides - 1) continue;
-		} else {	// numbered squares
-			/* square not finished, ignore */
-			if (num_on != NUMBER(sq)) continue;
+		if (sol->numbers[i] == -1) { // unnumbered tiles
+			/* tile has less than nsides-1 ON, ignore */
+			if (num_on != tile->nsides - 1) continue;
+		} else {	// numbered tiles
+			/* tile not finished, ignore */
+			if (num_on != NUMBER(tile)) continue;
 		}
 		cache= sol->nchanges;
-		/* square is complete, cross any OFF left */
-		for(j=0; j < sq->nsides; ++j) {
-			if (STATE(sq->sides[j]) == LINE_OFF)
-				CROSS_LINE(sq->sides[j]);
+		/* tile is complete, cross any OFF left */
+		for(j=0; j < tile->nsides; ++j) {
+			if (STATE(tile->sides[j]) == LINE_OFF)
+				CROSS_LINE(tile->sides[j]);
 		}
-		/* any line changes? record square */
+		/* any line changes? record tile */
 		if (sol->nchanges > cache) {
-			sol->sq_changes[sol->nsq_changes]= i;
-			++sol->nsq_changes;
+			sol->tile_changes[sol->ntile_changes]= i;
+			++sol->ntile_changes;
 		}
 	}
 
@@ -707,8 +707,8 @@ solve_cross_lines(struct solution *sol)
 
 /*
  * Assume a situation where we just found one big open loop, and not all
- * squares have been handled. Normally, we would then cross out the
- * connecting line. However, if the only unhandled squares are touching the
+ * tiles have been handled. Normally, we would then cross out the
+ * connecting line. However, if the only unhandled tiles are touching the
  * connecting line and would be handled by turning this line ON, we can't
  * cross it out.
  * Returns: TRUE if the situation described is detected, line should not
@@ -717,34 +717,34 @@ solve_cross_lines(struct solution *sol)
 static gboolean
 bottleneck_is_final_line(struct solution *sol, struct line *lin)
 {
-	struct square *sq;
+	struct tile *tile;
 	int num=0;
 	int num_unhandled=0;
 	int id;
 	int i, j;
 	int nlines_on;
 
-	/* check line touches at least 1 numbered and unhandled square */
-	for(i=0; i < lin->nsquares; ++i) {
-		id= lin->sq[i]->id;
-		if (sol->numbers[id] != -1 && sol->sq_handled[id] == FALSE) ++num;
+	/* check line touches at least 1 numbered and unhandled tile */
+	for(i=0; i < lin->ntiles; ++i) {
+		id= lin->tile[i]->id;
+		if (sol->numbers[id] != -1 && sol->tile_handled[id] == FALSE) ++num;
 	}
 	if (num == 0) return FALSE;
 
-	/* check if setting line would handle unhandled squares */
-	for(i=0; i < lin->nsquares; ++i) {
-		sq= lin->sq[i];
-		if (sol->numbers[sq->id] == -1 || sol->sq_handled[sq->id]) continue;
+	/* check if setting line would handle unhandled tiles */
+	for(i=0; i < lin->ntiles; ++i) {
+		tile= lin->tile[i];
+		if (sol->numbers[tile->id] == -1 || sol->tile_handled[tile->id]) continue;
 		nlines_on= 0;
-		for(j=0; j < sq->nsides; ++j)
-			if (sol->states[ sq->sides[j]->id ] == LINE_ON) ++nlines_on;
-		/* would line handle square? */
-		if (sol->numbers[sq->id] != nlines_on + 1) return FALSE;
+		for(j=0; j < tile->nsides; ++j)
+			if (sol->states[ tile->sides[j]->id ] == LINE_ON) ++nlines_on;
+		/* would line handle tile? */
+		if (sol->numbers[tile->id] != nlines_on + 1) return FALSE;
 	}
 
-	/* finally check if unhandled squares are the only ones left */
-	for(i=0; i < sol->geo->nsquares; ++i) {
-		if (sol->numbers[i] != -1 && sol->sq_handled[i] == FALSE)
+	/* finally check if unhandled tiles are the only ones left */
+	for(i=0; i < sol->geo->ntiles; ++i) {
+		if (sol->numbers[i] != -1 && sol->tile_handled[i] == FALSE)
 			++num_unhandled;
 	}
 	if (num != num_unhandled) return FALSE;
@@ -772,10 +772,10 @@ solve_bottleneck(struct solution *sol)
 	int length=0;
 	gboolean all_handled=TRUE;
 
-	sol->nchanges= sol->nsq_changes= 0;
-	/* check if all numbered squares have been handled */
-	for(i=0; i < geo->nsquares; ++i) {
-		if (sol->numbers[i] != -1 && sol->sq_handled[i] == FALSE) {
+	sol->nchanges= sol->ntile_changes= 0;
+	/* check if all numbered tiles have been handled */
+	for(i=0; i < geo->ntiles; ++i) {
+		if (sol->numbers[i] != -1 && sol->tile_handled[i] == FALSE) {
 			all_handled= FALSE;
 			break;
 		}
@@ -839,7 +839,7 @@ solve_bottleneck(struct solution *sol)
 			if (length == nlines_on) {
 				/* avoid creating artificial solutions */
 				if (all_handled) return;
-				/* assume a situation where the only un-handled square(s)
+				/* assume a situation where the only un-handled tile(s)
 				   would be handled by setting this line. In this situation,
 				   we can't cross out this line. */
 				if (bottleneck_is_final_line(sol, next)) return;
@@ -867,9 +867,9 @@ solve_check_solution(struct solution *sol)
 	int nlines_total=0;
 	int nlines_loop=0;
 
-	/* check that all numbered squares are happy */
-	for(i=0; i < geo->nsquares; ++i) {
-		if (sol->numbers[i] != -1 && sol->sq_handled[i] == FALSE)
+	/* check that all numbered tiles are happy */
+	for(i=0; i < geo->ntiles; ++i) {
+		if (sol->numbers[i] != -1 && sol->tile_handled[i] == FALSE)
 			return FALSE;
 	}
 
@@ -959,7 +959,7 @@ solution_loop(struct solution *sol, int max_iter, int max_level)
 			solve_cross_lines(sol);
 			solve_trivial_vertex(sol);
 		} else if (level == 1) {
-			solve_trivial_squares(sol);
+			solve_trivial_tiles(sol);
 		} else if (level == 2) {
 			solve_bottleneck(sol);
 		} else if (level == 3) {
@@ -968,7 +968,7 @@ solution_loop(struct solution *sol, int max_iter, int max_level)
 			solve_maxnumber_incoming_line(sol);
 			if (sol->nchanges == 0) solve_maxnumber_exit_line(sol);
 		} else if (level == 5) {
-			solve_squares_net_1(sol);
+			solve_tiles_net_1(sol);
 		} else if (level == 6) {
 			solve_try_combinations(sol, 0);
 		} else if (level == 7) {
@@ -1009,9 +1009,9 @@ solve_game(struct geometry *geo, struct game *game, double *final_score)
 	sol= solve_create_solution_data(geo, game);
 
 	/* These two tests only run once at the very start */
-	solve_zero_squares(sol);
+	solve_zero_tiles(sol);
 	printf("zero: changes %d\n", sol->nchanges);
-	solve_maxnumber_squares(sol);
+	solve_maxnumber_tiles(sol);
 	printf("maxnumber: changes %d\n", sol->nchanges);
 
 	/* run solution loop with no limits */
@@ -1075,10 +1075,10 @@ test_solve_game_trace(struct geometry *geo, struct game *game)
 	}
 
 	if (level == -2)  {
-		solve_zero_squares(sol);
+		solve_zero_tiles(sol);
 		++level;
 	} else if (level == -1) {
-		solve_maxnumber_squares(sol);
+		solve_maxnumber_tiles(sol);
 		++level;
 	} else {
 		/* run solution loop for 1 iteration */
@@ -1114,8 +1114,8 @@ void
 solve_game_solution(struct solution *sol, int max_level)
 {
 	/* These two tests only run once at the very start */
-	solve_zero_squares(sol);
-	solve_maxnumber_squares(sol);
+	solve_zero_tiles(sol);
+	solve_maxnumber_tiles(sol);
 
 	/* run solution loop with no limits */
 	solution_loop(sol, -1, max_level);

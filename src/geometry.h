@@ -34,21 +34,21 @@ struct vertex {
 	struct point pos;	// x,y coordinates of dot
 	int nlines;		// number of lines touching dot
 	struct line **lines;	// lines touching dot
-	int nsquares;		// number of squares vertex touches
-	struct square **sq;	// squares vertex touches
+	int ntiles;		// number of tiles vertex touches
+	struct tile **tile;		// tiles vertex touches
 };
 
 
 /*
- * Holds info about a square
+ * Holds info about a tile
  */
-struct square {
-	int id;			// id of square
-	int nvertex;		// number of vertices of 'square'
-	struct vertex **vertex;	// vertices of 'square'
-	int nsides;		// number of sides of 'square'
-	struct line **sides;	// lines around 'square'
-	struct point center;	// coords of center of square
+struct tile {
+	int id;			// id of tile
+	int nvertex;			// number of vertices of 'tile'
+	struct vertex **vertex;	// vertices of tile
+	int nsides;				// number of sides of tile
+	struct line **sides;	// lines around tile
+	struct point center;	// coords of center of tile
 	int fx_status;		// is it being animated? which animation?
 	int fx_frame;		// frame in FX animation
 };
@@ -60,8 +60,8 @@ struct square {
 struct line {
 	int id;			// id of line (line number)
 	struct vertex *ends[2];	// coords of ends of line
-	int nsquares;		// Number of squares touching this line (either 1 or 2)
-	struct square *sq[2];	// squares at each side of line
+	int ntiles;				// Number of tiles touching this line (either 1 or 2)
+	struct tile *tile[2];		// tiles at each side of line
 	int nin;		// number of lines in
 	int nout;		// number of lines out
 	struct line **in;	// lines in
@@ -74,26 +74,26 @@ struct line {
 
 
 /*
- * Describes game geometry (how lines, squares and dots connect to each other)
+ * Describes game geometry (how lines, tiles and dots connect to each other)
  */
 struct geometry {
 	int nvertex;		// Number of dots
 	struct vertex *vertex;	// List of dots
-	int nsquares;		// Number of squares
-	struct square *squares;	// List of squares
+	int ntiles;				// Number of tiles
+	struct tile *tiles;		// List of tiles
 	int nlines;
 	struct line *lines;
-	double sq_width;
-	double sq_height;
+	double tile_width;
+	double tile_height;
 	double on_line_width;		// width of ON line
 	double off_line_width;		// width of OFF line
 	double cross_line_width;	// width of CROSSED line
 	double cross_radius;		// cross size
-	double font_size;		// font size to use for square numbers
+	double font_size;		// font size to use for tile numbers
 	double font_scale;		// additional font scale factor for the particular type of tile
 	struct point *numpos;		// position hints for numbers
-	char *numbers;			// numbers in squares
-	int max_numlines;		// maximum number of lines around a square
+	char *numbers;			// numbers in tiles
+	int max_numlines;		// maximum number of lines around a tile
 	double board_size;		// size of board
 	double board_margin;		// size of margin around game area
 	double game_size;		// size of game area (board_size-2*board_margin)
@@ -105,7 +105,7 @@ struct geometry {
 void geometry_add_tile(struct geometry *geo, struct point *pts, int npts);
 void geometry_set_distance_resolution(double distance);
 void geometry_connect_skeleton(struct geometry *geo);
-struct geometry* geometry_create_new(int nsquares, int nvertex, int nlines, int max_numlines);
+struct geometry* geometry_create_new(int ntiles, int nvertex, int nlines, int max_numlines);
 void geometry_destroy(struct geometry *geo);
 
 

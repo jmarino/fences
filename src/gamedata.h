@@ -44,11 +44,11 @@ enum {
 
 
 /*
- * Holds game data (square numbers and lines that are on)
+ * Holds game data (tile numbers and lines that are on)
  */
 struct game {
 	int *states;		// Line states
-	int *numbers;		// Number in squares
+	int *numbers;		// Number in tiles
 };
 
 
@@ -64,8 +64,8 @@ struct click_mesh {
 
 struct board {
 	struct gameinfo gameinfo;		// info about game (tile type, size, ...)
-	struct geometry *geo;	// geometry info of lines, squares & vertices
-	struct game *game;	// game data (line states and square numbers)
+	struct geometry *geo;	// geometry info of lines, tiles & vertices
+	struct game *game;	// game data (line states and tile numbers)
 	double width_pxscale;	// Width board-to-pixel scale
 	double height_pxscale;	// Height board-to-pixel scale
 	struct click_mesh *click_mesh; // click mesh
@@ -77,7 +77,6 @@ struct board {
 
 
 /* gamedata.c */
-void find_smallest_numbered_square(struct geometry *geo, struct game *game);
 struct game* create_empty_gamedata(struct geometry *geo);
 void free_gamedata(struct game *game);
 void game_set_line(int id, int state);

@@ -42,10 +42,10 @@ create_empty_gamedata(struct geometry *geo)
 	/* allocate and initialize */
 	game= (struct game*)g_malloc(sizeof(struct game));
 	game->states= (int*)g_malloc(geo->nlines*sizeof(int));
-	game->numbers= (int*)g_malloc(geo->nsquares*sizeof(int));
+	game->numbers= (int*)g_malloc(geo->ntiles*sizeof(int));
 	for(i=0; i < geo->nlines; ++i)
 		game->states[i]= LINE_OFF;
-	for(i=0; i < geo->nsquares; ++i)
+	for(i=0; i < geo->ntiles; ++i)
 		game->numbers[i]= -1;
 
 	return game;
@@ -81,9 +81,9 @@ static struct game*
 generate_example_game(struct geometry *geo)
 {
 	int i;
-	const int dim=7;		// num of squares per side
+	const int dim=7;		// num of tiles per side
 	struct game *game;
-	int squaredata[7*7]={
+	int tiledata[7*7]={
 		-1,-1,-1,-1,-1,-1,-1,
 		-1,-1,-1, 3, 2,-1, 2,
 		-1, 3,-1, 1,-1,-1,-1,
@@ -183,9 +183,9 @@ generate_example_game(struct geometry *geo)
 	/* Create empty game data that fits geo */
 	game= create_empty_gamedata(geo);
 
-	/* set number inside square */
-	for(i=0; i < geo->nsquares; ++i) {
-		//game->numbers[i]= squaredata[i];
+	/* set number inside tile */
+	for(i=0; i < geo->ntiles; ++i) {
+		//game->numbers[i]= tiledata[i];
 		game->numbers[i]= hard7[i];
 		//game->numbers[i]= hard[i];
 		//game->numbers[i]= easy15[i];
@@ -241,7 +241,7 @@ initialize_board(void)
 	/* empty gamedata */
 	board.game= create_empty_gamedata(board.geo);
 	//board.game= generate_example_game(board.geo);
-	//printf("nlines: %d\nnsquares: %d\n", board.geo->nlines, board.geo->nsquares);
+	//printf("nlines: %d\nntiles: %d\n", board.geo->nlines, board.geo->ntiles);
 
 	return &board;
 }

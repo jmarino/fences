@@ -27,35 +27,35 @@ struct loop {
 	int *state;		/* state of lines */
 	int nlines;		/* number of lines ON in loop */
 	gboolean *mask;	/* indicates lines that can be changed */
-	struct square *sq;	/* square where we are currently growing */
-	int nexits;		/* lines ON available out of current square */
+	struct tile *tile;	/* tile where we are currently growing */
+	int nexits;		/* lines ON available out of current tile */
 	int navailable;	/* how many lines are changeable */
 };
 
 
 
 /*
- * Check if square has non incoming line corners on any of its vertices
- * Note: routine ignores any side set on square
+ * Check if tile has non incoming line corners on any of its vertices
+ * Note: routine ignores any side set on tile
  *	TRUE: a corner was found
  *	FALSE: no corner
  */
 static gboolean
-square_has_corner(struct square *sq, struct loop *loop)
+tile_has_corner(struct tile *tile, struct loop *loop)
 {
 	int i, j;
 	struct vertex *vertex;
 	struct line *lin;
 	int count;
 
-	for(i=0; i < sq->nvertex; ++i) {
-		vertex= sq->vertex[i];
+	for(i=0; i < tile->nvertex; ++i) {
+		vertex= tile->vertex[i];
 		count= 0;
 		for(j=0; j < vertex->nlines; ++j) {
 			lin= vertex->lines[j];
-			/* ignore lines that belong to square 'sq' */
-			if (lin->sq[0] == sq ||
-			    (lin->nsquares == 2 && lin->sq[1] == sq))
+			/* ignore lines that belong to tile 'tile' */
+			if (lin->tile[0] == tile ||
+			    (lin->ntiles == 2 && lin->tile[1] == tile))
 				continue;
 			/* count lines ON for vertex */
 			if (loop->state[ lin->id ] == LINE_ON) {
@@ -69,22 +69,22 @@ square_has_corner(struct square *sq, struct loop *loop)
 
 
 /*
- * Count number of disconnected branches around square.
+ * Count number of disconnected branches around tile.
  * Basically it counts number of OFF -> ON or ON -> OFF jumps as it
- * travels around the square.
+ * travels around the tile.
  * The number of branches is njumps/2.
  */
 static int
-branches_on_square(struct square *sq, struct loop *loop)
+branches_on_tile(struct tile *tile, struct loop *loop)
 {
 	int i;
 	int njumps=0;
 	int prev_on;
 
 	/* count number of jumps */
-	prev_on= (loop->state[ sq->sides[sq->nsides - 1]->id ] == LINE_ON);
-	for(i=0; i < sq->nsides; ++i) {
-		if (loop->state[ sq->sides[i]->id ] == LINE_ON) {
+	prev_on= (loop->state[ tile->sides[tile->nsides - 1]->id ] == LINE_ON);
+	for(i=0; i < tile->nsides; ++i) {
+		if (loop->state[ tile->sides[i]->id ] == LINE_ON) {
 			if (!prev_on) {
 				++njumps;
 				prev_on= TRUE;
@@ -102,44 +102,44 @@ branches_on_square(struct square *sq, struct loop *loop)
 
 
 /*
- * Is square availabe for growth
+ * Is tile availabe for growth
  *	- All sides have to be masked available
  *	- Number of OFF lines must be >= number of ON lines
  *	- Must NOT have a non-incoming line corner
- *	- Square must only touch loop in one region
+ *	- Tile must only touch loop in one region
  */
 static gboolean
-is_square_available(struct square *sq, struct loop *loop, int index)
+is_tile_available(struct tile *tile, struct loop *loop, int index)
 {
 	int i;
 	gboolean res;
 	int on=0;
 
-	/* check that all sides in square are available */
-	for(i=0; i < sq->nsides; ++i) {
-		if (!loop->mask[ sq->sides[i]->id ])
+	/* check that all sides in tile are available */
+	for(i=0; i < tile->nsides; ++i) {
+		if (!loop->mask[ tile->sides[i]->id ])
 			return FALSE;
 	}
 
-	/* square must have more OFF lines than ON to be eligible */
-	for(i=0; i < sq->nsides; ++i) {
-		if (loop->state[ sq->sides[i]->id ]== LINE_ON)
+	/* tile must have more OFF lines than ON to be eligible */
+	for(i=0; i < tile->nsides; ++i) {
+		if (loop->state[ tile->sides[i]->id ]== LINE_ON)
 			++on;
 		else
 			--on;
 	}
 	if (on > 0) return FALSE;
 
-	/* one of square's vertices is a line corner -> skip */
+	/* one of tile's vertices is a line corner -> skip */
 	loop->state[index]= LINE_OFF;
-	res= square_has_corner(sq, loop);
+	res= tile_has_corner(tile, loop);
 	loop->state[index]= LINE_ON;
 	if (res) {
 		return FALSE;
 	}
 
-	/* more than one loop branch touches square -> skip */
-	if (branches_on_square(sq, loop) > 1) {
+	/* more than one loop branch touches tile -> skip */
+	if (branches_on_tile(tile, loop) > 1) {
 		return FALSE;
 	}
 
@@ -148,17 +148,17 @@ is_square_available(struct square *sq, struct loop *loop, int index)
 
 
 /*
- * Toggle lines around square
+ * Toggle lines around tile
  */
 static void
-toggle_square_lines(struct loop *loop, struct square *sq)
+toggle_tile_lines(struct loop *loop, struct tile *tile)
 {
 	int i;
 	int id;
 
-	/* go around sides of square toggling lines */
-	for(i=0; i < sq->nsides; ++i) {
-		id= sq->sides[i]->id;
+	/* go around sides of tile toggling lines */
+	for(i=0; i < tile->nsides; ++i) {
+		id= tile->sides[i]->id;
 		if (loop->state[id] == LINE_ON) {
 			loop->state[id]= LINE_OFF;
 			--loop->nlines;
@@ -185,7 +185,7 @@ loop_find_new_shoulder(struct loop *loop)
 	int index=0;
 	int count;
 	struct line *lin;
-	struct square *sq;
+	struct tile *tile;
 
 	while(loop->nexits <= 0 && loop->navailable > 0) {
 		/* select a line from navailable */
@@ -200,29 +200,29 @@ loop_find_new_shoulder(struct loop *loop)
 		}
 		lin= loop->geo->lines + index;
 
-		/* select random square out of chosen line */
-		count= g_random_int_range(0, lin->nsquares);
-		for (i=0; i < lin->nsquares; ++i) {
-			if (is_square_available(lin->sq[count], loop, index))
+		/* select random tile out of chosen line */
+		count= g_random_int_range(0, lin->ntiles);
+		for (i=0; i < lin->ntiles; ++i) {
+			if (is_tile_available(lin->tile[count], loop, index))
 				break;
-			count= (count +1)%lin->nsquares;
+			count= (count +1)%lin->ntiles;
 		}
 
-		/* line has no valid squares -> invalidate */
-		if (i == lin->nsquares) {
+		/* line has no valid tiles -> invalidate */
+		if (i == lin->ntiles) {
 			loop->mask[index]= FALSE;
 			--loop->navailable;
 			continue;
 		}
 
-		/* set new found square as growing square */
-		sq= lin->sq[count];
-		toggle_square_lines(loop, sq);
-		loop->sq= sq;
+		/* set new found tile as growing tile */
+		tile= lin->tile[count];
+		toggle_tile_lines(loop, tile);
+		loop->tile= tile;
 		loop->nexits= 0;
-		for(i=0; i< sq->nsides; ++i) {
-			if (loop->state[ sq->sides[i]->id ] == LINE_ON &&
-			    loop->mask[ sq->sides[i]->id ])
+		for(i=0; i< tile->nsides; ++i) {
+			if (loop->state[ tile->sides[i]->id ] == LINE_ON &&
+			    loop->mask[ tile->sides[i]->id ])
 				++loop->nexits;
 		}
 	}
@@ -230,22 +230,22 @@ loop_find_new_shoulder(struct loop *loop)
 
 
 /*
- * Count squares not touching any line (zero squares)
+ * Count tiles not touching any line (zero tiles)
  */
 static int
-count_zero_squares(struct loop *loop)
+count_zero_tiles(struct loop *loop)
 {
 	int i, j;
 	int count= 0;
-	struct square *sq;
+	struct tile *tile;
 
-	for(i=0; i < loop->geo->nsquares; ++i) {
-		sq= loop->geo->squares + i;
-		for(j=0; j < sq->nsides; ++j)  {
-			if (loop->state[sq->sides[j]->id] == LINE_ON)
+	for(i=0; i < loop->geo->ntiles; ++i) {
+		tile= loop->geo->tiles + i;
+		for(j=0; j < tile->nsides; ++j)  {
+			if (loop->state[tile->sides[j]->id] == LINE_ON)
 				break;
 		}
-		if (j == sq->nsides) ++count;
+		if (j == tile->nsides) ++count;
 	}
 	return count;
 }
@@ -263,7 +263,7 @@ build_loop(struct loop *loop, gboolean trace)
 	int i;
 	int index=0;
 	int count;
-	struct square *sq;
+	struct tile *tile;
 	struct line *lin;
 	int num_resets=0;
 
@@ -274,10 +274,10 @@ build_loop(struct loop *loop, gboolean trace)
 			goto end_of_loop;
 		}
 
-		/* select a line around current square */
+		/* select a line around current tile */
 		count= g_random_int_range(0, loop->nexits);
-		for(i=0; i < loop->sq->nsides; ++i) {
-			index= loop->sq->sides[i]->id;
+		for(i=0; i < loop->tile->nsides; ++i) {
+			index= loop->tile->sides[i]->id;
 			if (loop->state[index] == LINE_ON && loop->mask[index])
 				--count;
 			if (count < 0)
@@ -285,8 +285,8 @@ build_loop(struct loop *loop, gboolean trace)
 		}
 		lin= loop->geo->lines + index;
 
-		/* we're growing from a square, so line better have 2 squares */
-		if (lin->nsquares == 1) {
+		/* we're growing from a tile, so line better have 2 tiles */
+		if (lin->ntiles == 1) {
 			loop->mask[index]= FALSE;
 			--loop->navailable;
 			--loop->nexits;
@@ -294,21 +294,21 @@ build_loop(struct loop *loop, gboolean trace)
 			//continue;
 		}
 
-		/* pick next square to grow in */
-		sq= (lin->sq[0] != loop->sq) ? lin->sq[0] : lin->sq[1];
-		if (is_square_available(sq, loop, index) == FALSE) {
+		/* pick next tile to grow in */
+		tile= (lin->tile[0] != loop->tile) ? lin->tile[0] : lin->tile[1];
+		if (is_tile_available(tile, loop, index) == FALSE) {
 			loop->mask[index]= FALSE;
 			--loop->navailable;
 			--loop->nexits;
 			goto end_of_loop;
 		}
 
-		toggle_square_lines(loop, sq);
-		loop->sq= sq;
+		toggle_tile_lines(loop, tile);
+		loop->tile= tile;
 		loop->nexits= 0;
-		for(i=0; i< sq->nsides; ++i) {
-			if (loop->state[ sq->sides[i]->id ] == LINE_ON &&
-			    loop->mask[ sq->sides[i]->id ])
+		for(i=0; i< tile->nsides; ++i) {
+			if (loop->state[ tile->sides[i]->id ] == LINE_ON &&
+			    loop->mask[ tile->sides[i]->id ])
 				++loop->nexits;
 		}
 
@@ -317,13 +317,13 @@ build_loop(struct loop *loop, gboolean trace)
 		/* Are we done? Check for a decent loop. */
 		if (loop->navailable <= 0) {
 			/* count number of zeros, reset mask if >= 15% */
-			count= count_zero_squares(loop);
-			if ((100.0*count)/loop->geo->nsquares >= 15.0) {
+			count= count_zero_tiles(loop);
+			if ((100.0*count)/loop->geo->ntiles >= 15.0) {
 				++num_resets;	// record the reset
 				loop->navailable= 0;
 				for(i=0; i < loop->geo->nlines; ++i) {
 					/* don't touch OFF lines, preserve
-					 artificial zero squares */
+					 artificial zero tiles */
 					if (loop->state[i] == LINE_ON) {
 						loop->mask[i]= TRUE;
 						++loop->navailable;
@@ -350,7 +350,7 @@ build_loop(struct loop *loop, gboolean trace)
 static void
 initialize_loop(struct loop *loop)
 {
-	struct square *sq;
+	struct tile *tile;
 	struct vertex *vertex;
 	struct geometry *geo=loop->geo;
 	int i, j;
@@ -367,37 +367,37 @@ initialize_loop(struct loop *loop)
 	}
 	loop->navailable= 0;
 
-	/* force from 1 to 4 squares to have 0 lines,
+	/* force from 1 to 4 tiles to have 0 lines,
 	   we don't check for repetitions, if they happen too bad */
-	nzeros= (int)(geo->nsquares*3.0/100.0);		// 3%
+	nzeros= (int)(geo->ntiles*3.0/100.0);		// 3%
 	if (nzeros == 0) nzeros= 1;
 	else if (nzeros > 4) nzeros= 4;
 	for(i=0; i < nzeros; ++i) {
-		sq= geo->squares +  g_random_int_range(0, geo->nsquares);
-		for(j=0; j < sq->nsides; ++j)
-			loop->mask[sq->sides[j]->id]= FALSE;
+		tile= geo->tiles +  g_random_int_range(0, geo->ntiles);
+		for(j=0; j < tile->nsides; ++j)
+			loop->mask[tile->sides[j]->id]= FALSE;
 	}
 
-	/* select a ramdom square to start the loop (not touching the 0 square) */
+	/* select a ramdom tile to start the loop (not touching the 0 tile) */
 	for(;;) {
-		sq= geo->squares +  g_random_int_range(0, geo->nsquares);
-		/* check that lines around square are not already disabled */
-		for(i=0; i < sq->nsides; ++i) {
-			if (loop->mask[sq->sides[i]->id] == FALSE)
+		tile= geo->tiles +  g_random_int_range(0, geo->ntiles);
+		/* check that lines around tile are not already disabled */
+		for(i=0; i < tile->nsides; ++i) {
+			if (loop->mask[tile->sides[i]->id] == FALSE)
 				break;
 		}
-		if (i == sq->nsides) break;	// none disabled -> done
+		if (i == tile->nsides) break;	// none disabled -> done
 	}
 
-	/* set lines around starting square */
-	for(i=0; i < sq->nsides; ++i) {
-		loop->state[sq->sides[i]->id]= LINE_ON;
-		loop->mask[sq->sides[i]->id]= TRUE;
+	/* set lines around starting tile */
+	for(i=0; i < tile->nsides; ++i) {
+		loop->state[tile->sides[i]->id]= LINE_ON;
+		loop->mask[tile->sides[i]->id]= TRUE;
 	}
-	loop->nlines= sq->nsides;
-	loop->navailable= sq->nsides;
-	loop->sq= sq;
-	loop->nexits= sq->nsides;
+	loop->nlines= tile->nsides;
+	loop->navailable= tile->nsides;
+	loop->tile= tile;
+	loop->nexits= tile->nsides;
 }
 
 

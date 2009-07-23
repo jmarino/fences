@@ -39,7 +39,7 @@ hexagonal_calculate_sizes(struct geometry *geo, int dim)
 	if (geo->on_line_width < 2*geo->off_line_width)
 		geo->on_line_width= 2*geo->off_line_width;
 	geo->cross_line_width= geo->off_line_width*2;
-	geo->cross_radius= geo->sq_width/10.0;
+	geo->cross_radius= geo->tile_width/10.0;
 	geo->font_scale= 1.5;
 }
 
@@ -104,7 +104,7 @@ build_hex_tile_geometry(const struct gameinfo *info)
 	geometry_set_distance_resolution(side/10.0);
 
 	/* create hexagons */
-	geo->nsquares= 0;
+	geo->ntiles= 0;
 	geo->nvertex= 0;
 	geo->nlines= 0;
 	for(i=0; i < dimx; ++i) {
@@ -130,17 +130,17 @@ build_hex_tile_geometry(const struct gameinfo *info)
 		}
 	}
 
-	printf("ntiles: %d (%d) %d\n", geo->nsquares, ntiles);
+	printf("ntiles: %d (%d) %d\n", geo->ntiles, ntiles);
 	printf("nvertex: %d (%d) %d\n", geo->nvertex, nvertex);
 	printf("nlines: %d (%d) %d\n", geo->nlines, nlines);
 
 	/* make sure we didn't underestimate max numbers */
-	g_assert(geo->nsquares <= ntiles);
+	g_assert(geo->ntiles <= ntiles);
 	g_assert(geo->nvertex <= nvertex);
 	g_assert(geo->nlines <= nlines);
 
-	/* realloc to actual number of squares, vertices and lines */
-	geo->squares= g_realloc(geo->squares, geo->nsquares*sizeof(struct square));
+	/* realloc to actual number of tiles, vertices and lines */
+	geo->tiles= g_realloc(geo->tiles, geo->ntiles*sizeof(struct tile));
 	geo->vertex= g_realloc(geo->vertex, geo->nvertex*sizeof(struct vertex));
 	geo->lines= g_realloc(geo->lines, geo->nlines*sizeof(struct line));
 

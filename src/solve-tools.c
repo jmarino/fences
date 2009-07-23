@@ -25,11 +25,11 @@
 
 /*
  * Check game data for inconsistencies:
- * Numbered square:
- *  - Number of lines on around square <= number
- *  - Must have enough lines OFF to possibly satisy square number
- * Non-numbered square:
- *  - **TODO** number ON must be < number of sides in square
+ * Numbered tile:
+ *  - Number of lines on around tile <= number
+ *  - Must have enough lines OFF to possibly satisfy tile number
+ * Non-numbered tile:
+ *  - **TODO** number ON must be < number of sides in tile
  * Vertices:
  *  - Vertex with one ON must have at least one OFF
  *  - Vertex with more than two ON lines
@@ -42,20 +42,20 @@ solve_check_valid_game(struct solution *sol)
 	int i, j;
 	int num_on;
 	int num_off;
-	struct square *sq;
+	struct tile *tile;
 	struct vertex *vertex;
 
-	/* check all squares */
-	sq= sol->geo->squares;
-	for(i=0; i < sol->geo->nsquares ; ++i) {
-		/* only numbered squares */
+	/* check all tiles */
+	tile= sol->geo->tiles;
+	for(i=0; i < sol->geo->ntiles ; ++i) {
+		/* only numbered tiles */
 		if (sol->numbers[i] == -1) continue;
-		/* count lines on and compare with number in square */
+		/* count lines on and compare with number in tile */
 		num_on= num_off= 0;
-		for(j=0; j < sq[i].nsides; ++j) {
-			if (STATE(sq[i].sides[j]) == LINE_ON)
+		for(j=0; j < tile[i].nsides; ++j) {
+			if (STATE(tile[i].sides[j]) == LINE_ON)
 				++num_on;
-			else if (STATE(sq[i].sides[j]) == LINE_OFF)
+			else if (STATE(tile[i].sides[j]) == LINE_OFF)
 				++num_off;
 		}
 		if (num_on > sol->numbers[i]) return FALSE;
@@ -173,21 +173,21 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	sol->numbers= game->numbers;
 	sol->states= (int *)g_malloc(geo->nlines*sizeof(int));
 	sol->lin_mask= (int *)g_malloc(geo->nlines*sizeof(int));
-	sol->sq_handled= (gboolean *)g_malloc(geo->nsquares*sizeof(gboolean));
+	sol->tile_handled= (gboolean *)g_malloc(geo->ntiles*sizeof(gboolean));
 	sol->nchanges= 0;
 	sol->changes= (int *)g_malloc(geo->nlines*sizeof(int));
 	/* **TODO** size of changes is overkill (but safe): optimize */
-	sol->nsq_changes= 0;
-	sol->sq_changes= (int *)g_malloc(geo->nsquares*sizeof(int));
-	/* **TODO** size of sq_changes is overkill (but safe): optimize */
+	sol->ntile_changes= 0;
+	sol->tile_changes= (int *)g_malloc(geo->ntiles*sizeof(int));
+	/* **TODO** size of tile_changes is overkill (but safe): optimize */
 	sol->solved= FALSE;
 	sol->difficulty= 0.0;
 	sol->last_level= -1;
 
 	for(i=0; i < geo->nlines; ++i)
 		sol->states[i]= LINE_OFF;
-	for(i=0; i < geo->nsquares; ++i) {
-		sol->sq_handled[i]= FALSE;
+	for(i=0; i < geo->ntiles; ++i) {
+		sol->tile_handled[i]= FALSE;
 	}
 	memset(sol->level_count, 0, SOLVE_NUM_LEVELS * sizeof(int));
 
@@ -203,9 +203,9 @@ solve_free_solution_data(struct solution *sol)
 {
 	g_free(sol->states);
 	g_free(sol->lin_mask);
-	g_free(sol->sq_handled);
+	g_free(sol->tile_handled);
 	g_free(sol->changes);
-	g_free(sol->sq_changes);
+	g_free(sol->tile_changes);
 	g_free(sol);
 }
 
@@ -220,12 +220,12 @@ solve_copy_solution(struct solution *dest, struct solution *src)
 	dest->game= src->game;
 	memcpy(dest->states, src->states, src->geo->nlines*sizeof(int));
 	dest->numbers= src->numbers;
-	memcpy(dest->sq_handled, src->sq_handled, src->geo->nsquares*sizeof(gboolean));
+	memcpy(dest->tile_handled, src->tile_handled, src->geo->ntiles*sizeof(gboolean));
 	memcpy(dest->lin_mask, src->lin_mask, src->geo->nlines*sizeof(int));
 	dest->nchanges= src->nchanges;
 	memcpy(dest->changes, src->changes, src->geo->nlines*sizeof(int));
-	dest->nsq_changes= src->nsq_changes;
-	memcpy(dest->sq_changes, src->sq_changes, src->geo->nsquares*sizeof(int));
+	dest->ntile_changes= src->ntile_changes;
+	memcpy(dest->tile_changes, src->tile_changes, src->geo->ntiles*sizeof(int));
 	memcpy(dest->level_count, src->level_count, SOLVE_NUM_LEVELS * sizeof(int));
 	dest->solved= src->solved;
 	dest->difficulty= src->difficulty;
@@ -241,31 +241,31 @@ solve_duplicate_solution(struct solution *src)
 {
 	struct solution *sol;
 	int lines_size;
-	int squares_size;
+	int tiles_size;
 
 	g_assert(src != NULL);
 	lines_size= src->geo->nlines * sizeof(int);
-	squares_size= src->geo->nsquares * sizeof(gboolean);
+	tiles_size= src->geo->ntiles * sizeof(gboolean);
 	sol= (struct solution *)g_malloc(sizeof(struct solution));
 	sol->geo= src->geo;
 	sol->game= src->game;
 	sol->numbers= src->numbers;
 	sol->states= (int *)g_malloc(lines_size);
 	sol->lin_mask= (int *)g_malloc(lines_size);
-	sol->sq_handled= (gboolean *)g_malloc(squares_size);
+	sol->tile_handled= (gboolean *)g_malloc(tiles_size);
 	sol->changes= (int *)g_malloc(lines_size);
 	sol->nchanges= src->nchanges;
-	sol->sq_changes= (int *)g_malloc(squares_size);
-	sol->nsq_changes= src->nsq_changes;
+	sol->tile_changes= (int *)g_malloc(tiles_size);
+	sol->ntile_changes= src->ntile_changes;
 	sol->solved= src->solved;
 	sol->difficulty= src->difficulty;
 	sol->last_level= src->last_level;
 
 	memcpy(sol->states, src->states, lines_size);
-	memcpy(sol->sq_handled, src->sq_handled, squares_size);
+	memcpy(sol->tile_handled, src->tile_handled, tiles_size);
 	memcpy(sol->lin_mask, src->lin_mask, lines_size);
 	memcpy(sol->changes, src->changes, lines_size);
-	memcpy(sol->sq_changes, src->sq_changes, squares_size);
+	memcpy(sol->tile_changes, src->tile_changes, tiles_size);
 	memcpy(sol->level_count, src->level_count, SOLVE_NUM_LEVELS * sizeof(int));
 
 	return sol;
@@ -280,10 +280,10 @@ solve_reset_solution(struct solution *sol)
 {
 	memset(sol->states, 0, sol->geo->nlines * sizeof(int));
 	memset(sol->lin_mask, 0, sol->geo->nlines * sizeof(int));
-	memset(sol->sq_handled, 0, sol->geo->nsquares * sizeof(gboolean));
+	memset(sol->tile_handled, 0, sol->geo->ntiles * sizeof(gboolean));
 	memset(sol->level_count, 0, SOLVE_NUM_LEVELS * sizeof(int));
 	sol->nchanges= 0;
-	sol->nsq_changes= 0;
+	sol->ntile_changes= 0;
 	sol->solved= FALSE;
 	sol->difficulty= 0.0;
 	sol->last_level= -1;

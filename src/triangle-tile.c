@@ -40,14 +40,14 @@ triangular_calculate_sizes(struct geometry *geo, int dim)
 	if (geo->on_line_width < 2*geo->off_line_width)
 		geo->on_line_width= 2*geo->off_line_width;
 	geo->cross_line_width= geo->off_line_width*2;
-	geo->cross_radius= MIN(geo->sq_width, geo->sq_height)/15.;
+	geo->cross_radius= MIN(geo->tile_width, geo->tile_height)/15.;
 	geo->font_scale= 0.7;
 }
 
 
 /*
  * Build triangular tile geometry data
- * Triangular grid of dim x dim squares
+ * Triangular grid of dim x dim tiles
  */
 struct geometry*
 build_triangular_tile_geometry(const struct gameinfo *info)
@@ -90,7 +90,7 @@ build_triangular_tile_geometry(const struct gameinfo *info)
 
 	/* iterate through triangles creating skeleton geometry
 	   (skeleton geometry: lines hold all the topology info) */
-	geo->nsquares= 0;
+	geo->ntiles= 0;
 	geo->nlines= 0;
 	geo->nvertex= 0;
 	for(j=0; j < dimy; ++j) {
@@ -118,23 +118,23 @@ build_triangular_tile_geometry(const struct gameinfo *info)
 	}
 
 	/* DEBUG: print out details about a few triangles */
-	//g_message("nvertex:%d, nsquares:%d, nlines:%d", geo->nvertex,
-	//		  geo->nsquares, geo->nlines);
+	//g_message("nvertex:%d, ntiles:%d, nlines:%d", geo->nvertex,
+	//		  geo->ntiles, geo->nlines);
 	/*
 	for(i=0; i < 8; ++i) {
-		sq= geo->squares + i;
-		printf("Triangle: %d (nvertex:%d, nsides:%d)\n", sq->id, sq->nvertex,
-			sq->nsides);
+		tile= geo->tiles + i;
+		printf("Triangle: %d (nvertex:%d, nsides:%d)\n", tile->id, tile->nvertex,
+			tile->nsides);
 		printf("**Vertices:\n");
-		for(j=0; j< sq->nvertex; ++j)
-			printf("**** %d\n", sq->vertex[j]->id);
+		for(j=0; j< tile->nvertex; ++j)
+			printf("**** %d\n", tile->vertex[j]->id);
 		printf("**Sides:\n");
-		for(j=0; j< sq->nsides; ++j)
-			printf("**** %d\n", sq->sides[j]->id);
+		for(j=0; j< tile->nsides; ++j)
+			printf("**** %d\n", tile->sides[j]->id);
 			}*/
 
 	/* sanity check: see if we got the numbers we expected */
-	g_assert(geo->nsquares == ntiles);
+	g_assert(geo->ntiles == ntiles);
 	g_assert(geo->nvertex == nvertex);
 	g_assert(geo->nlines == nlines);
 

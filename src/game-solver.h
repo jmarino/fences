@@ -32,8 +32,8 @@
 		++sol->nchanges;}
 //#define UNSET_LINE(lin)		{sol->states[(lin)->id]= LINE_OFF; ++count;}
 #define STATE(lin)			sol->states[(lin)->id]
-#define NUMBER(sq)			sol->numbers[(sq)->id]
-#define MAX_NUMBER(sq)		sol->numbers[(sq)->id] == ((sq)->nsides - 1)
+#define NUMBER(tile)		sol->numbers[(tile)->id]
+#define MAX_NUMBER(tile)	sol->numbers[(tile)->id] == ((tile)->nsides - 1)
 
 
 /* number of solution levels */
@@ -46,15 +46,15 @@
  */
 struct solution {
 	struct geometry *geo;	// geometry of game
-	struct game *game;	// game state (mostly useful for square numbers)
+	struct game *game;	// game state (mostly useful for tile numbers)
 	int *states;		// line states (so we don't touch game->states)
 	int *numbers;		// points to game->numbers
-	gboolean *sq_handled;	// has square been handled?
+	gboolean *tile_handled;	// has tile been handled?
 	int *lin_mask;
 	int nchanges;			// number of line changes in last solution step
 	int *changes;			// ID of lines changed in last solution step
-	int nsq_changes;		// number of squares involved in last solution step
-	int *sq_changes;		// ID of squares that caused changes in last step
+	int ntile_changes;		// number of tiles involved in last solution step
+	int *tile_changes;		// ID of tiles that caused changes in last step
 	int level_count[SOLVE_NUM_LEVELS];	// solution score by level
 	gboolean solved;		// is solution complete
 	double difficulty;		// difficulty of solution
@@ -79,13 +79,13 @@ void solve_reset_solution(struct solution *sol);
 int solve_try_combinations(struct solution *sol, int level);
 
 /* game-solver.c */
-void solve_zero_squares(struct solution *sol);
-void solve_maxnumber_squares(struct solution *sol);
+void solve_zero_tiles(struct solution *sol);
+void solve_maxnumber_tiles(struct solution *sol);
 void solve_maxnumber_incoming_line(struct solution *sol);
 void solve_maxnumber_exit_line(struct solution *sol);
 void solve_corner(struct solution *sol);
-void solve_squares_net_1(struct solution *sol);
-void solve_trivial_squares(struct solution *sol);
+void solve_tiles_net_1(struct solution *sol);
+void solve_trivial_tiles(struct solution *sol);
 void solve_trivial_vertex(struct solution *sol);
 void solve_bottleneck(struct solution *sol);
 void solve_cross_lines(struct solution *sol);

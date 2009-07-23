@@ -112,7 +112,7 @@ qbert_calculate_sizes(struct geometry *geo, int dim)
 	if (geo->on_line_width < 2*geo->off_line_width)
 		geo->on_line_width= 2*geo->off_line_width;
 	geo->cross_line_width= geo->off_line_width*2;
-	geo->cross_radius= geo->sq_width/10.0;
+	geo->cross_radius= geo->tile_width/10.0;
 	geo->font_scale= 1.5;
 }
 
@@ -177,7 +177,7 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 	geometry_set_distance_resolution(side/10.0);
 
 	/* create rhombs (3 rhombs in each unit) */
-	geo->nsquares= geo->nlines= geo->nvertex= 0;
+	geo->ntiles= geo->nlines= geo->nvertex= 0;
 	for(j=0; j < dimy; ++j) {
 		pos.y= y0 + j * (side + side/2.0);
 		xoffset= x0 - (j % 2)*( sqrt(3.0)*side/2.0 );
@@ -188,12 +188,12 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 	}
 
 	/* make sure we didn't underestimate max numbers */
-	g_assert(geo->nsquares <= nrhomb_max);
+	g_assert(geo->ntiles <= nrhomb_max);
 	g_assert(geo->nvertex <= nvertex_max);
 	g_assert(geo->nlines <= nlines_max);
 
-	/* realloc to actual number of squares, vertices and lines */
-	geo->squares= g_realloc(geo->squares, geo->nsquares*sizeof(struct square));
+	/* realloc to actual number of tiles, vertices and lines */
+	geo->tiles= g_realloc(geo->tiles, geo->ntiles*sizeof(struct tile));
 	geo->vertex= g_realloc(geo->vertex, geo->nvertex*sizeof(struct vertex));
 	geo->lines= g_realloc(geo->lines, geo->nlines*sizeof(struct line));
 
@@ -205,23 +205,23 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 
 
 	/* DEBUG */
-	/* grab a square and print everything about it */
-	struct square *sq=geo->squares + 5;
-	printf("Square %d:\n", sq->id);
-	printf("  nsides: %d, nvertex: %d\n", sq->nsides, sq->nvertex);
+	/* grab a tile and print everything about it */
+	struct tile *tile=geo->tiles + 5;
+	printf("Tile %d:\n", tile->id);
+	printf("  nsides: %d, nvertex: %d\n", tile->nsides, tile->nvertex);
 	printf("  Sides: ");
-	for(i=0; i < sq->nsides; ++i) printf("%d  ", sq->sides[i]->id);
+	for(i=0; i < tile->nsides; ++i) printf("%d  ", tile->sides[i]->id);
 	printf("\n  Vertex: ");
-	for(i=0; i < sq->nvertex; ++i) printf("%d  ", sq->vertex[i]->id);
+	for(i=0; i < tile->nvertex; ++i) printf("%d  ", tile->vertex[i]->id);
 	printf("\n");
 
-	sq= geo->squares+6;
-	printf("Square %d:\n", sq->id);
-	printf("  nsides: %d, nvertex: %d\n", sq->nsides, sq->nvertex);
+	tile= geo->tiles+6;
+	printf("Tile %d:\n", tile->id);
+	printf("  nsides: %d, nvertex: %d\n", tile->nsides, tile->nvertex);
 	printf("  Sides: ");
-	for(i=0; i < sq->nsides; ++i) printf("%d  ", sq->sides[i]->id);
+	for(i=0; i < tile->nsides; ++i) printf("%d  ", tile->sides[i]->id);
 	printf("\n  Vertex: ");
-	for(i=0; i < sq->nvertex; ++i) printf("%d  ", sq->vertex[i]->id);
+	for(i=0; i < tile->nvertex; ++i) printf("%d  ", tile->vertex[i]->id);
 	printf("\n");
 	return geo;
 }

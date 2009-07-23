@@ -28,7 +28,7 @@
  * How many combinations (of size k) in a set of size n
  * Formula: n! / ( k! (n - k)! )
  * Simplifies to: n*(n-1)*...*(n-k+1) / k!
- * Example: 4 side square with number 2 --> k= 2, n= 4
+ * Example: 4 side tile with number 2 --> k= 2, n= 4
  */
 static int
 number_combinations(int n, int k)
@@ -63,7 +63,7 @@ number_combinations(int n, int k)
  *	- x - x		comb=5 ; start=1; spaces=1;
  */
 static int
-set_combination(struct solution *sol, struct square *sq, int n, int k, int comb)
+set_combination(struct solution *sol, struct tile *tile, int n, int k, int comb)
 {
 	int i, j;
 	int start;
@@ -75,32 +75,32 @@ set_combination(struct solution *sol, struct square *sq, int n, int k, int comb)
 	spaces= comb/n;
 
 	/* find first available line */
-	while(STATE(sq->sides[nline]) != LINE_OFF)
-		nline= (nline + 1) % sq->nsides;
+	while(STATE(tile->sides[nline]) != LINE_OFF)
+		nline= (nline + 1) % tile->nsides;
 
 	/* jump start lines */
 	for(i=0; i < start; ++i) {
-		while(STATE(sq->sides[nline]) != LINE_OFF)
-			nline= (nline + 1) % sq->nsides;
-		nline= (nline + 1) % sq->nsides;
+		while(STATE(tile->sides[nline]) != LINE_OFF)
+			nline= (nline + 1) % tile->nsides;
+		nline= (nline + 1) % tile->nsides;
 	}
 
 	/* set k lines on */
 	for(i=0; i < k; ++i) {
 		/* find next available line and set it */
-		while(STATE(sq->sides[nline]) != LINE_OFF)
-			nline= (nline + 1) % sq->nsides;
-		sol->states[sq->sides[nline]->id]= LINE_ON;
+		while(STATE(tile->sides[nline]) != LINE_OFF)
+			nline= (nline + 1) % tile->nsides;
+		sol->states[tile->sides[nline]->id]= LINE_ON;
 		lines_mask|= 1 << nline;
-		nline= (nline + 1) % sq->nsides;
-		while(STATE(sq->sides[nline]) != LINE_OFF)
-			nline= (nline + 1) % sq->nsides;
+		nline= (nline + 1) % tile->nsides;
+		while(STATE(tile->sides[nline]) != LINE_OFF)
+			nline= (nline + 1) % tile->nsides;
 
 		/* jump spaces */
 		for(j=0; j < spaces; ++j) {
-			while(STATE(sq->sides[nline]) != LINE_OFF)
-				nline= (nline + 1) % sq->nsides;
-			nline= (nline + 1) % sq->nsides;
+			while(STATE(tile->sides[nline]) != LINE_OFF)
+				nline= (nline + 1) % tile->nsides;
+			nline= (nline + 1) % tile->nsides;
 		}
 	}
 	return lines_mask;
@@ -109,7 +109,7 @@ set_combination(struct solution *sol, struct square *sq, int n, int k, int comb)
 
 /*
  * Solve combination with look-ahead level 0
- * Try only one iteration of trivial vertex and trivial square
+ * Try only one iteration of trivial vertex and trivial tile
  * Returns TRUE if solution found is valid
  */
 static gboolean
@@ -117,7 +117,7 @@ combination_solve0(struct solution *sol)
 {
 	(void)solve_cross_lines(sol);
 	(void)solve_trivial_vertex(sol);
-	(void)solve_trivial_squares(sol);
+	(void)solve_trivial_tiles(sol);
 
 	return solve_check_valid_game(sol);
 }
@@ -125,7 +125,7 @@ combination_solve0(struct solution *sol)
 
 /*
  * Solve combination with look-ahead level 1
- * Try a couple of iterations of trivial vertex and trivial square
+ * Try a couple of iterations of trivial vertex and trivial tile
  * Returns TRUE if solution found is valid
  */
 static gboolean
@@ -138,7 +138,7 @@ combination_solve1(struct solution *sol)
 		(void)solve_cross_lines(sol);
 		solve_trivial_vertex(sol);
 		count= sol->nchanges;
-		solve_trivial_squares(sol);
+		solve_trivial_tiles(sol);
 		count+= sol->nchanges;
 		valid= solve_check_valid_game(sol);
 	}
@@ -164,7 +164,7 @@ combination_solve2(struct solution *sol)
 			solve_cross_lines(sol);
 			solve_trivial_vertex(sol);
 		} else if (level == 1) {
-			solve_trivial_squares(sol);
+			solve_trivial_tiles(sol);
 		} else if (level == 2) {
 			solve_bottleneck(sol);
 		} else if (level == 3) {
@@ -173,7 +173,7 @@ combination_solve2(struct solution *sol)
 			solve_maxnumber_incoming_line(sol);
 			if (sol->nchanges == 0) solve_maxnumber_exit_line(sol);
 		} else if (level == 5) {
-			solve_squares_net_1(sol);
+			solve_tiles_net_1(sol);
 		}
 
 		/* if nothing found go to next level */
@@ -191,17 +191,17 @@ combination_solve2(struct solution *sol)
 
 
 /*
- * Test all possible combinations in one square
+ * Test all possible combinations in one tile
  * Level: how far ahead to look after trying a combination
  * Returns number of lines succesfully modified after trying all combinations
  * NOTE: line masks are sizeof(int) bits which limits max number of lines
  *	but no safety checks exist to ensure num of lines < sizeof(int)
  */
 static int
-test_square_combinations(struct solution *sol, struct solution *sol_bak,
-			 int sq_num, int level)
+test_tile_combinations(struct solution *sol, struct solution *sol_bak,
+			 int tile_num, int level)
 {
-	struct square *sq;
+	struct tile *tile;
 	int nlines_off=0;
 	int nlines_todo=0;
 	int lines_mask;		// lines always ON in all valid combinations
@@ -213,17 +213,17 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 	int i;
 	gboolean valid=TRUE;
 
-	sq= sol->geo->squares + sq_num;
-	/* count lines ON and OFF in square */
-	for(i=0; i < sq->nsides; ++i) {
-		if (STATE(sq->sides[i]) == LINE_OFF)
+	tile= sol->geo->tiles + tile_num;
+	/* count lines ON and OFF in tile */
+	for(i=0; i < tile->nsides; ++i) {
+		if (STATE(tile->sides[i]) == LINE_OFF)
 			++nlines_off;
-		else if (STATE(sq->sides[i]) == LINE_ON)
+		else if (STATE(tile->sides[i]) == LINE_ON)
 			++nlines_todo;
 	}
 
 	/* get number of possible combinations */
-	nlines_todo= sol->numbers[sq_num] - nlines_todo;
+	nlines_todo= sol->numbers[tile_num] - nlines_todo;
 	ncomb= number_combinations(nlines_off, nlines_todo);
 
 	/* try every different combination */
@@ -232,7 +232,7 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 	for(i=0; i < ncomb; ++i) {
 		/* enable lines for this combination */
 		/* lines_mask only keeps lines that are always on */
-		tmp_mask= set_combination(sol, sq, nlines_off, nlines_todo, i);
+		tmp_mask= set_combination(sol, tile, nlines_off, nlines_todo, i);
 		all_lines|= tmp_mask;
 
 		/* try to solve a bit (limited by look-ahead level) */
@@ -266,9 +266,9 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 	while(lines_mask != 0 || bad_lines != 0) {
 		/* set lines in mask */
 		if (lines_mask&1) {
-			SET_LINE(sq->sides[i]);
+			SET_LINE(tile->sides[i]);
 		} else if (bad_lines&1)
-			CROSS_LINE(sq->sides[i]);
+			CROSS_LINE(tile->sides[i]);
 		lines_mask>>= 1;
 		bad_lines>>= 1;
 		++i;
@@ -280,7 +280,7 @@ test_square_combinations(struct solution *sol, struct solution *sol_bak,
 
 
 /*
- * Try all possible combinations of lines around a numbered square
+ * Try all possible combinations of lines around a numbered tile
  * For each try, test the validity of the game
  * Discard permutations that produce an invalid game.
  * Any line that is ON for all valid permutations, is set to ON
@@ -297,15 +297,15 @@ solve_try_combinations(struct solution *sol, int level)
 	/* make a backup of current solution state */
 	sol_bak= solve_duplicate_solution(sol);
 
-	/* iterate over all squares */
-	for(i=0; i < geo->nsquares; ++i) {
-		/* ignore handled squares or squares with no number */
-		if (sol->sq_handled[i] || sol->numbers[i] == -1)
+	/* iterate over all tiles */
+	for(i=0; i < geo->ntiles; ++i) {
+		/* ignore handled tiles or tiles with no number */
+		if (sol->tile_handled[i] || sol->numbers[i] == -1)
 			continue;
 
-		/* Test all combinations for square and see if all valid ones
+		/* Test all combinations for tile and see if all valid ones
 		 have a line always ON or OFF. */
-		count= test_square_combinations(sol, sol_bak, i, level);
+		count= test_tile_combinations(sol, sol_bak, i, level);
 
 		/* TRUE -> a line has been set, we're done */
 		if (count > 0)

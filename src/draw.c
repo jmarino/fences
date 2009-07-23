@@ -83,31 +83,31 @@ draw_areainf(cairo_t *cr)
 
 
 /*
- * DEBUG: Hack to display square centers
+ * DEBUG: Hack to display tile centers
  */
 static void
-draw_square_centers(cairo_t *cr)
+draw_tile_centers(cairo_t *cr)
 {
 	int i;
-	struct square *sq;
+	struct tile *tile;
 
 	cairo_set_source_rgba(cr, 0., 1., 0., 0.2);
-	sq= board.geo->squares;
-	for(i=0; i < board.geo->nsquares; ++i) {
+	tile= board.geo->tiles;
+	for(i=0; i < board.geo->ntiles; ++i) {
 		cairo_new_sub_path(cr);
-		cairo_arc (cr, sq->center.x, sq->center.y, 2*DOT_RADIUS,
+		cairo_arc (cr, tile->center.x, tile->center.y, 2*DOT_RADIUS,
 			   0, 2 * M_PI);
-		++sq;
+		++tile;
 	}
 	cairo_fill(cr);
 }
 
 
 /*
- * DEBUG: Hack to display which squares are associated with each line
+ * DEBUG: Hack to display which tiles are associated with each line
  */
 static void
-draw_linesquares(cairo_t *cr)
+draw_linetiles(cairo_t *cr)
 {
 	int i;
 	struct line *lin;
@@ -121,10 +121,10 @@ draw_linesquares(cairo_t *cr)
 		x= (lin->ends[0]->pos.x + lin->ends[1]->pos.x)/2.;
 		y= (lin->ends[0]->pos.y + lin->ends[1]->pos.y)/2.;
 		cairo_move_to(cr, x, y);
-		cairo_line_to(cr, lin->sq[0]->center.x, lin->sq[0]->center.y);
-		if (lin->nsquares == 2) {
+		cairo_line_to(cr, lin->tile[0]->center.x, lin->tile[0]->center.y);
+		if (lin->ntiles == 2) {
 			cairo_move_to(cr, x, y);
-			cairo_line_to(cr, lin->sq[1]->center.x, lin->sq[1]->center.y);
+			cairo_line_to(cr, lin->tile[1]->center.x, lin->tile[1]->center.y);
 		}
 		++lin;
 	}
@@ -220,7 +220,7 @@ draw_board(cairo_t *cr, struct geometry *geo, struct game *game)
 {
 	struct vertex *vertex1, *vertex2;
 	struct line *line;
-	struct square *sq;
+	struct tile *tile;
 	int i, j;
 	double x, y;
 	int lines_on;	// how many ON lines a vertex has
@@ -233,8 +233,8 @@ draw_board(cairo_t *cr, struct geometry *geo, struct game *game)
 	// debug
 	//draw_tiles(cr);
 	//draw_areainf(cr);
-	//draw_square_centers(cr);
-	//draw_linesquares(cr);
+	//draw_tile_centers(cr);
+	//draw_linetiles(cr);
 	//draw_bounds(cr);
 	//draw_margin(cr);
 
@@ -305,25 +305,25 @@ draw_board(cairo_t *cr, struct geometry *geo, struct game *game)
 		}
 	}
 
-	/* Text in squares */
-	sq= geo->squares;
+	/* Text in tiles */
+	tile= geo->tiles;
 	cairo_set_font_size(cr, geo->font_size);
 	cairo_set_source_rgb(cr, 0, 0, 0);
 
-	for(i=0; i<geo->nsquares; ++i) {
-		number= game->numbers[sq->id];
-		if (number != -1) {	// square has a number
-			cairo_move_to(cr, sq->center.x - geo->numpos[number].x,
-				      sq->center.y + geo->numpos[number].y);
+	for(i=0; i<geo->ntiles; ++i) {
+		number= game->numbers[tile->id];
+		if (number != -1) {	// tile has a number
+			cairo_move_to(cr, tile->center.x - geo->numpos[number].x,
+				      tile->center.y + geo->numpos[number].y);
 			cairo_show_text (cr, geo->numbers + 2*number);
 		}
-		++sq;
+		++tile;
 	}
 }
 
 
 /*
- * Calculate extents (width & height) of all possible square numbers
+ * Calculate extents (width & height) of all possible tile numbers
  * This has to be done after every window resize because the accuracy of
  * the extents depends on the pixel size.
  */
@@ -339,10 +339,10 @@ draw_measure_font(GtkWidget *drawarea, int width, int height,
 	cr= gdk_cairo_create (drawarea->window);
 	cairo_scale (cr, width/geo->board_size, height/geo->board_size);
 
-	/* scale font size so number 0 fits in sq_height/2. */
+	/* scale font size so number 0 fits in tile_height/2. */
 	cairo_set_font_size(cr, geo->board_size/2.);
 	cairo_text_extents(cr, geo->numbers + 0, &extent);
-	geo->font_size= (geo->sq_height/2.) * (geo->board_size/2./extent.height);
+	geo->font_size= (geo->tile_height/2.) * (geo->board_size/2./extent.height);
 	/* further scale font to fit current tile type */
 	geo->font_size*= geo->font_scale;
 

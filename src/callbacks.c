@@ -169,7 +169,7 @@ drawarea_configure(GtkWidget *drawarea, GdkEventConfigure *event, gpointer user_
 	board->height_pxscale= event->height/(double)board->geo->board_size;
 
 	/*
-	 * Recalculate font size and extent boxes of square numbers
+	 * Recalculate font size and extent boxes of tile numbers
 	 * This has to be done after every window resize because the
 	 * accuracy of the measurements depends on the pixel size.
 	 */

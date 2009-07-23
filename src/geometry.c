@@ -114,12 +114,12 @@ geometry_fill_inout(struct geometry *geo)
 
 
 /*
- * Go around square that touches line, connecting vertices and lines to square.
- * Add vertices and lines to square.
- * Add square to vertices.
+ * Go around tile that touches line, connecting vertices and lines to tile.
+ * Add vertices and lines to tile.
+ * Add tile to vertices.
  */
 static void
-geometry_go_around_square(struct square *sq, struct line *lin)
+geometry_go_around_tile(struct tile *tile, struct line *lin)
 {
 	struct vertex *start_vertex;
 	struct vertex *vertex;
@@ -133,20 +133,20 @@ geometry_go_around_square(struct square *sq, struct line *lin)
 	dir= lin->out;
 
 	do {
-		/* connect lines to square */
-		sq->sides[sq->nsides]= lin;
-		++sq->nsides;
-		/* connect vertex & square */
-		sq->vertex[sq->nvertex]= vertex;
-		++(sq->nvertex);
-		vertex->sq[vertex->nsquares]= sq;
-		++(vertex->nsquares);
+		/* connect lines to tile */
+		tile->sides[tile->nsides]= lin;
+		++tile->nsides;
+		/* connect vertex & tile */
+		tile->vertex[tile->nvertex]= vertex;
+		++(tile->nvertex);
+		vertex->tile[vertex->ntiles]= tile;
+		++(vertex->ntiles);
 
-		/* find next line that touches square */
+		/* find next line that touches tile */
 		for(i=0; i < ndir; ++i) {
 			lin= dir[i];
-			if (lin->sq[0] == sq
-				|| (lin->nsquares == 2 && lin->sq[1] == sq)) break;
+			if (lin->tile[0] == tile
+				|| (lin->ntiles == 2 && lin->tile[1] == tile)) break;
 		}
 		g_assert(i < ndir);	/* we must always find a line */
 
@@ -166,91 +166,91 @@ geometry_go_around_square(struct square *sq, struct line *lin)
 
 
 /*
- * Connect each square to the vertex and lines it touches. Also connect
- * each vertex to the squares it touches.
- * Before this point only lines had references to which squares they touch.
- * This function builds tracks which lines each square touches, which vertex
- * each square touches, and which squares each vertex touches.
+ * Connect each tile to the vertex and lines it touches. Also connect
+ * each vertex to the tiles it touches.
+ * Before this point only lines had references to which tiles they touch.
+ * This function builds tracks which lines each tile touches, which vertex
+ * each tile touches, and which tiles each vertex touches.
  */
 static void
-geometry_connect_squares(struct geometry *geo)
+geometry_connect_tiles(struct geometry *geo)
 {
 	int i, j;
 	struct line *lin;
 	struct vertex *vertex;
-	struct square *sq;
+	struct tile *tile;
 	int direction;
 
-	/* count number of vertex and number of lines touching each square
-	   NOTE: notice that sq->nvertex and vertex->nsquares are counted twice.
+	/* count number of vertex and number of lines touching each tile
+	   NOTE: notice that tile->nvertex and vertex->ntiles are counted twice.
 	   We're over-counting them by a factor of 2. */
 	lin= geo->lines;
 	for(i=0; i < geo->nlines; ++i) {
 		vertex= lin->ends[0];
-		for(j=0; j < lin->nsquares; ++j) {
-			sq= lin->sq[j];
-			++(sq->nvertex);
-			++(sq->nsides);
-			++(vertex->nsquares);
+		for(j=0; j < lin->ntiles; ++j) {
+			tile= lin->tile[j];
+			++(tile->nvertex);
+			++(tile->nsides);
+			++(vertex->ntiles);
 		}
 		vertex= lin->ends[1];
-		for(j=0; j < lin->nsquares; ++j) {
-			sq= lin->sq[j];
-			++(sq->nvertex);
-			++(sq->nsides);
-			++(vertex->nsquares);
+		for(j=0; j < lin->ntiles; ++j) {
+			tile= lin->tile[j];
+			++(tile->nvertex);
+			++(tile->nsides);
+			++(vertex->ntiles);
 		}
 		++lin;
 	}
 
-	/* allocate space for squares in each vertex.
-	   Compensate for over-counting nsquares (factor 2) */
+	/* allocate space for tiles in each vertex.
+	   Compensate for over-counting ntiles (factor 2) */
 	vertex= geo->vertex;
 	for(i=0; i < geo->nvertex; ++i) {
-		vertex->sq= (struct square **)g_malloc0((vertex->nsquares/2)*sizeof(void*));
-		vertex->nsquares= 0;	/* to be used as counter below */
+		vertex->tile= (struct tile **)g_malloc0((vertex->ntiles/2)*sizeof(void*));
+		vertex->ntiles= 0;	/* to be used as counter below */
 		++vertex;
 	}
 
-	/* allocate space for vertices and lines in each square.
+	/* allocate space for vertices and lines in each tile.
 	   Compensate for over-counting nvertex (factor 2) */
-	sq= geo->squares;
-	for(i=0; i < geo->nsquares; ++i) {
-		sq->vertex= (struct vertex **)g_malloc0((sq->nvertex/2)*sizeof(void*));
-		sq->nvertex= 0;			/* to be used as counter below */
-		sq->sides= (struct line **)g_malloc0((sq->nsides/2)*sizeof(void*));
-		sq->nsides= 0;			/* to be used as counter below */
-		++sq;
+	tile= geo->tiles;
+	for(i=0; i < geo->ntiles; ++i) {
+		tile->vertex= (struct vertex **)g_malloc0((tile->nvertex/2)*sizeof(void*));
+		tile->nvertex= 0;			/* to be used as counter below */
+		tile->sides= (struct line **)g_malloc0((tile->nsides/2)*sizeof(void*));
+		tile->nsides= 0;			/* to be used as counter below */
+		++tile;
 	}
 
-	/* try each line and follow it around the squares it touches
-	   while doing this, set square's sides & vertex, and set
-	   vertex's squares
-	   NOTE: sq->fx_status is reused (shamelessly) as a mask to know
-	   which squares have been already handled. */
+	/* try each line and follow it around the tiles it touches
+	   while doing this, set tile's sides & vertex, and set
+	   vertex's tiles
+	   NOTE: tile->fx_status is reused (shamelessly) as a mask to know
+	   which tiles have been already handled. */
 	lin= geo->lines;
 	for(i=0; i < geo->nlines; ++i) {
-		sq= lin->sq[0];
-		if (sq->fx_status == 0) {
-			geometry_go_around_square(sq, lin);
-			sq->fx_status= 1;
+		tile= lin->tile[0];
+		if (tile->fx_status == 0) {
+			geometry_go_around_tile(tile, lin);
+			tile->fx_status= 1;
 		}
-		if (lin->nsquares == 2) {
-			sq= lin->sq[1];
-			if (sq->fx_status == 0) {
-				geometry_go_around_square(sq, lin);
-				sq->fx_status= 1;
+		if (lin->ntiles == 2) {
+			tile= lin->tile[1];
+			if (tile->fx_status == 0) {
+				geometry_go_around_tile(tile, lin);
+				tile->fx_status= 1;
 			}
 		}
 		++lin;
 	}
 
 	/* reset fx_status, which was used as a mask */
-	sq= geo->squares;
-	for(i=0; i < geo->nsquares; ++i) {
-		g_assert(sq->fx_status == 1);
-		sq->fx_status= 0;
-		++sq;
+	tile= geo->tiles;
+	for(i=0; i < geo->ntiles; ++i) {
+		g_assert(tile->fx_status == 1);
+		tile->fx_status= 0;
+		++tile;
 	}
 }
 
@@ -262,20 +262,20 @@ static void
 geometry_calculate_tile_centers(struct geometry *geo)
 {
 	int i, j;
-	struct square *sq;
+	struct tile *tile;
 
-	sq= geo->squares;
-	for(i=0; i < geo->nsquares; ++i) {
-		/* calculate position of center of square */
-		sq->center.x= sq->vertex[0]->pos.x;
-		sq->center.y= sq->vertex[0]->pos.y;
-		for(j=1; j < sq->nvertex; ++j) {
-			sq->center.x+= sq->vertex[j]->pos.x;
-			sq->center.y+= sq->vertex[j]->pos.y;
+	tile= geo->tiles;
+	for(i=0; i < geo->ntiles; ++i) {
+		/* calculate position of center of tile */
+		tile->center.x= tile->vertex[0]->pos.x;
+		tile->center.y= tile->vertex[0]->pos.y;
+		for(j=1; j < tile->nvertex; ++j) {
+			tile->center.x+= tile->vertex[j]->pos.x;
+			tile->center.y+= tile->vertex[j]->pos.y;
 		}
-		sq->center.x= sq->center.x/(double)sq->nvertex;
-		sq->center.y= sq->center.y/(double)sq->nvertex;
-		++sq;
+		tile->center.x= tile->center.x/(double)tile->nvertex;
+		tile->center.y= tile->center.y/(double)tile->nvertex;
+		++tile;
 	}
 }
 
@@ -289,26 +289,26 @@ geometry_define_line_infarea(struct geometry *geo)
 	int i;
 	struct line *lin;
 	struct vertex *v1;
-	struct square *sq;
+	struct tile *tile;
 
 	lin= geo->lines;
 	for(i=0; i<geo->nlines; ++i) {
 		v1= lin->ends[0];
 		lin->inf[0].x= v1->pos.x;
 		lin->inf[0].y= v1->pos.y;
-		sq= lin->sq[0];
-		lin->inf[1].x= sq->center.x;
-		lin->inf[1].y= sq->center.y;
+		tile= lin->tile[0];
+		lin->inf[1].x= tile->center.x;
+		lin->inf[1].y= tile->center.y;
 		v1= lin->ends[1];
 		lin->inf[2].x= v1->pos.x;
 		lin->inf[2].y= v1->pos.y;
-		if (lin->nsquares == 2) {
-			sq= lin->sq[1];
-			lin->inf[3].x= sq->center.x;
-			lin->inf[3].y= sq->center.y;
+		if (lin->ntiles == 2) {
+			tile= lin->tile[1];
+			lin->inf[3].x= tile->center.x;
+			lin->inf[3].y= tile->center.y;
 		} else {	// edge line, must manufacture 4th point
 			/* make up point across line:
-			 along line joining center of square to center of line */
+			 along line joining center of tile to center of line */
 			lin->inf[3].x= lin->inf[0].x + lin->inf[2].x - lin->inf[1].x;
 			lin->inf[3].y= lin->inf[0].y + lin->inf[2].y - lin->inf[1].y;
 		}
@@ -342,36 +342,36 @@ geometry_define_line_infarea(struct geometry *geo)
 
 
 /*
- * Measure smallest width and height of all squares
+ * Measure smallest width and height of all tiles
  */
 static void
-geometry_measure_squares(struct geometry *geo)
+geometry_measure_tiles(struct geometry *geo)
 {
-	struct square *sq;
+	struct tile *tile;
 	int i, j, j2;
-	double sqw, sqh, tmp;
+	double tilew, tileh, tmp;
 
-	/* go around all squares to measure smallest w and h */
-	sq= geo->squares;
-	for(i=0; i<geo->nsquares; ++i) {
-		sqw= sqh= 0.;
-		for(j=0; j < sq->nvertex; ++j) {
-			j2= (j + 1) % sq->nvertex;
-			tmp= fabs(sq->vertex[j]->pos.x -
-				  sq->vertex[j2]->pos.x);
-			if (tmp > sqw) sqw= tmp;
-			tmp= fabs(sq->vertex[j]->pos.y -
-				  sq->vertex[j2]->pos.y);
-			if (tmp > sqh) sqh= tmp;
+	/* go around all tiles to measure smallest w and h */
+	tile= geo->tiles;
+	for(i=0; i<geo->ntiles; ++i) {
+		tilew= tileh= 0.;
+		for(j=0; j < tile->nvertex; ++j) {
+			j2= (j + 1) % tile->nvertex;
+			tmp= fabs(tile->vertex[j]->pos.x -
+				  tile->vertex[j2]->pos.x);
+			if (tmp > tilew) tilew= tmp;
+			tmp= fabs(tile->vertex[j]->pos.y -
+				  tile->vertex[j2]->pos.y);
+			if (tmp > tileh) tileh= tmp;
 		}
 		if (i == 0) {
-			geo->sq_width= sqw;
-			geo->sq_height= sqh;
+			geo->tile_width= tilew;
+			geo->tile_height= tileh;
 		} else {
-			if (sqw < geo->sq_width) geo->sq_width= sqw;
-			if (sqh < geo->sq_height) geo->sq_height= sqh;
+			if (tilew < geo->tile_width) geo->tile_width= tilew;
+			if (tileh < geo->tile_height) geo->tile_height= tileh;
 		}
-		++sq;
+		++tile;
 	}
 }
 
@@ -404,8 +404,8 @@ geometry_add_vertex(struct geometry *geo, struct point *point)
 		vertex->pos.y= point->y;
 		vertex->nlines= 0;
 		vertex->lines= NULL;
-		vertex->nsquares= 0;
-		vertex->sq= NULL;
+		vertex->ntiles= 0;
+		vertex->tile= NULL;
 		++geo->nvertex;
 	}
 
@@ -437,9 +437,9 @@ geometry_add_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
 		lin->id= geo->nlines;
 		lin->ends[0]= v1;
 		lin->ends[1]= v2;
-		lin->nsquares= 0;
-		lin->sq[0]= NULL;
-		lin->sq[1]= NULL;
+		lin->ntiles= 0;
+		lin->tile[0]= NULL;
+		lin->tile[1]= NULL;
 		lin->nin= 0;
 		lin->in= NULL;
 		lin->nout= 0;
@@ -458,30 +458,30 @@ geometry_add_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
  * Add vertices and lines as required (avoiding repetitions).
  * IMPORTANT: the points given must wrap around the tile in order,
  * either clockwise or counter-clockwise.
- * Lines are created with info about which squares and vertices they touch.
+ * Lines are created with info about which tiles and vertices they touch.
  * Only lines are connected in this manner because in a skeleton geometry
  * it's only the lines that have room to store this data (they always
- * touch 2 squares and vertices).
+ * touch 2 tiles and vertices).
  */
 void
 geometry_add_tile(struct geometry *geo, struct point *pts, int npts)
 {
-	struct square *sq;
+	struct tile *tile;
 	struct vertex *vertex;
 	struct vertex *vertex_first;
 	struct vertex *vertex_prev=NULL;
 	struct line *lin;
 	int i;
 
-	sq= geo->squares + geo->nsquares;
-	sq->id= geo->nsquares;
-	sq->nvertex= 0;
-	sq->vertex= NULL;
-	sq->nsides= 0;
-	sq->sides= NULL;
-	sq->fx_status= 0;
-	sq->fx_frame= 0;
-	++geo->nsquares;
+	tile= geo->tiles + geo->ntiles;
+	tile->id= geo->ntiles;
+	tile->nvertex= 0;
+	tile->vertex= NULL;
+	tile->nsides= 0;
+	tile->sides= NULL;
+	tile->fx_status= 0;
+	tile->fx_frame= 0;
+	++geo->ntiles;
 
 	/* add first vertex */
 	vertex_first= geometry_add_vertex(geo, pts);
@@ -493,26 +493,26 @@ geometry_add_tile(struct geometry *geo, struct point *pts, int npts)
 
 		/* add line connecting last two points*/
 		lin= geometry_add_line(geo, vertex_prev, vertex);
-		/* store sq in line */
-		g_assert(lin->nsquares < 2);	/* no more than 2 squares touching line */
-		lin->sq[lin->nsquares]= sq;
-		++lin->nsquares;
+		/* store tile in line */
+		g_assert(lin->ntiles < 2);	/* no more than 2 tiles touching line */
+		lin->tile[lin->ntiles]= tile;
+		++lin->ntiles;
 
 		vertex_prev= vertex;
 	}
 
 	/* connect last point to first */
 	lin= geometry_add_line(geo, vertex, vertex_first);
-	g_assert(lin->nsquares < 2);		/* no more than 2 squares touching line */
-	lin->sq[lin->nsquares]= sq;
-	++lin->nsquares;
+	g_assert(lin->ntiles < 2);		/* no more than 2 tiles touching line */
+	lin->tile[lin->ntiles]= tile;
+	++lin->ntiles;
 }
 
 
 /*
  * Set distance resolution to use.
  * Two points that are closer than this distance are considered the same point.
- * We store its square for efficiency.
+ * We store its tile for efficiency.
  */
 void
 geometry_set_distance_resolution(double distance)
@@ -529,7 +529,7 @@ geometry_set_distance_resolution(double distance)
  *  - All vertex defined
  *    * id and pos are set
  *  - All lines defined
- *    * id, ends and sq fields are set
+ *    * id, ends and tile fields are set
  * The info about connections is contained in the lines. This function will
  * extract that info and generate a fully connected geometry.
  */
@@ -542,17 +542,17 @@ geometry_connect_skeleton(struct geometry *geo)
 	/* create and populate in & out arrays in each line */
 	geometry_fill_inout(geo);
 
-	/* connect squares to lines and vertices */
-	geometry_connect_squares(geo);
+	/* connect tiles to lines and vertices */
+	geometry_connect_tiles(geo);
 
-	/* find square centers */
+	/* find tile centers */
 	geometry_calculate_tile_centers(geo);
 
 	/* define area of influence of each line */
 	geometry_define_line_infarea(geo);
 
-	/* measure minimum square dimensions */
-	geometry_measure_squares(geo);
+	/* measure minimum tile dimensions */
+	geometry_measure_tiles(geo);
 }
 
 
@@ -560,25 +560,25 @@ geometry_connect_skeleton(struct geometry *geo)
  * Create new geometry
  */
 struct geometry*
-geometry_create_new(int nsquares, int nvertex, int nlines, int max_numlines)
+geometry_create_new(int ntiles, int nvertex, int nlines, int max_numlines)
 {
 	struct geometry *geo;
 	int i;
 
 	/* Allocate memory for geometry data */
 	geo= (struct geometry*)g_malloc(sizeof(struct geometry));
-	geo->nsquares= nsquares;
+	geo->ntiles= ntiles;
 	geo->nvertex= nvertex;
 	geo->nlines= nlines;
-	geo->squares= (struct square*)g_malloc(geo->nsquares*sizeof(struct square));
+	geo->tiles= (struct tile*)g_malloc(geo->ntiles*sizeof(struct tile));
 	geo->vertex= (struct vertex*)g_malloc(geo->nvertex*sizeof(struct vertex));
 	geo->lines= (struct line*)g_malloc(geo->nlines*sizeof(struct line));
 	geo->numpos= (struct point *)g_malloc(max_numlines*sizeof(struct point));
 	geo->numbers= (char *)g_malloc(2*max_numlines*sizeof(char));
 	for(i=0; i < max_numlines; ++i)
 		snprintf(geo->numbers + 2*i, 2, "%1d", i);
-	geo->sq_width= 0.;
-	geo->sq_height= 0.;
+	geo->tile_width= 0.;
+	geo->tile_height= 0.;
 	geo->on_line_width= 0.;
 	geo->off_line_width= 0.;
 	geo->cross_line_width= 0.;
@@ -602,19 +602,19 @@ geometry_destroy(struct geometry *geo)
 {
 	int i;
 
-	for(i=0; i < geo->nsquares; ++i) {
-		g_free(geo->squares[i].vertex);
-		g_free(geo->squares[i].sides);
+	for(i=0; i < geo->ntiles; ++i) {
+		g_free(geo->tiles[i].vertex);
+		g_free(geo->tiles[i].sides);
 	}
 	for(i=0; i < geo->nvertex; ++i) {
 		g_free(geo->vertex[i].lines);
-		g_free(geo->vertex[i].sq);
+		g_free(geo->vertex[i].tile);
 	}
 	for(i=0; i < geo->nlines; ++i) {
 		g_free(geo->lines[i].in);
 		g_free(geo->lines[i].out);
 	}
-	g_free(geo->squares);
+	g_free(geo->tiles);
 	g_free(geo->vertex);
 	g_free(geo->lines);
 	g_free(geo->numbers);

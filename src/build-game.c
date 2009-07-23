@@ -23,10 +23,10 @@
 #include "brute-force.h"
 
 
-#define SQUARE_HIDDEN		0
-#define SQUARE_VISIBLE		1
-#define SQUARE_FIXED		2
-#define SQUARE_TEMPORARY	3
+#define TILE_HIDDEN		0
+#define TILE_VISIBLE		1
+#define TILE_FIXED		2
+#define TILE_TEMPORARY	3
 
 
 /*
@@ -34,10 +34,10 @@
  */
 struct newgame {
 	int *loop;				// line states defining the game loop
-	int *all_numbers;		// numbers inside squares
-	int *sq_mask;			// squares with visible number
-	int nvisible;			// number of squares with visible number
-	int nhidden;			// number of squares not made visible (hidden)
+	int *all_numbers;		// numbers inside tiles
+	int *tile_mask;			// tiles with visible number
+	int nvisible;			// number of tiles with visible number
+	int nhidden;			// number of tiles not made visible (hidden)
 
 	/* current status of new game */
 	struct game *game;
@@ -48,12 +48,12 @@ struct newgame {
 
 
 /*
- * Pick random square out of hidden ones and mark it as
- * visible temporarily: SQUARE_TEMPORARY
- * Returns ID of chosen square
+ * Pick random tile out of hidden ones and mark it as
+ * visible temporarily: TILE_TEMPORARY
+ * Returns ID of chosen tile
  */
 static int
-pick_random_hidden_square(struct newgame *newgame)
+pick_random_hidden_tile(struct newgame *newgame)
 {
 	int count;
 	int index=-1;
@@ -61,10 +61,10 @@ pick_random_hidden_square(struct newgame *newgame)
 	count= g_random_int_range(0, newgame->nhidden);
 	while(count >= 0) {
 		++index;
-		if (newgame->sq_mask[index] == SQUARE_HIDDEN)
+		if (newgame->tile_mask[index] == TILE_HIDDEN)
 			--count;
 	}
-	newgame->sq_mask[index]= SQUARE_TEMPORARY;
+	newgame->tile_mask[index]= TILE_TEMPORARY;
 	newgame->game->numbers[index]= newgame->all_numbers[index];
 	--newgame->nhidden;
 	++newgame->nvisible;
@@ -84,16 +84,16 @@ newgame_trim_game(struct newgame *newgame, struct geometry *geo)
 	int i, j;
 
 	/* if difficulty is not good enough, go over the current game and
-	   delete squares */
+	   delete tiles */
 	if (newgame->sol->difficulty < 6.0) {
 	    index= -1;
 		for(i=0; i < newgame->nvisible; ++i) {
-			for(j=index + 1; j < geo->nsquares; ++j)
-				if (newgame->sq_mask[j] == SQUARE_VISIBLE)
+			for(j=index + 1; j < geo->ntiles; ++j)
+				if (newgame->tile_mask[j] == TILE_VISIBLE)
 					break;
-			g_assert(j < geo->nsquares);
+			g_assert(j < geo->ntiles);
 			index= j;
-			newgame->sq_mask[index]= SQUARE_HIDDEN;
+			newgame->tile_mask[index]= TILE_HIDDEN;
 			newgame->game->numbers[index]= -1;
 			solve_reset_solution(newgame->sol);
 			solve_game_solution(newgame->sol, newgame->max_level);
@@ -103,8 +103,8 @@ newgame_trim_game(struct newgame *newgame, struct geometry *geo)
 				printf("**eliminated one number\n");
 				prev_difficulty= newgame->sol->difficulty;
 			} else {
-				/* restore square */
-				newgame->sq_mask[index]= SQUARE_VISIBLE;
+				/* restore tile */
+				newgame->tile_mask[index]= TILE_VISIBLE;
 				newgame->game->numbers[index]=
 					newgame->all_numbers[index];
 			}
@@ -122,7 +122,7 @@ build_new_game(struct geometry *geo, double difficulty)
 	int i, j;
 	int index;
 	struct newgame *newgame;
-	struct square *sq;
+	struct tile *tile;
 	gboolean found=FALSE;
 	struct solution *sol;
 
@@ -142,20 +142,20 @@ build_new_game(struct geometry *geo, double difficulty)
 	memcpy(newgame->loop, newgame->game->states, geo->nlines * sizeof(int));
 	memset(newgame->game->states, 0, geo->nlines * sizeof(int));
 
-	/* count number of lines touching all squares */
-	newgame->all_numbers= (int*)g_malloc(geo->nsquares * sizeof(int));
-	newgame->sq_mask= (int*)g_malloc(geo->nsquares * sizeof(int));
-	for(i=0; i < geo->nsquares; ++i) {
+	/* count number of lines touching all tiles */
+	newgame->all_numbers= (int*)g_malloc(geo->ntiles * sizeof(int));
+	newgame->tile_mask= (int*)g_malloc(geo->ntiles * sizeof(int));
+	for(i=0; i < geo->ntiles; ++i) {
 		newgame->all_numbers[i]= 0;
-		newgame->sq_mask[i]= SQUARE_HIDDEN;
-		sq= geo->squares + i;
-		for(j=0; j < sq->nsides; ++j) {
-			if (newgame->loop[sq->sides[j]->id] == LINE_ON)
+		newgame->tile_mask[i]= TILE_HIDDEN;
+		tile= geo->tiles + i;
+		for(j=0; j < tile->nsides; ++j) {
+			if (newgame->loop[tile->sides[j]->id] == LINE_ON)
 				++(newgame->all_numbers[i]);
 		}
 	}
 	newgame->nvisible= 0;
-	newgame->nhidden= geo->nsquares;
+	newgame->nhidden= geo->ntiles;
 	/* maximum solution level to allow with aimed difficulty */
 	/* **TODO** fix this hack */
 	newgame->max_level= 5;
@@ -167,7 +167,7 @@ build_new_game(struct geometry *geo, double difficulty)
 	/* reset game states and previous solution states */
 	memset(sol->states, 0, geo->nlines * sizeof(int));
 	memset(sol->lin_mask, 0, geo->nlines * sizeof(int));
-	memset(sol->sq_handled, 0, geo->nsquares * sizeof(gboolean));
+	memset(sol->tile_handled, 0, geo->ntiles * sizeof(gboolean));
 
 	/* main loop */
 	while(1) {
@@ -175,30 +175,30 @@ build_new_game(struct geometry *geo, double difficulty)
 			printf("nhidden = 0. Stop.\n");
 			break;
 		}
-		/* pick a random square to show */
-	    index= pick_random_hidden_square(newgame);
-		sq= geo->squares + index;
+		/* pick a random tile to show */
+	    index= pick_random_hidden_tile(newgame);
+		tile= geo->tiles + index;
 
 		/* solve current game */
-		solve_zero_squares(sol);
+		solve_zero_tiles(sol);
 		if (sol->nchanges == 0)
-			solve_maxnumber_squares(sol);
+			solve_maxnumber_tiles(sol);
 		if (sol->nchanges == 0) {
 			/* run just 1 step of solution */
 			solution_loop(sol, 1, newgame->max_level);
 		}
 		/* something was done */
 		if (sol->nchanges > 0) {
-			newgame->sq_mask[index]= SQUARE_VISIBLE;
-			/* mark also any other squares that may have been involved */
-			for(i=0; i < sol->nsq_changes; ++i) {
-				if (sol->sq_changes[i] == index) continue;
-				newgame->sq_mask[sol->sq_changes[i]]= SQUARE_VISIBLE;
+			newgame->tile_mask[index]= TILE_VISIBLE;
+			/* mark also any other tiles that may have been involved */
+			for(i=0; i < sol->ntile_changes; ++i) {
+				if (sol->tile_changes[i] == index) continue;
+				newgame->tile_mask[sol->tile_changes[i]]= TILE_VISIBLE;
 			}
-			/* clear all temporary squares */
-			for(i=0; i < geo->nsquares; ++i) {
-				if (newgame->sq_mask[i] == SQUARE_TEMPORARY) {
-					newgame->sq_mask[i]= SQUARE_HIDDEN;
+			/* clear all temporary tiles */
+			for(i=0; i < geo->ntiles; ++i) {
+				if (newgame->tile_mask[i] == TILE_TEMPORARY) {
+					newgame->tile_mask[i]= TILE_HIDDEN;
 					newgame->game->numbers[i]= -1;
 					++newgame->nhidden;
 					--newgame->nvisible;
@@ -207,8 +207,8 @@ build_new_game(struct geometry *geo, double difficulty)
 			/* restart solution and solve as far as possible */
 			solve_reset_solution(sol);
 
-			solve_zero_squares(sol);
-			solve_maxnumber_squares(sol);
+			solve_zero_tiles(sol);
+			solve_maxnumber_tiles(sol);
 
 			/* run solution loop with no limits */
 			solution_loop(sol, -1, newgame->max_level);
@@ -234,7 +234,7 @@ build_new_game(struct geometry *geo, double difficulty)
 	solve_reset_solution(sol);
 	solve_game_solution(sol, -1);
 
-	/* trim any not needed squares */
+	/* trim any not needed tiles */
 	newgame_trim_game(newgame, geo);
 
 	/* reset and solve to get a meassure of difficulty */
@@ -252,8 +252,8 @@ build_new_game(struct geometry *geo, double difficulty)
 	memcpy(game->states, sol->states, geo->nlines * sizeof(int));
 	memcpy(game->states, newgame->loop, geo->nlines * sizeof(int));
 	/*memset(game->states, 0, geo->nlines * sizeof(int));
-	for(i=0; i < geo->nsquares; ++i)
-		if (newgame->sq_mask[i] != SQUARE_HIDDEN)
+	for(i=0; i < geo->ntiles; ++i)
+		if (newgame->tile_mask[i] != TILE_HIDDEN)
 			game->numbers[i]= newgame->all_numbers[i];
 		else
 			game->numbers[i]= -1;
@@ -264,7 +264,7 @@ build_new_game(struct geometry *geo, double difficulty)
 	/* free new game structure */
 	g_free(newgame->loop);
 	g_free(newgame->all_numbers);
-	g_free(newgame->sq_mask);
+	g_free(newgame->tile_mask);
 	//g_free(newgame->zero_pos);
 	g_free(newgame);
 
