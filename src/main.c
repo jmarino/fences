@@ -40,6 +40,16 @@ extern struct board board;
 
 
 /*
+ * Clean up things just before exiting
+ */
+static void
+fences_exit_cleanup(struct board *board)
+{
+	gamedata_destroy_current_game(board);
+}
+
+
+/*
  *
  */
 int
@@ -78,6 +88,9 @@ main (int argc, char *argv[])
 
 	gtk_main ();
 	gdk_threads_leave();
+
+	/* clean up */
+	fences_exit_cleanup(&board);
 
 	return 0;
 }
