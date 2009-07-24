@@ -94,27 +94,43 @@ geometry_fill_inout(struct geometry *geo)
 	struct line *lin;
 	struct vertex *vertex;
 	int i, j;
+	struct line **in_ptr, **out_ptr;
+	int in_num=0;
+	int out_num=0;
 
+	/* count total number of in & out lines */
+	lin= geo->lines;
+	for(i=0; i < geo->nlines; ++i) {
+		/* in lines for this line */
+		in_num+= lin->ends[0]->nlines - 1;
+		/* out lines for this line */
+		out_num+= lin->ends[1]->nlines - 1;
+		++lin;
+	}
+
+	/* store two big chunks of memory, then set pointers on it */
+	in_ptr= (struct line **)g_malloc0(in_num*sizeof(void*));
+	out_ptr= (struct line **)g_malloc0(out_num*sizeof(void*));
 	/* populate the in & out arrays of each line */
 	lin= geo->lines;
 	for(i=0; i < geo->nlines; ++i) {
 		/* store space for ins (lines touching vertex - 1) */
 		vertex= lin->ends[0];
-		lin->nin= 0;
-		lin->in= (struct line **)g_malloc0((vertex->nlines - 1)*sizeof(void*));
+		lin->nin= vertex->nlines - 1;
+		lin->in= in_ptr;
 		for(j=0; j < vertex->nlines; ++j) {
 			if (vertex->lines[j] == lin) continue;
-			lin->in[lin->nin]= vertex->lines[j];
-			++lin->nin;
+			*in_ptr= vertex->lines[j];
+			++in_ptr;
 		}
 		/* store space for outs (lines touching vertex - 1) */
 		vertex= lin->ends[1];
-		lin->nout= 0;
-		lin->out= (struct line **)g_malloc0((vertex->nlines - 1)*sizeof(void*));
+		lin->nout= vertex->nlines - 1;
+		lin->out= out_ptr;
 		for(j=0; j < vertex->nlines; ++j) {
 			if (vertex->lines[j] == lin) continue;
-			lin->out[lin->nout]= vertex->lines[j];
-			++lin->nout;
+			*out_ptr= vertex->lines[j];
+			++out_ptr;
 		}
 		++lin;
 	}
@@ -618,10 +634,8 @@ geometry_destroy(struct geometry *geo)
 	for(i=0; i < geo->nvertex; ++i) {
 		g_free(geo->vertex[i].tiles);
 	}
-	for(i=0; i < geo->nlines; ++i) {
-		g_free(geo->lines[i].in);
-		g_free(geo->lines[i].out);
-	}
+	g_free(geo->lines[0].in);
+	g_free(geo->lines[0].out);
 	g_free(geo->tiles);
 	g_free(geo->vertex);
 	g_free(geo->lines);
