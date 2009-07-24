@@ -204,6 +204,10 @@ geometry_connect_tiles(struct geometry *geo)
 	struct vertex *vertex;
 	struct tile *tile;
 	int direction;
+	int num_ele=0;
+	struct tile **ptr_t;
+	struct vertex **ptr_v;
+	struct line **ptr_s;
 
 	/* count number of vertex and number of lines touching each tile
 	   NOTE: notice that tile->nvertex and vertex->ntiles are counted twice.
@@ -216,6 +220,7 @@ geometry_connect_tiles(struct geometry *geo)
 			++(tile->nvertex);
 			++(tile->nsides);
 			++(vertex->ntiles);
+			++num_ele;
 		}
 		vertex= lin->ends[1];
 		for(j=0; j < lin->ntiles; ++j) {
@@ -223,26 +228,34 @@ geometry_connect_tiles(struct geometry *geo)
 			++(tile->nvertex);
 			++(tile->nsides);
 			++(vertex->ntiles);
+			++num_ele;
 		}
 		++lin;
 	}
 
-	/* allocate space for tiles in each vertex.
-	   Compensate for over-counting ntiles (factor 2) */
+	/* Compensate for over-counting elements (factor 2) */
+	num_ele= num_ele/2;
+
+	/* allocate space for tiles in each vertex. */
+	ptr_t= (struct tile **)g_malloc0(num_ele*sizeof(void*));
 	vertex= geo->vertex;
 	for(i=0; i < geo->nvertex; ++i) {
-		vertex->tiles= (struct tile **)g_malloc0((vertex->ntiles/2)*sizeof(void*));
+		vertex->tiles= ptr_t;
+		ptr_t+= vertex->ntiles/2;
 		vertex->ntiles= 0;	/* to be used as counter below */
 		++vertex;
 	}
 
-	/* allocate space for vertices and lines in each tile.
-	   Compensate for over-counting nvertex (factor 2) */
+	/* allocate space for vertices and lines in each tile */
 	tile= geo->tiles;
+	ptr_v= (struct vertex **)g_malloc0(num_ele*2*sizeof(void*));
+	ptr_s= ptr_v + num_ele;
 	for(i=0; i < geo->ntiles; ++i) {
-		tile->vertex= (struct vertex **)g_malloc0((tile->nvertex/2)*sizeof(void*));
+		tile->vertex= ptr_v;
+		ptr_v+= tile->nvertex/2;
 		tile->nvertex= 0;			/* to be used as counter below */
-		tile->sides= (struct line **)g_malloc0((tile->nsides/2)*sizeof(void*));
+		tile->sides= ptr_s;
+		ptr_s+= tile->nsides/2;
 		tile->nsides= 0;			/* to be used as counter below */
 		++tile;
 	}
@@ -626,14 +639,9 @@ geometry_destroy(struct geometry *geo)
 {
 	int i;
 
-	for(i=0; i < geo->ntiles; ++i) {
-		g_free(geo->tiles[i].vertex);
-		g_free(geo->tiles[i].sides);
-	}
+	g_free(geo->tiles[0].vertex);
 	g_free(geo->vertex[0].lines);
-	for(i=0; i < geo->nvertex; ++i) {
-		g_free(geo->vertex[i].tiles);
-	}
+	g_free(geo->vertex[0].tiles);
 	g_free(geo->lines[0].in);
 	g_free(geo->lines[0].out);
 	g_free(geo->tiles);
