@@ -626,6 +626,8 @@ geometry_create_new(int ntiles, int nvertex, int nlines, int max_numlines)
 	geo->board_size= 0.;
 	geo->board_margin= 0.;
 	geo->game_size= 0.;
+	geo->vertex_root= NULL;
+	geo->line_root= NULL;
 
 	return geo;
 }
@@ -649,5 +651,7 @@ geometry_destroy(struct geometry *geo)
 	g_free(geo->lines);
 	g_free(geo->numbers);
 	g_free(geo->numpos);
+	if (geo->vertex_root) avltree_destroy(geo->vertex_root);
+	if (geo->line_root) avltree_destroy(geo->line_root);
 	g_free(geo);
 }
