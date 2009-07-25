@@ -573,6 +573,10 @@ geometry_set_distance_resolution(double distance)
 void
 geometry_connect_skeleton(struct geometry *geo)
 {
+	printf("ntiles: %d\n", geo->ntiles);
+	printf("nvertex: %d\n", geo->nvertex);
+	printf("nlines: %d\n", geo->nlines);
+
 	/* connect vertices and lines */
 	geometry_connect_vertex_lines(geo);
 
