@@ -76,10 +76,7 @@ click_mesh_setup(const struct geometry *geo)
 		lin= geo->lines;
 		for(l=0; l < geo->nlines; ++l) {
 			/* check if line's area of influence intersects the box */
-			if(b == 0 && l == 22)
-				inside= is_area_inside_box(lin->inf, edge, 1);
-			else
-				inside= is_area_inside_box(lin->inf, edge, 0);
+			inside= is_area_inside_box(lin->inf, edge);
 			if (inside) {
 				//printf("box %d (%lf,%lf;%lf,%lf): add line %d  (%lf,%lf)\n", b,
 				//	   edge[0].x,edge[0].y, edge[1].x, edge[1].y, l,

@@ -35,7 +35,7 @@
  *	box:  struct point[2]
  */
 gboolean
-is_area_inside_box(struct point *area, struct point *box, int debug)
+is_area_inside_box(struct point *area, struct point *box)
 {
 	int i, j;
 	double box_s[2];		// box shadow
@@ -59,17 +59,6 @@ is_area_inside_box(struct point *area, struct point *box, int debug)
 		return FALSE;
 	if (area_s[1].y < box[0].y || area_s[0].y > box[1].y)
 		return FALSE;
-	if (debug) {
-		printf("area: (%lf,%lf) ; (%lf,%lf) ; (%lf, %lf) ; (%lf, %lf)\n",
-		       area[0].x, area[0].y, area[1].x, area[1].y,
-		       area[2].x, area[2].y, area[3].x, area[3].y);
-		printf("x -> area_s: %lf,%lf\t;\tbox: %lf, %lf\n",
-		       area_s[0].x, area_s[1].x,
-		       box[0].x, box[1].x);
-		printf("y -> area_s: %lf,%lf\t;\tbox: %lf, %lf\n",
-		       area_s[0].y, area_s[1].y,
-		       box[0].y, box[1].y);
-	}
 
 	/*
 	 * project on 4 directions defined by area
