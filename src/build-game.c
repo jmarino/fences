@@ -19,7 +19,6 @@
 
 #include "gamedata.h"
 #include "game-solver.h"
-#include "build-loop.h"
 #include "brute-force.h"
 
 

@@ -29,10 +29,10 @@ fences_SOURCES = \
 	mesh-tools.c \
 	penrose-tile.c tiles.h \
 	square-tile.c \
-	build-loop.c build-loop.h \
+	build-loop.c \
 	game-solver.c game-solver.h \
 	brute-force.c brute-force.h \
-	build-game.c build-game.h \
+	build-game.c \
 	solve-combinations.c \
 	solve-tools.c \
 	gui.c gui.h \

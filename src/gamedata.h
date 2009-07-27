@@ -94,5 +94,11 @@ struct click_mesh* click_mesh_setup(const struct geometry *geo);
 gboolean is_area_inside_box(struct point *area, struct point *box);
 gboolean is_point_inside_area(struct point *point, struct point *area);
 
+/* build-game.c */
+struct game* build_new_game(struct geometry *geo, double difficulty);
+
+/* build-loop.c */
+void build_new_loop(struct geometry *geo, struct game *game, gboolean trace);
+
 
 #endif
