@@ -17,6 +17,7 @@
 #ifndef __INCLUDED_GEOMETRY_H__
 #define __INCLUDED_GEOMETRY_H__
 
+#include "avl-tree.h"
 
 /*
  * Holds coordinates of a point
@@ -97,6 +98,8 @@ struct geometry {
 	double board_size;		// size of board
 	double board_margin;		// size of margin around game area
 	double game_size;		// size of game area (board_size-2*board_margin)
+	struct avl_node *vertex_root;	// AVL tree to track vertices
+	struct avl_node *line_root;		// AVL tree to track lines
 };
 
 

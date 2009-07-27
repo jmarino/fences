@@ -203,7 +203,6 @@ geometry_connect_tiles(struct geometry *geo)
 	struct line *lin;
 	struct vertex *vertex;
 	struct tile *tile;
-	int direction;
 	int num_ele=0;
 	struct tile **ptr_t;
 	struct vertex **ptr_v;
@@ -249,7 +248,7 @@ geometry_connect_tiles(struct geometry *geo)
 	/* allocate space for vertices and lines in each tile */
 	tile= geo->tiles;
 	ptr_v= (struct vertex **)g_malloc0(num_ele*2*sizeof(void*));
-	ptr_s= ptr_v + num_ele;
+	ptr_s= (struct line **)(ptr_v + num_ele);
 	for(i=0; i < geo->ntiles; ++i) {
 		tile->vertex= ptr_v;
 		ptr_v+= tile->nvertex/2;
@@ -414,6 +413,55 @@ geometry_measure_tiles(struct geometry *geo)
 
 
 /*
+ * Compare the value using the double field of the union (see avl_value)
+ * returns 0 -> equal ; -1 -> test < value ; +1 -> test > value
+ */
+static int
+value_cmp_double(avl_value *test, avl_value *value)
+{
+	double diff;
+
+	diff= test->d - value->d;
+	if (fabs(diff) < DISTANCE_RESOLUTION_SQUARED) {
+		return 0;
+	}
+	if (diff < 0) return -1;
+	return 1;
+}
+
+
+/*
+ * Compare the value using the int field of the union (see avl_value)
+ * returns 0 -> equal ; -1 -> test < value ; +1 -> test > value
+ */
+static int
+value_cmp_int(avl_value *test, avl_value *value)
+{
+	if (test->i == value->i) return 0;
+	if (test->i < value->i) return -1;
+	return 1;
+}
+
+
+/*
+ * Test if a given point has the same position as a given vertex
+ * Returns: 0 -> equal (same position) ; !0 -> different
+ */
+static int
+vertex_cmp(struct point *point, struct vertex *vertex)
+{
+	double x;
+	double y;
+
+	x= point->x - vertex->pos.x;
+	y= point->y - vertex->pos.y;
+	if ( x*x + y*y < DISTANCE_RESOLUTION_SQUARED)
+		return 0;
+	return 1;
+}
+
+
+/*
  * Adds vertex to list in skeleton geometry.
  * Returns a pointer to already exisiting vertex if it is already in the list.
  * Returns a pointer to a newly added vertex otherwise.
@@ -421,20 +469,16 @@ geometry_measure_tiles(struct geometry *geo)
 static struct vertex*
 geometry_add_vertex(struct geometry *geo, struct point *point)
 {
-	int i;
 	struct vertex *vertex;
-	double x, y;
+	avl_value value;
+	struct avl_node *parent;
 
-	/* search backwards to optimize */
-	vertex= geo->vertex + (geo->nvertex - 1);
-	for(i=0; i < geo->nvertex; ++i) {
-		x= point->x - vertex->pos.x;
-		y= point->y - vertex->pos.y;
-		if ( x*x + y*y < DISTANCE_RESOLUTION_SQUARED)
-			break;
-		--vertex;
-	}
-	if (i == geo->nvertex) {		/* not found, create new */
+	/* find existing vertex that represents 'point' */
+	value.d= point->x*point->x + point->y*point->y;
+	vertex= avltree_find(geo->vertex_root, &value, point, value_cmp_double,
+						 AVLTREE_DATACMP(vertex_cmp), &parent);
+
+	if (vertex == NULL) {		/* not found, create new */
 		vertex= geo->vertex + geo->nvertex;
 		vertex->id= geo->nvertex;
 		vertex->pos.x= point->x;
@@ -444,9 +488,26 @@ geometry_add_vertex(struct geometry *geo, struct point *point)
 		vertex->ntiles= 0;
 		vertex->tiles= NULL;
 		++geo->nvertex;
+
+		/* insert new vertex in AVL tree */
+		geo->vertex_root= avltree_insert_node_at(parent, &value, vertex,
+												 value_cmp_double);
 	}
 
 	return vertex;
+}
+
+
+/*
+ * Test if a given line is equal
+ * Returns: 0 -> equal (same position) ; !0 -> different
+ */
+static int
+line_cmp(struct vertex *vertex, struct line *line)
+{
+	if (line->ends[0] == vertex || line->ends[1] == vertex)
+		return 0;
+	return 1;
 }
 
 
@@ -458,18 +519,22 @@ geometry_add_vertex(struct geometry *geo, struct point *point)
 static struct line*
 geometry_add_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
 {
-	int i;
 	struct line *lin;
+	avl_value value;
+	struct avl_node *parent;
 
-	/* search backwards to optimize */
-	lin= geo->lines + (geo->nlines - 1);
-	for(i=0; i < geo->nlines; ++i) {
-		if ((lin->ends[0] == v1 && lin->ends[1] == v2) ||
-			(lin->ends[1] == v1 && lin->ends[0] == v2))
-			break;
-		--lin;
+	/* find existing vertex that represents 'point' */
+	if (v1->id < v2->id) {
+		value.i= v1->id;
+		lin= avltree_find(geo->line_root, &value, v2, value_cmp_int,
+						  AVLTREE_DATACMP(line_cmp), &parent);
+	} else {
+		value.i= v2->id;
+		lin= avltree_find(geo->line_root, &value, v1, value_cmp_int,
+						  AVLTREE_DATACMP(line_cmp), &parent);
 	}
-	if (i == geo->nlines) {		/* not found, create new */
+
+	if (lin == NULL) {		/* not found, create new */
 		lin= geo->lines + geo->nlines;
 		lin->id= geo->nlines;
 		lin->ends[0]= v1;
@@ -484,6 +549,9 @@ geometry_add_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
 		lin->fx_status= 0;
 		lin->fx_frame= 0;
 		++geo->nlines;
+
+		/* insert new vertex in AVL tree */
+		geo->line_root= avltree_insert_node_at(parent, &value, lin,	value_cmp_int);
 	}
 
 	return lin;
@@ -504,7 +572,7 @@ void
 geometry_add_tile(struct geometry *geo, struct point *pts, int npts)
 {
 	struct tile *tile;
-	struct vertex *vertex;
+	struct vertex *vertex=NULL;
 	struct vertex *vertex_first;
 	struct vertex *vertex_prev=NULL;
 	struct line *lin;
@@ -534,7 +602,6 @@ geometry_add_tile(struct geometry *geo, struct point *pts, int npts)
 		g_assert(lin->ntiles < 2);	/* no more than 2 tiles touching line */
 		lin->tiles[lin->ntiles]= tile;
 		++lin->ntiles;
-
 		vertex_prev= vertex;
 	}
 
@@ -573,6 +640,15 @@ geometry_set_distance_resolution(double distance)
 void
 geometry_connect_skeleton(struct geometry *geo)
 {
+	/* first free AVL trees, since they're not needed anymore */
+	if (geo->vertex_root) {
+		avltree_destroy(geo->vertex_root);
+		geo->vertex_root= NULL;
+	}
+	if (geo->line_root) {
+		avltree_destroy(geo->line_root);
+		geo->line_root= NULL;
+	}
 	printf("ntiles: %d\n", geo->ntiles);
 	printf("nvertex: %d\n", geo->nvertex);
 	printf("nlines: %d\n", geo->nlines);
@@ -630,6 +706,8 @@ geometry_create_new(int ntiles, int nvertex, int nlines, int max_numlines)
 	geo->board_size= 0.;
 	geo->board_margin= 0.;
 	geo->game_size= 0.;
+	geo->vertex_root= NULL;
+	geo->line_root= NULL;
 
 	return geo;
 }
@@ -641,8 +719,6 @@ geometry_create_new(int ntiles, int nvertex, int nlines, int max_numlines)
 void
 geometry_destroy(struct geometry *geo)
 {
-	int i;
-
 	g_free(geo->tiles[0].vertex);
 	g_free(geo->vertex[0].lines);
 	g_free(geo->vertex[0].tiles);
@@ -653,5 +729,7 @@ geometry_destroy(struct geometry *geo)
 	g_free(geo->lines);
 	g_free(geo->numbers);
 	g_free(geo->numpos);
+	if (geo->vertex_root) avltree_destroy(geo->vertex_root);
+	if (geo->line_root) avltree_destroy(geo->line_root);
 	g_free(geo);
 }

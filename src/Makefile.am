@@ -23,6 +23,7 @@ fences_SOURCES = \
 	callbacks.c callbacks.h \
 	draw.c draw.h \
 	geometry.c geometry.h \
+	avl-tree.c avl-tree.h \
 	gamedata.c gamedata.h \
 	click-mesh.c \
 	mesh-tools.c \
