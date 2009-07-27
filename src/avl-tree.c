@@ -61,44 +61,27 @@ avltree_calculate_height(struct avl_node *node)
 
 
 /*
- * Insert node in tree.
- * Bottom insertion and rebalance as we backtrack up the tree.
+ * Insert node in tree under node 'parent'.
+ *   parent: insert new node under 'parent', creates new tree if NULL
  *   value_cmp: function that compares avl_value's (returns -1,0,+1)
  */
 struct avl_node*
-avltree_insert_node(struct avl_node *root, avl_value *value, void *data,
-					AvltreeValueCmp value_cmp)
+avltree_insert_node_at(struct avl_node *parent, avl_value *value, void *data,
+					   AvltreeValueCmp value_cmp)
 {
-	struct avl_node *node=root;
-	struct avl_node *parent=NULL;
+	struct avl_node *node;
 	struct avl_node *pivot;
-	int dir;		// 0 left, 1 right
 	int lh;
 	int rh;
 	int diff;
 
-	/* traverse tree to find insertion point */
-	for( ; ; ) {
-		if (node == NULL) {
-			node= avltree_create_node(value, data);
-			break;
-		}
-		parent= node;
-		if (value_cmp(value, &node->value) < 0) {	/* go on left */
-			node= node->left;
-			dir= 0;
-		} else {								/* go on right */
-			node= node->right;
-			dir= 1;
-		}
-	}
-	/* case of first element */
-	if (parent == NULL) {
-		return node;
-	}
+	/* create new node */
+	node= avltree_create_node(value, data);
+	if (parent == NULL) return node;	/* first element of tree */
+
 	/* connect new node */
 	node->parent= parent;
-	if (dir == 0) parent->left= node;
+	if (value_cmp(value, &parent->value) < 0) parent->left= node;
 	else parent->right= node;
 
 	/* unwind up the tree and fix any height balance */
@@ -165,6 +148,30 @@ avltree_insert_node(struct avl_node *root, avl_value *value, void *data,
 
 
 /*
+ * Insert node in tree.
+ * Bottom insertion and rebalance as we backtrack up the tree.
+ *   value_cmp: function that compares avl_value's (returns -1,0,+1)
+ */
+struct avl_node*
+avltree_insert_node(struct avl_node *root, avl_value *value, void *data,
+					AvltreeValueCmp value_cmp)
+{
+	struct avl_node *parent=NULL;
+
+	/* traverse tree to find insertion point */
+	while(root != NULL) {
+		parent= root;
+		if (value_cmp(value, &root->value) < 0) {	/* go on left */
+			root= root->left;
+		} else {								/* go on right */
+			root= root->right;
+		}
+	}
+	return avltree_insert_node_at(parent, value, data, value_cmp);
+}
+
+
+/*
  * Destroy AVL tree
  */
 void
@@ -197,14 +204,17 @@ avltree_destroy(struct avl_node *root)
  * Find element in tree
  *  value_cmp: function that compares avl_value's (returns -1,0,+1)
  *  data_cmp: compares the data to make sure they're equal
+ *  parent: returns pointer to parent of last travelled node, useful for insert_at
  */
 void*
 avltree_find(struct avl_node *root, avl_value *value, void *data,
-			 AvltreeValueCmp value_cmp, AvltreeDataCmp data_cmp)
+			 AvltreeValueCmp value_cmp, AvltreeDataCmp data_cmp, struct avl_node **parent)
 {
 	int cmp;
 
+	if (parent) *parent= NULL;
 	while(root != NULL) {
+		if (parent) *parent= root;
 		cmp= value_cmp(value, &root->value);
 		if (cmp == 0) { 			/* found? */
 			if (data_cmp(data, root->data) == 0) {	/* FOUND! */

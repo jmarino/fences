@@ -51,10 +51,13 @@ typedef int (*AvltreeDataCmp)(void*,void*);
 
 
 /* avl-tree.c */
+struct avl_node* avltree_insert_node_at(struct avl_node *parent, avl_value *value,
+										void *data, AvltreeValueCmp value_cmp);
 struct avl_node* avltree_insert_node(struct avl_node *root, avl_value *value,
 									 void *data, AvltreeValueCmp value_cmp);
 void avltree_destroy(struct avl_node *root);
 void* avltree_find(struct avl_node *root, avl_value *value, void *data,
-				   AvltreeValueCmp value_cmp, AvltreeDataCmp data_cmp);
+				   AvltreeValueCmp value_cmp, AvltreeDataCmp data_cmp,
+				   struct avl_node **parent);
 
 #endif

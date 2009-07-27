@@ -471,11 +471,12 @@ geometry_add_vertex(struct geometry *geo, struct point *point)
 {
 	struct vertex *vertex;
 	avl_value value;
+	struct avl_node *parent;
 
 	/* find existing vertex that represents 'point' */
 	value.d= point->x*point->x + point->y*point->y;
 	vertex= avltree_find(geo->vertex_root, &value, point, value_cmp_double,
-						 AVLTREE_DATACMP(vertex_cmp));
+						 AVLTREE_DATACMP(vertex_cmp), &parent);
 
 	if (vertex == NULL) {		/* not found, create new */
 		vertex= geo->vertex + geo->nvertex;
@@ -489,8 +490,8 @@ geometry_add_vertex(struct geometry *geo, struct point *point)
 		++geo->nvertex;
 
 		/* insert new vertex in AVL tree */
-		geo->vertex_root= avltree_insert_node(geo->vertex_root, &value, vertex,
-											  value_cmp_double);
+		geo->vertex_root= avltree_insert_node_at(parent, &value, vertex,
+												 value_cmp_double);
 	}
 
 	return vertex;
@@ -518,19 +519,19 @@ line_cmp(struct vertex *vertex, struct line *line)
 static struct line*
 geometry_add_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
 {
-	//int i;
 	struct line *lin;
 	avl_value value;
+	struct avl_node *parent;
 
 	/* find existing vertex that represents 'point' */
 	if (v1->id < v2->id) {
 		value.i= v1->id;
 		lin= avltree_find(geo->line_root, &value, v2, value_cmp_int,
-						  AVLTREE_DATACMP(line_cmp));
+						  AVLTREE_DATACMP(line_cmp), &parent);
 	} else {
 		value.i= v2->id;
 		lin= avltree_find(geo->line_root, &value, v1, value_cmp_int,
-						  AVLTREE_DATACMP(line_cmp));
+						  AVLTREE_DATACMP(line_cmp), &parent);
 	}
 
 	if (lin == NULL) {		/* not found, create new */
@@ -550,8 +551,7 @@ geometry_add_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
 		++geo->nlines;
 
 		/* insert new vertex in AVL tree */
-		geo->line_root= avltree_insert_node(geo->line_root, &value, lin,
-											value_cmp_int);
+		geo->line_root= avltree_insert_node_at(parent, &value, lin,	value_cmp_int);
 	}
 
 	return lin;
