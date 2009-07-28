@@ -26,6 +26,7 @@ enum {
 	TILE_TYPE_QBERT,
 	TILE_TYPE_HEX,
 	TILE_TYPE_SNUB,
+	TILE_TYPE_CAIRO,
 	NUMBER_TILE_TYPE
 };
 
@@ -59,5 +60,9 @@ struct geometry* build_hex_tile_geometry(const struct gameinfo *info);
 
 /* snub-tile.c */
 struct geometry* build_snub_tile_geometry(const struct gameinfo *info);
+
+/* cairo-tile.c */
+struct geometry* build_cairo_tile_geometry(const struct gameinfo *info);
+
 
 #endif

@@ -289,6 +289,9 @@ build_board_geometry(struct gameinfo *gameinfo)
 	case TILE_TYPE_SNUB:
 		geo= build_snub_tile_geometry(gameinfo);
 		break;
+	case TILE_TYPE_CAIRO:
+		geo= build_cairo_tile_geometry(gameinfo);
+		break;
 	default:
 		g_message("(build_board_geometry) unknown tile type: %d", gameinfo->type);
 	};
