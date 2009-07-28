@@ -268,7 +268,7 @@ gamedata_clear_game(struct board *board)
 struct geometry *
 build_board_geometry(struct gameinfo *gameinfo)
 {
-	struct geometry *geo;
+	struct geometry *geo=NULL;
 
 	switch(gameinfo->type){
 	case TILE_TYPE_SQUARE:

@@ -203,9 +203,10 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 	/* define sizes of drawing bits */
 	qbert_calculate_sizes(geo, dimy);
 
-
+	return geo;
 	/* DEBUG */
 	/* grab a tile and print everything about it */
+	/*
 	struct tile *tile=geo->tiles + 5;
 	printf("Tile %d:\n", tile->id);
 	printf("  nsides: %d, nvertex: %d\n", tile->nsides, tile->nvertex);
@@ -222,6 +223,6 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 	for(i=0; i < tile->nsides; ++i) printf("%d  ", tile->sides[i]->id);
 	printf("\n  Vertex: ");
 	for(i=0; i < tile->nvertex; ++i) printf("%d  ", tile->vertex[i]->id);
-	printf("\n");
-	return geo;
+	printf("\n"); 
+	return geo; */
 }

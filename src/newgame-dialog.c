@@ -461,8 +461,6 @@ build_difficulty_settings(struct dialog_data *dialog_data)
 static void
 extract_game_info(const struct dialog_data *dialog_data, struct gameinfo *info)
 {
-	int i;
-
 	info->type= index2tiletype[dialog_data->tile_index];
 	info->size= size_widget_get_value(dialog_data);
 	info->diff_index= dialog_data->diff_index;

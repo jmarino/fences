@@ -20,6 +20,7 @@
 #include "geometry.h"
 #include "tiles.h"
 
+#include <stdio.h>
 
 /* prefered board dimensions for penrose tile */
 #define HEX_BOARD_SIZE	100.
@@ -130,9 +131,9 @@ build_hex_tile_geometry(const struct gameinfo *info)
 		}
 	}
 
-	printf("ntiles: %d (%d) %d\n", geo->ntiles, ntiles);
-	printf("nvertex: %d (%d) %d\n", geo->nvertex, nvertex);
-	printf("nlines: %d (%d) %d\n", geo->nlines, nlines);
+	printf("ntiles: %d (%d)\n", geo->ntiles, ntiles);
+	printf("nvertex: %d (%d)\n", geo->nvertex, nvertex);
+	printf("nlines: %d (%d)\n", geo->nlines, nlines);
 
 	/* make sure we didn't underestimate max numbers */
 	g_assert(geo->ntiles <= ntiles);

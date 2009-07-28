@@ -351,7 +351,6 @@ static void
 initialize_loop(struct loop *loop)
 {
 	struct tile *tile;
-	struct vertex *vertex;
 	struct geometry *geo=loop->geo;
 	int i, j;
 	int nzeros;

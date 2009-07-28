@@ -21,6 +21,7 @@
 #include "game-solver.h"
 #include "brute-force.h"
 
+#include <stdio.h>
 
 #define TILE_HIDDEN		0
 #define TILE_VISIBLE		1
