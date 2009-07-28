@@ -201,6 +201,7 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 void
 solve_free_solution_data(struct solution *sol)
 {
+	if (sol == NULL) return;
 	g_free(sol->states);
 	g_free(sol->lin_mask);
 	g_free(sol->tile_handled);
