@@ -231,6 +231,7 @@ initialize_board(void)
 	board.drawarea= NULL;
 	board.window= NULL;
 	board.game_state= GAMESTATE_NOGAME;
+	board.sol= NULL;
 
 	/* build geometry data from gameinfo */
 	board.geo= build_board_geometry(&board.gameinfo);
@@ -309,6 +310,8 @@ gamedata_destroy_current_game(struct board *board)
 	board->geo= NULL;
 	free_gamedata(board->game);
 	board->game= NULL;
+	solve_free_solution_data(board->sol);
+	board->sol= NULL;
 	click_mesh_destroy(board->click_mesh);
 	board->click_mesh= NULL;
 	history_destroy(board->history);
