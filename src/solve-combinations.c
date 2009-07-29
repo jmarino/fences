@@ -214,16 +214,11 @@ test_tile_combinations(struct solution *sol, struct solution *sol_bak,
 	gboolean valid=TRUE;
 
 	tile= sol->geo->tiles + tile_num;
-	/* count lines ON and OFF in tile */
-	for(i=0; i < tile->nsides; ++i) {
-		if (STATE(tile->sides[i]) == LINE_OFF)
-			++nlines_off;
-		else if (STATE(tile->sides[i]) == LINE_ON)
-			++nlines_todo;
-	}
 
 	/* get number of possible combinations */
-	nlines_todo= sol->numbers[tile_num] - nlines_todo;
+	nlines_off= tile->nsides - (sol->tile_count[tile_num].on +
+								sol->tile_count[tile_num].cross);
+	nlines_todo= sol->numbers[tile_num] - sol->tile_count[tile_num].on;
 	ncomb= number_combinations(nlines_off, nlines_todo);
 
 	/* try every different combination */

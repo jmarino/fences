@@ -161,8 +161,6 @@ void
 solve_trivial_tiles(struct solution *sol)
 {
 	int i, j;
-	int lines_on;
-	int lines_crossed;
 	struct tile *tile;
 	struct geometry *geo=sol->geo;
 
@@ -172,23 +170,14 @@ solve_trivial_tiles(struct solution *sol)
 		if (sol->tile_done[i])
 			continue;
 
-		/* count lines ON and CROSSED around tile */
 		tile= geo->tiles + i;
-		lines_on= 0;
-		lines_crossed= 0;
-		for(j=0; j < tile->nsides; ++j) {
-			if (STATE(tile->sides[j]) == LINE_CROSSED)
-				++lines_crossed;
-			else if (STATE(tile->sides[j]) == LINE_ON)
-				++lines_on;
-		}
 		/* tile has all lines either ON or CROSSED -> handled */
-		if (lines_on + lines_crossed == tile->nsides) {
+		if (sol->tile_count[i].on + sol->tile_count[i].cross == tile->nsides) {
 			sol->tile_done[i]= TRUE;
 			continue;
 		}
 		/* enough lines crossed? -> set ON the OFF ones */
-		if ( tile->nsides - lines_crossed == NUMBER(tile) ) {
+		if ( tile->nsides - sol->tile_count[i].cross == NUMBER(tile) ) {
 			sol->tile_done[i]= TRUE;
 			sol->tile_changes[sol->ntile_changes]= i;
 			++sol->ntile_changes;
@@ -211,30 +200,30 @@ void
 solve_trivial_vertex(struct solution *sol)
 {
 	int i, j;
-	int lines_on;
 	int lines_off;
-	int pos=0;
 	struct vertex *vertex;
 	struct geometry *geo=sol->geo;
 
 	sol->nchanges= sol->ntile_changes= 0;
 	for(i=0; i < geo->nvertex; ++i) {
-		if (sol->vertex_done[i]) continue;
+		/* unfinished vertices with just one incoming ON line */
+		if (sol->vertex_done[i] || sol->vertex_count[i].on != 1) continue;
 		vertex= geo->vertex + i;
-		lines_on= lines_off= 0;
-		/* count lines on and off */
+		lines_off= vertex->nlines -
+			(sol->vertex_count[i].on + sol->vertex_count[i].cross);
+
+		if (lines_off != 1) continue;
+
+		/* here we have: vertex with one incoming and only one available exit */
+		/* find OFF line and set it ON */
 		for(j=0; j < vertex->nlines; ++j) {
-			if (STATE(vertex->lines[j]) == LINE_ON)
-				++lines_on;
-			else if (STATE(vertex->lines[j]) == LINE_OFF) {
-				pos= j;
-				++lines_off;
+			if (STATE(vertex->lines[j]) == LINE_OFF) {
+				solve_set_line_on(sol, vertex->lines[j]);
+				sol->vertex_done[i]= TRUE;
+				break;
 			}
 		}
-		if (lines_on == 1 && lines_off == 1) {
-			/* vertex with one incoming and only one exit */
-			solve_set_line_on(sol, vertex->lines[pos]);
-		}
+
 		/* only allow one trivial vertex to be set at a time */
 		if (sol->nchanges > 0) break;
 	}
@@ -357,7 +346,6 @@ solve_maxnumber_incoming_line(struct solution *sol)
 	int i, j, k;
 	struct tile *tile;
 	struct vertex *vertex;
-	int nlines_on;
 	struct line *lin=NULL;
 	struct geometry *geo=sol->geo;
 	int cache;
@@ -373,15 +361,17 @@ solve_maxnumber_incoming_line(struct solution *sol)
 		/* inspect vertices of tile */
 		for(j=0; j < tile->nvertex; ++j) {
 			vertex= tile->vertex[j];
-			/* check that vertex has one ON line */
-			nlines_on= 0;
+			/* check that vertex has exactly one ON line */
+			if (sol->vertex_count[vertex->id].on != 1) continue;
+
+			/* find ON line */
 			for(k=0; k < vertex->nlines; ++k) {
 				if (STATE(vertex->lines[k]) == LINE_ON) {
 					lin= vertex->lines[k];
-					++nlines_on;
+					break;
 				}
 			}
-			if (nlines_on != 1) continue;
+			g_assert(k < vertex->nlines);
 			/* make sure ON line is not part of tile */
 			if (line_touches_tile(lin, tile)) continue;
 
@@ -545,7 +535,6 @@ solve_tiles_net_1(struct solution *sol)
 {
 	int i, j, k;
 	struct tile *tile;
-	int nlines_on;
 	int num_exits;
 	struct line *lin=NULL;
 	struct vertex *vertex;
@@ -560,36 +549,33 @@ solve_tiles_net_1(struct solution *sol)
 		if (sol->tile_done[i] || sol->numbers[i] == -1)
 			continue;
 
-		/* count lines ON around tile */
-		nlines_on= 0;
-		for(j=0; j < tile->nsides; ++j) {
-			if (STATE(tile->sides[j]) == LINE_ON)
-				++nlines_on;
-		}
-		if (NUMBER(tile) - nlines_on != 1) continue;
+		/* we're looking for tiles with just one line left to be set */
+		if (NUMBER(tile) - sol->tile_count[i].on != 1) continue;
 
 		cache= sol->nchanges;
 		/* inspect vertices of tile */
 		for(j=0; j < tile->nvertex; ++j) {
 			vertex= tile->vertex[j];
-			/* check we have one incoming line ON */
-			nlines_on= 0;
+			/* check we have just one line ON */
+			if (sol->vertex_count[vertex->id].on != 1) continue;
+
+			/* there must be exactly 2 OFF lines */
+			num_exits= vertex->nlines -	(sol->vertex_count[vertex->id].on +
+										 sol->vertex_count[vertex->id].cross);
+			if (num_exits != 2) continue;
+
+			/* final check: the 1 ON line must not be a side of the tile,
+			   and the 2 OFF lines must be sides of the tile */
 			num_exits= 0;
 			for(k=0; k < vertex->nlines; ++k) {
 				if (STATE(vertex->lines[k]) == LINE_ON) {
 					lin= vertex->lines[k];
-					++nlines_on;
-					continue;
-				}
-				/* OFF line not on tile */
-				if (STATE(vertex->lines[k]) == LINE_OFF &&
-				    line_touches_tile(vertex->lines[k], tile) == FALSE) {
+				} else if (STATE(vertex->lines[k]) == LINE_OFF &&
+				    line_touches_tile(vertex->lines[k], tile)) {
 					++num_exits;
 				}
 			}
-			if (nlines_on != 1 || line_touches_tile(lin, tile) == TRUE ||
-			    num_exits > 0)
-				continue;
+			if (num_exits != 2 || line_touches_tile(lin, tile)) continue;
 
 			/* cross all lines away from this vertex */
 			for(k=0; k < tile->nsides; ++k) {
@@ -620,9 +606,7 @@ void
 solve_cross_lines(struct solution *sol)
 {
 	int i, j;
-	int num_on;
 	int num_off;
-	int pos=0;
 	struct vertex *vertex;
 	struct tile *tile;
 	struct geometry *geo=sol->geo;
@@ -635,20 +619,15 @@ solve_cross_lines(struct solution *sol)
 		/* only unhandled tiles */
 		if (sol->tile_done[i]) continue;
 
-		/* count lines ON around tile */
 		tile= geo->tiles + i;
-		num_on= 0;
-		for(j=0; j < tile->nsides; ++j) {
-			if (STATE(tile->sides[j]) == LINE_ON)
-				++num_on;
-		}
-		if (sol->numbers[i] == -1) { // unnumbered tiles
-			/* tile has less than nsides-1 ON, ignore */
-			if (num_on != tile->nsides - 1) continue;
+		/* not-numbered tiles -> we want nsides - 1 ON
+		   numbered tiles -> we want NUMBER lines ON */
+		if (sol->numbers[i] == -1) {
+			if (sol->tile_count[i].on != tile->nsides - 1) continue;
 		} else {	// numbered tiles
-			/* tile not finished, ignore */
-			if (num_on != NUMBER(tile)) continue;
+			if (sol->tile_count[i].on != NUMBER(tile)) continue;
 		}
+
 		cache= sol->nchanges;
 		/* tile is complete, cross any OFF left */
 		for(j=0; j < tile->nsides; ++j) {
@@ -669,24 +648,17 @@ solve_cross_lines(struct solution *sol)
 		for(i=0; i < geo->nvertex; ++i) {
 			if (sol->vertex_done[i]) continue;
 			vertex= geo->vertex + i;
-			num_on= num_off= 0;
-			/* count lines on and off */
-			for(j=0; j < vertex->nlines; ++j) {
-				if (STATE(vertex->lines[j]) == LINE_ON)
-					++num_on;
-				else if (STATE(vertex->lines[j]) == LINE_OFF) {
-					pos= j;		/* keep track of last OFF line */
-					++num_off;
-				}
-			}
-			/* check count */
-			if (num_on == 2) {	/* vertex busy */
-				for(j=0; j < vertex->nlines; ++j) {
+
+			num_off= vertex->nlines - (sol->vertex_count[i].on +
+									   sol->vertex_count[i].cross);
+
+			/* check: vertex has 2 lines ON -> vertex is done
+			   vertex has 0 lines ON and just 1 OFF -> no exit */
+			if (sol->vertex_count[i].on == 2 ||
+				(sol->vertex_count[i].on == 0 && num_off == 1)) {
+				/* cross any line left OFF */
+				for(j=0; j < vertex->nlines; ++j)
 					solve_set_line_cross(sol, vertex->lines[j]);
-				}
-				sol->vertex_done[i]= TRUE;
-			} else if (num_on == 0 && num_off == 1) { /* no exit */
-				solve_set_line_cross(sol, vertex->lines[pos]);
 				sol->vertex_done[i]= TRUE;
 			}
 		}
@@ -710,8 +682,7 @@ bottleneck_is_final_line(struct solution *sol, struct line *lin)
 	int num=0;
 	int num_unhandled=0;
 	int id;
-	int i, j;
-	int nlines_on;
+	int i;
 
 	/* check line touches at least 1 numbered and unhandled tile */
 	for(i=0; i < lin->ntiles; ++i) {
@@ -724,11 +695,9 @@ bottleneck_is_final_line(struct solution *sol, struct line *lin)
 	for(i=0; i < lin->ntiles; ++i) {
 		tile= lin->tiles[i];
 		if (sol->numbers[tile->id] == -1 || sol->tile_done[tile->id]) continue;
-		nlines_on= 0;
-		for(j=0; j < tile->nsides; ++j)
-			if (sol->states[ tile->sides[j]->id ] == LINE_ON) ++nlines_on;
+
 		/* would line handle tile? */
-		if (sol->numbers[tile->id] != nlines_on + 1) return FALSE;
+		if (NUMBER(tile) != sol->tile_count[tile->id].on + 1) return FALSE;
 	}
 
 	/* finally check if unhandled tiles are the only ones left */
