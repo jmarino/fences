@@ -62,12 +62,9 @@ find_shared_side(struct tile *tile1, struct tile *tile2, int *i, int *j)
 static inline gboolean
 line_touches_tile(struct line *lin, struct tile *tile)
 {
-	if (lin->ntiles == 1) {
-		if (lin->tiles[0] == tile) return TRUE;
-	} else {
-		if (lin->tiles[0] == tile ||
-		    lin->tiles[1] == tile) return TRUE;
-	}
+	if (lin->tiles[0] == tile ||
+		(lin->ntiles == 2 && lin->tiles[1] == tile)) return TRUE;
+
 	return FALSE;
 }
 
