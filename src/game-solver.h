@@ -50,6 +50,7 @@ struct solution {
 	int *states;		// line states (so we don't touch game->states)
 	int *numbers;		// points to game->numbers
 	gboolean *tile_done;	// has tile been handled?
+	gboolean *vertex_done;	// has vertex been handled?
 	int *lin_mask;
 	int nchanges;			// number of line changes in last solution step
 	int *changes;			// ID of lines changed in last solution step
