@@ -29,6 +29,11 @@
  * Find solution
  */
 
+/*
+ * NOTE: Note about tile_done
+ * Both tiles with and without a number can be marked as 'undone'.
+ * So, tile_done= FALSE doesn't guarantee a number tile.
+ */
 
 
 
@@ -688,7 +693,7 @@ solve_cross_lines(struct solution *sol)
 				if (STATE(vertex->lines[j]) == LINE_ON)
 					++num_on;
 				else if (STATE(vertex->lines[j]) == LINE_OFF) {
-					pos= j;
+					pos= j;		/* keep track of last OFF line */
 					++num_off;
 				}
 			}
