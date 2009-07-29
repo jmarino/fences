@@ -20,17 +20,8 @@
 
 /*
  * Convenience macros
- * They assume that 'struct solution *sol' and 'int count' is defined
+ * They assume that 'struct solution *sol' is defined
  */
-#define SET_LINE(lin)\
-	{sol->states[(lin)->id]= LINE_ON;			\
-		sol->changes[sol->nchanges]= (lin)->id;	\
-		++sol->nchanges;}
-#define CROSS_LINE(lin)\
-	{sol->states[(lin)->id]= LINE_CROSSED;		\
-		sol->changes[sol->nchanges]= (lin)->id;	\
-		++sol->nchanges;}
-//#define UNSET_LINE(lin)		{sol->states[(lin)->id]= LINE_OFF; ++count;}
 #define STATE(lin)			sol->states[(lin)->id]
 #define NUMBER(tile)		sol->numbers[(tile)->id]
 #define MAX_NUMBER(tile)	sol->numbers[(tile)->id] == ((tile)->nsides - 1)
@@ -75,6 +66,8 @@ void solve_free_solution_data(struct solution *sol);
 void solve_copy_solution(struct solution *dest, struct solution *src);
 struct solution *solve_duplicate_solution(struct solution *src);
 void solve_reset_solution(struct solution *sol);
+inline void solve_set_line_on(struct solution *sol, struct line *lin);
+inline void solve_set_line_cross(struct solution *sol, struct line *lin);
 
 /* solve-combinations.c */
 int solve_try_combinations(struct solution *sol, int level);

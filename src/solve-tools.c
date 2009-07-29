@@ -298,3 +298,33 @@ solve_reset_solution(struct solution *sol)
 	sol->difficulty= 0.0;
 	sol->last_level= -1;
 }
+
+
+/*
+ * Set line ON
+ */
+inline void
+solve_set_line_on(struct solution *sol, struct line *lin)
+{
+	int id=lin->id;
+
+	if (sol->states[id] != LINE_OFF) return;
+	sol->states[id]= LINE_ON;
+	sol->changes[sol->nchanges]= id;
+	++sol->nchanges;
+}
+
+
+/*
+ * CROSS line out
+ */
+inline void
+solve_set_line_cross(struct solution *sol, struct line *lin)
+{
+	int id=lin->id;
+
+	if (sol->states[id] != LINE_OFF) return;
+	sol->states[id]= LINE_CROSSED;
+	sol->changes[sol->nchanges]= id;
+	++sol->nchanges;
+}

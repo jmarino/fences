@@ -266,9 +266,9 @@ test_tile_combinations(struct solution *sol, struct solution *sol_bak,
 	while(lines_mask != 0 || bad_lines != 0) {
 		/* set lines in mask */
 		if (lines_mask&1) {
-			SET_LINE(tile->sides[i]);
+			solve_set_line_on(sol, tile->sides[i]);
 		} else if (bad_lines&1)
-			CROSS_LINE(tile->sides[i]);
+			solve_set_line_cross(sol, tile->sides[i]);
 		lines_mask>>= 1;
 		bad_lines>>= 1;
 		++i;

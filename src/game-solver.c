@@ -147,8 +147,7 @@ solve_zero_tiles(struct solution *sol)
 		++sol->ntile_changes;
 		tile= geo->tiles + i;
 		for(j=0; j < tile->nsides; ++j)
-			if (STATE(tile->sides[j]) == LINE_OFF)
-				CROSS_LINE(tile->sides[j]);
+			solve_set_line_cross(sol, tile->sides[j]);
 	}
 }
 
@@ -194,8 +193,7 @@ solve_trivial_tiles(struct solution *sol)
 			sol->tile_changes[sol->ntile_changes]= i;
 			++sol->ntile_changes;
 			for(j=0; j < tile->nsides; ++j) {
-				if (STATE(tile->sides[j]) == LINE_OFF)
-					SET_LINE(tile->sides[j]);
+				solve_set_line_on(sol, tile->sides[j]);
 			}
 		}
 		/* only allow one trivial tile to be set at a time */
@@ -235,7 +233,7 @@ solve_trivial_vertex(struct solution *sol)
 		}
 		if (lines_on == 1 && lines_off == 1) {
 			/* vertex with one incoming and only one exit */
-			SET_LINE(vertex->lines[pos]);
+			solve_set_line_on(sol, vertex->lines[pos]);
 		}
 		/* only allow one trivial vertex to be set at a time */
 		if (sol->nchanges > 0) break;
@@ -275,10 +273,8 @@ solve_maxnumber_tiles(struct solution *sol)
 			cache= sol->nchanges;
 			/* vertex is in a corner -> enable lines touching it */
 			if (vertex->nlines == 2) {
-				if (STATE(vertex->lines[0]) != LINE_ON)
-					SET_LINE(vertex->lines[0]);
-				if (STATE(vertex->lines[1]) != LINE_ON)
-					SET_LINE(vertex->lines[1]);
+				solve_set_line_on(sol, vertex->lines[0]);
+				solve_set_line_on(sol, vertex->lines[1]);
 				/* any changes? -> record tile */
 				if (sol->nchanges > cache) {
 					sol->tile_changes[sol->ntile_changes]= i;
@@ -300,26 +296,22 @@ solve_maxnumber_tiles(struct solution *sol)
 			/* find if the two MAX tiles share a line */
 			lin= find_shared_side(tile, tile2, &pos1, &pos2);
 			if (lin != NULL) {	// shared side: side by side tiles
-				if (STATE(lin) != LINE_ON)
-					SET_LINE(lin);
+				solve_set_line_on(sol, lin);
 				/* set all lines around tiles except the ones touching lin */
 				for(k=2; k < tile->nsides - 1; ++k) {
 					k2= (pos1 + k) % tile->nsides;
-					if (STATE(tile->sides[k2]) != LINE_ON)
-						SET_LINE(tile->sides[k2]);
+					solve_set_line_on(sol, tile->sides[k2]);
 				}
 				for(k=2; k < tile2->nsides - 1; ++k) {
 					k2= (pos2 + k) % tile2->nsides;
-					if (STATE(tile2->sides[k2]) != LINE_ON)
-						SET_LINE(tile2->sides[k2]);
+					solve_set_line_on(sol, tile2->sides[k2]);
 				}
 				/* cross any lines from vertex that are not part of tile or tile2 */
 				for(k=0; k < vertex->nlines; ++k) {
 					if (line_touches_tile(vertex->lines[k], tile) ||
 					    line_touches_tile(vertex->lines[k], tile2))
 						continue;
-					if (STATE(vertex->lines[k]) != LINE_CROSSED)
-						CROSS_LINE(vertex->lines[k]);
+					solve_set_line_cross(sol, vertex->lines[k]);
 
 				}
 				/* lines changed -> record tile */
@@ -332,14 +324,12 @@ solve_maxnumber_tiles(struct solution *sol)
 				for(k=0; k < tile->nsides; ++k) {
 					if (tile->sides[k]->ends[0] == vertex ||
 					    tile->sides[k]->ends[1] == vertex) continue;
-					if (STATE(tile->sides[k]) != LINE_ON)
-						SET_LINE(tile->sides[k]);
+					solve_set_line_on(sol, tile->sides[k]);
 				}
 				for(k=0; k < tile2->nsides; ++k) {
 					if (tile2->sides[k]->ends[0] == vertex ||
 					    tile2->sides[k]->ends[1] == vertex) continue;
-					if (STATE(tile2->sides[k]) != LINE_ON)
-						SET_LINE(tile2->sides[k]);
+					solve_set_line_on(sol, tile2->sides[k]);
 				}
 				/* lines changed -> record tile */
 				if (sol->nchanges > cache) {
@@ -399,9 +389,8 @@ solve_maxnumber_incoming_line(struct solution *sol)
 			/* cross lines going out from vertex that don't
 			 * touch tile */
 			for(k=0; k < vertex->nlines; ++k) {
-				if (STATE(vertex->lines[k]) == LINE_OFF &&
-				    !line_touches_tile(vertex->lines[k], tile)) {
-					CROSS_LINE(vertex->lines[k]);
+				if ( !line_touches_tile(vertex->lines[k], tile) ) {
+					solve_set_line_cross(sol, vertex->lines[k]);
 				}
 			}
 
@@ -409,8 +398,7 @@ solve_maxnumber_incoming_line(struct solution *sol)
 			for(k=0; k < tile->nsides; ++k) {
 				if (tile->sides[k]->ends[0] == vertex ||
 				    tile->sides[k]->ends[1] == vertex) continue;
-				if (STATE(tile->sides[k]) != LINE_ON)
-					SET_LINE(tile->sides[k]);
+				solve_set_line_on(sol, tile->sides[k]);
 			}
 			/* lines changed? record tile */
 			if (sol->nchanges > cache) {
@@ -487,7 +475,7 @@ solve_maxnumber_exit_line(struct solution *sol)
 		if (j < vertex->nlines || nlines_off != 1) continue;
 
 		/* only one line OFF -> set it ON */
-		SET_LINE(vertex->lines[pos]);
+		solve_set_line_on(sol, vertex->lines[pos]);
 		sol->tile_changes[sol->ntile_changes]= i;
 		++sol->ntile_changes;
 		break;
@@ -532,11 +520,9 @@ solve_corner(struct solution *sol)
 				if (line_touches_tile(vertex->lines[k], tile) == FALSE)
 					continue;
 				if (sol->numbers[i] == 1) {
-					if (STATE(vertex->lines[k]) != LINE_CROSSED)
-						CROSS_LINE(vertex->lines[k]);
+					solve_set_line_cross(sol, vertex->lines[k]);
 				} else {
-					if (STATE(vertex->lines[k]) != LINE_ON)
-						SET_LINE(vertex->lines[k]);
+					solve_set_line_on(sol, vertex->lines[k]);
 				}
 			}
 		}
@@ -609,8 +595,7 @@ solve_tiles_net_1(struct solution *sol)
 			for(k=0; k < tile->nsides; ++k) {
 				if (tile->sides[k]->ends[0] == vertex ||
 				    tile->sides[k]->ends[1] == vertex) continue;
-				if (STATE(tile->sides[k]) == LINE_OFF)
-					CROSS_LINE(tile->sides[k]);
+				solve_set_line_cross(sol, tile->sides[k]);
 			}
 		}
 		/* any line changes? record tile */
@@ -667,8 +652,7 @@ solve_cross_lines(struct solution *sol)
 		cache= sol->nchanges;
 		/* tile is complete, cross any OFF left */
 		for(j=0; j < tile->nsides; ++j) {
-			if (STATE(tile->sides[j]) == LINE_OFF)
-				CROSS_LINE(tile->sides[j]);
+			solve_set_line_cross(sol, tile->sides[j]);
 		}
 		/* mark tile as handled */
 		sol->tile_done[i]= TRUE;
@@ -698,12 +682,11 @@ solve_cross_lines(struct solution *sol)
 			/* check count */
 			if (num_on == 2) {	/* vertex busy */
 				for(j=0; j < vertex->nlines; ++j) {
-					if (STATE(vertex->lines[j]) == LINE_OFF)
-						CROSS_LINE(vertex->lines[j]);
+					solve_set_line_cross(sol, vertex->lines[j]);
 				}
 				sol->vertex_done[i]= TRUE;
 			} else if (num_on == 0 && num_off == 1) { /* no exit */
-				CROSS_LINE(vertex->lines[pos]);
+				solve_set_line_cross(sol, vertex->lines[pos]);
 				sol->vertex_done[i]= TRUE;
 			}
 		}
@@ -850,7 +833,7 @@ solve_bottleneck(struct solution *sol)
 				   we can't cross out this line. */
 				if (bottleneck_is_final_line(sol, next)) return;
 			}
-			CROSS_LINE(next);
+			solve_set_line_cross(sol, next);
 
 			//return length;
 			return;
