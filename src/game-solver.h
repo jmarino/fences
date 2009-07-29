@@ -31,6 +31,12 @@
 #define SOLVE_MAX_LEVEL		8
 #define SOLVE_NUM_LEVELS	(SOLVE_MAX_LEVEL + 1)
 
+/* structure to keep track of number of lines ON and CROSS */
+struct num_lines {
+	guint8 on;
+	guint8 cross;
+};
+
 
 /*
  * Contains detail about game solution
@@ -51,6 +57,8 @@ struct solution {
 	gboolean solved;		// is solution complete
 	double difficulty;		// difficulty of solution
 	int last_level;			// level used in last step of solution
+	struct num_lines *tile_count;		// keep track of lines ON & CROSS around tile
+	struct num_lines *vertex_count;	// keep track of lines ON & CROSS around vertex
 };
 
 

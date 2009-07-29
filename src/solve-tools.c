@@ -184,6 +184,8 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	sol->solved= FALSE;
 	sol->difficulty= 0.0;
 	sol->last_level= -1;
+	sol->tile_count= (struct num_lines*)g_malloc(geo->ntiles*sizeof(struct num_lines));
+	sol->vertex_count= (struct num_lines*)g_malloc(geo->nvertex*sizeof(struct num_lines));
 
 	for(i=0; i < geo->nlines; ++i)
 		sol->states[i]= LINE_OFF;
@@ -192,6 +194,8 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	}
 	for(i=0; i < geo->nvertex; ++i)	sol->vertex_done[i]= FALSE;
 	memset(sol->level_count, 0, SOLVE_NUM_LEVELS * sizeof(int));
+	memset(sol->tile_count, 0, geo->ntiles*sizeof(struct num_lines));
+	memset(sol->vertex_count, 0, geo->nvertex*sizeof(struct num_lines));
 
 	return sol;
 }
@@ -210,6 +214,8 @@ solve_free_solution_data(struct solution *sol)
 	g_free(sol->vertex_done);
 	g_free(sol->changes);
 	g_free(sol->tile_changes);
+	g_free(sol->tile_count);
+	g_free(sol->vertex_count);
 	g_free(sol);
 }
 
@@ -232,6 +238,8 @@ solve_copy_solution(struct solution *dest, struct solution *src)
 	dest->ntile_changes= src->ntile_changes;
 	memcpy(dest->tile_changes, src->tile_changes, src->geo->ntiles*sizeof(int));
 	memcpy(dest->level_count, src->level_count, SOLVE_NUM_LEVELS * sizeof(int));
+	memcpy(dest->tile_count, src->tile_count, src->geo->ntiles*sizeof(struct num_lines));
+	memcpy(dest->vertex_count, src->vertex_count, src->geo->nvertex*sizeof(struct num_lines));
 	dest->solved= src->solved;
 	dest->difficulty= src->difficulty;
 	dest->last_level= src->last_level;
@@ -268,6 +276,10 @@ solve_duplicate_solution(struct solution *src)
 	sol->solved= src->solved;
 	sol->difficulty= src->difficulty;
 	sol->last_level= src->last_level;
+	sol->tile_count=
+		(struct num_lines*)g_malloc(src->geo->ntiles*sizeof(struct num_lines));
+	sol->vertex_count=
+		(struct num_lines*)g_malloc(src->geo->nvertex*sizeof(struct num_lines));
 
 	memcpy(sol->states, src->states, lines_size);
 	memcpy(sol->tile_done, src->tile_done, tiles_size);
@@ -276,6 +288,8 @@ solve_duplicate_solution(struct solution *src)
 	memcpy(sol->changes, src->changes, lines_size);
 	memcpy(sol->tile_changes, src->tile_changes, tiles_size);
 	memcpy(sol->level_count, src->level_count, SOLVE_NUM_LEVELS * sizeof(int));
+	memcpy(sol->tile_count, src->tile_count, src->geo->ntiles*sizeof(struct num_lines));
+	memcpy(sol->vertex_count, src->vertex_count, src->geo->nvertex*sizeof(struct num_lines));
 
 	return sol;
 }
@@ -292,6 +306,8 @@ solve_reset_solution(struct solution *sol)
 	memset(sol->tile_done, 0, sol->geo->ntiles * sizeof(gboolean));
 	memset(sol->vertex_done, 0, sol->geo->nvertex * sizeof(gboolean));
 	memset(sol->level_count, 0, SOLVE_NUM_LEVELS * sizeof(int));
+	memset(sol->tile_count, 0, sol->geo->ntiles*sizeof(struct num_lines));
+	memset(sol->vertex_count, 0, sol->geo->nvertex*sizeof(struct num_lines));
 	sol->nchanges= 0;
 	sol->ntile_changes= 0;
 	sol->solved= FALSE;
@@ -312,6 +328,12 @@ solve_set_line_on(struct solution *sol, struct line *lin)
 	sol->states[id]= LINE_ON;
 	sol->changes[sol->nchanges]= id;
 	++sol->nchanges;
+	/* increase tile & vertex ON line count */
+	++sol->tile_count[lin->tiles[0]->id].on;
+	if (lin->ntiles == 2)
+		++sol->tile_count[lin->tiles[1]->id].on;
+	++sol->vertex_count[lin->ends[0]->id].on;
+	++sol->vertex_count[lin->ends[1]->id].on;
 }
 
 
@@ -327,4 +349,10 @@ solve_set_line_cross(struct solution *sol, struct line *lin)
 	sol->states[id]= LINE_CROSSED;
 	sol->changes[sol->nchanges]= id;
 	++sol->nchanges;
+	/* increase tile & vertex CROSS line count */
+	++sol->tile_count[lin->tiles[0]->id].cross;
+	if (lin->ntiles == 2)
+		++sol->tile_count[lin->tiles[1]->id].cross;
+	++sol->vertex_count[lin->ends[0]->id].cross;
+	++sol->vertex_count[lin->ends[1]->id].cross;
 }
