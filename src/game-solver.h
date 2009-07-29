@@ -48,6 +48,8 @@ struct solution {
 	int *numbers;		// points to game->numbers
 	gboolean *tile_done;	// has tile been handled?
 	gboolean *vertex_done;	// has vertex been handled?
+	int num_tile_done;		// number of tiles marked as done
+	int num_vertex_done;	// number of vertices marked as done
 	int *lin_mask;
 	int nchanges;			// number of line changes in last solution step
 	int *changes;			// ID of lines changed in last solution step

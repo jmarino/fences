@@ -175,6 +175,8 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	sol->lin_mask= (int *)g_malloc(geo->nlines*sizeof(int));
 	sol->tile_done= (gboolean *)g_malloc(geo->ntiles*sizeof(gboolean));
 	sol->vertex_done= (gboolean *)g_malloc(geo->nvertex*sizeof(gboolean));
+	sol->num_tile_done= 0;
+	sol->num_vertex_done= 0;
 	sol->nchanges= 0;
 	sol->changes= (int *)g_malloc(geo->nlines*sizeof(int));
 	/* **TODO** size of changes is overkill (but safe): optimize */
@@ -232,6 +234,8 @@ solve_copy_solution(struct solution *dest, struct solution *src)
 	dest->numbers= src->numbers;
 	memcpy(dest->tile_done, src->tile_done, src->geo->ntiles*sizeof(gboolean));
 	memcpy(dest->vertex_done, src->vertex_done, src->geo->nvertex*sizeof(gboolean));
+	dest->num_tile_done= src->num_tile_done;
+	dest->num_vertex_done= src->num_vertex_done;
 	memcpy(dest->lin_mask, src->lin_mask, src->geo->nlines*sizeof(int));
 	dest->nchanges= src->nchanges;
 	memcpy(dest->changes, src->changes, src->geo->nlines*sizeof(int));
@@ -280,6 +284,8 @@ solve_duplicate_solution(struct solution *src)
 		(struct num_lines*)g_malloc(src->geo->ntiles*sizeof(struct num_lines));
 	sol->vertex_count=
 		(struct num_lines*)g_malloc(src->geo->nvertex*sizeof(struct num_lines));
+	sol->num_tile_done= src->num_tile_done;
+	sol->num_vertex_done= src->num_vertex_done;
 
 	memcpy(sol->states, src->states, lines_size);
 	memcpy(sol->tile_done, src->tile_done, tiles_size);
@@ -313,6 +319,8 @@ solve_reset_solution(struct solution *sol)
 	sol->solved= FALSE;
 	sol->difficulty= 0.0;
 	sol->last_level= -1;
+	sol->num_tile_done= 0;
+	sol->num_vertex_done= 0;
 }
 
 
