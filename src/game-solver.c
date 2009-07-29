@@ -220,8 +220,9 @@ solve_trivial_vertex(struct solution *sol)
 	struct geometry *geo=sol->geo;
 
 	sol->nchanges= sol->ntile_changes= 0;
-	vertex= geo->vertex;
 	for(i=0; i < geo->nvertex; ++i) {
+		if (sol->vertex_done[i]) continue;
+		vertex= geo->vertex + i;
 		lines_on= lines_off= 0;
 		/* count lines on and off */
 		for(j=0; j < vertex->nlines; ++j) {
@@ -238,7 +239,6 @@ solve_trivial_vertex(struct solution *sol)
 		}
 		/* only allow one trivial vertex to be set at a time */
 		if (sol->nchanges > 0) break;
-		++vertex;
 	}
 }
 
@@ -682,8 +682,9 @@ solve_cross_lines(struct solution *sol)
 	while (old_count != sol->nchanges) {
 		old_count= sol->nchanges;
 		/* go through all vertices */
-		vertex= geo->vertex;
 		for(i=0; i < geo->nvertex; ++i) {
+			if (sol->vertex_done[i]) continue;
+			vertex= geo->vertex + i;
 			num_on= num_off= 0;
 			/* count lines on and off */
 			for(j=0; j < vertex->nlines; ++j) {
@@ -700,10 +701,11 @@ solve_cross_lines(struct solution *sol)
 					if (STATE(vertex->lines[j]) == LINE_OFF)
 						CROSS_LINE(vertex->lines[j]);
 				}
+				sol->vertex_done[i]= TRUE;
 			} else if (num_on == 0 && num_off == 1) { /* no exit */
 				CROSS_LINE(vertex->lines[pos]);
+				sol->vertex_done[i]= TRUE;
 			}
-			++vertex;
 		}
 	}
 }
