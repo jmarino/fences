@@ -138,9 +138,9 @@ solve_zero_tiles(struct solution *sol)
 	sol->nchanges= sol->ntile_changes= 0;
 	for(i=0; i < geo->ntiles; ++i) {
 		/* only care about unhandled 0 tiles */
-		if (sol->numbers[i] != 0 || sol->tile_handled[i]) continue;
+		if (sol->numbers[i] != 0 || sol->tile_done[i]) continue;
 		/* cross sides of tile */
-		sol->tile_handled[i]= TRUE;	// mark tile as handled
+		sol->tile_done[i]= TRUE;	// mark tile as handled
 		sol->tile_changes[sol->ntile_changes]= i;
 		++sol->ntile_changes;
 		tile= geo->tiles + i;
@@ -168,7 +168,7 @@ solve_trivial_tiles(struct solution *sol)
 	sol->nchanges= sol->ntile_changes= 0;
 	for(i=0; i < geo->ntiles; ++i) {
 		/* only unhandled tiles */
-		if (sol->tile_handled[i])
+		if (sol->tile_done[i])
 			continue;
 
 		/* count lines ON and CROSSED around tile */
@@ -183,12 +183,12 @@ solve_trivial_tiles(struct solution *sol)
 		}
 		/* tile has all lines either ON or CROSSED -> handled */
 		if (lines_on + lines_crossed == tile->nsides) {
-			sol->tile_handled[i]= TRUE;
+			sol->tile_done[i]= TRUE;
 			continue;
 		}
 		/* enough lines crossed? -> set ON the OFF ones */
 		if ( tile->nsides - lines_crossed == NUMBER(tile) ) {
-			sol->tile_handled[i]= TRUE;
+			sol->tile_done[i]= TRUE;
 			sol->tile_changes[sol->ntile_changes]= i;
 			++sol->ntile_changes;
 			for(j=0; j < tile->nsides; ++j) {
@@ -264,7 +264,7 @@ solve_maxnumber_tiles(struct solution *sol)
 	for(i=0; i < geo->ntiles; ++i) {
 		tile= geo->tiles + i;
 		/* ignore handled tiles or with number != sides - 1 */
-		if (sol->tile_handled[i] || sol->numbers[i] != tile->nsides - 1)
+		if (sol->tile_done[i] || sol->numbers[i] != tile->nsides - 1)
 			continue;
 
 		/* inspect vertices of tile */
@@ -375,7 +375,7 @@ solve_maxnumber_incoming_line(struct solution *sol)
 	for(i=0; i < geo->ntiles; ++i) {
 		tile= geo->tiles + i;
 		/* ignore tiles without number or number < nsides -1 */
-		if (sol->numbers[i] != tile->nsides - 1 || sol->tile_handled[i])
+		if (sol->numbers[i] != tile->nsides - 1 || sol->tile_done[i])
 			continue;
 
 		/* inspect vertices of tile */
@@ -444,7 +444,7 @@ solve_maxnumber_exit_line(struct solution *sol)
 	for(i=0; i < geo->ntiles; ++i) {
 		tile= geo->tiles + i;
 		/* ignore handled tiles, without number or number < nsides -1 */
-		if (sol->numbers[i] != tile->nsides - 1 || sol->tile_handled[i])
+		if (sol->numbers[i] != tile->nsides - 1 || sol->tile_done[i])
 			continue;
 
 		/* count lines OFF on tile */
@@ -513,7 +513,7 @@ solve_corner(struct solution *sol)
 	for(i=0; i < geo->ntiles; ++i) {
 		tile= geo->tiles + i;
 		/* ignore handled tiles, unnumbered tiles or number != nsides -1 */
-		if (sol->tile_handled[i] ||
+		if (sol->tile_done[i] ||
 		    (sol->numbers[i] != tile->nsides - 1 && sol->numbers[i] != 1))
 			continue;
 
@@ -569,7 +569,7 @@ solve_tiles_net_1(struct solution *sol)
 	for(i=0; i < geo->ntiles; ++i) {
 		tile= geo->tiles + i;
 		/* ignore handled tiles and unnumbered tiles */
-		if (sol->tile_handled[i] || sol->numbers[i] == -1)
+		if (sol->tile_done[i] || sol->numbers[i] == -1)
 			continue;
 
 		/* count lines ON around tile */
@@ -646,7 +646,7 @@ solve_cross_lines(struct solution *sol)
 	/* go through all tiles */
 	for(i=0; i < geo->ntiles; ++i) {
 		/* only unhandled tiles */
-		if (sol->tile_handled[i]) continue;
+		if (sol->tile_done[i]) continue;
 
 		/* count lines ON around tile */
 		tile= geo->tiles + i;
@@ -727,14 +727,14 @@ bottleneck_is_final_line(struct solution *sol, struct line *lin)
 	/* check line touches at least 1 numbered and unhandled tile */
 	for(i=0; i < lin->ntiles; ++i) {
 		id= lin->tiles[i]->id;
-		if (sol->numbers[id] != -1 && sol->tile_handled[id] == FALSE) ++num;
+		if (sol->numbers[id] != -1 && sol->tile_done[id] == FALSE) ++num;
 	}
 	if (num == 0) return FALSE;
 
 	/* check if setting line would handle unhandled tiles */
 	for(i=0; i < lin->ntiles; ++i) {
 		tile= lin->tiles[i];
-		if (sol->numbers[tile->id] == -1 || sol->tile_handled[tile->id]) continue;
+		if (sol->numbers[tile->id] == -1 || sol->tile_done[tile->id]) continue;
 		nlines_on= 0;
 		for(j=0; j < tile->nsides; ++j)
 			if (sol->states[ tile->sides[j]->id ] == LINE_ON) ++nlines_on;
@@ -744,7 +744,7 @@ bottleneck_is_final_line(struct solution *sol, struct line *lin)
 
 	/* finally check if unhandled tiles are the only ones left */
 	for(i=0; i < sol->geo->ntiles; ++i) {
-		if (sol->numbers[i] != -1 && sol->tile_handled[i] == FALSE)
+		if (sol->numbers[i] != -1 && sol->tile_done[i] == FALSE)
 			++num_unhandled;
 	}
 	if (num != num_unhandled) return FALSE;
@@ -775,7 +775,7 @@ solve_bottleneck(struct solution *sol)
 	sol->nchanges= sol->ntile_changes= 0;
 	/* check if all numbered tiles have been handled */
 	for(i=0; i < geo->ntiles; ++i) {
-		if (sol->numbers[i] != -1 && sol->tile_handled[i] == FALSE) {
+		if (sol->numbers[i] != -1 && sol->tile_done[i] == FALSE) {
 			all_handled= FALSE;
 			break;
 		}
@@ -869,7 +869,7 @@ solve_check_solution(struct solution *sol)
 
 	/* check that all numbered tiles are happy */
 	for(i=0; i < geo->ntiles; ++i) {
-		if (sol->numbers[i] != -1 && sol->tile_handled[i] == FALSE)
+		if (sol->numbers[i] != -1 && sol->tile_done[i] == FALSE)
 			return FALSE;
 	}
 

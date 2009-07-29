@@ -173,7 +173,7 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	sol->numbers= game->numbers;
 	sol->states= (int *)g_malloc(geo->nlines*sizeof(int));
 	sol->lin_mask= (int *)g_malloc(geo->nlines*sizeof(int));
-	sol->tile_handled= (gboolean *)g_malloc(geo->ntiles*sizeof(gboolean));
+	sol->tile_done= (gboolean *)g_malloc(geo->ntiles*sizeof(gboolean));
 	sol->nchanges= 0;
 	sol->changes= (int *)g_malloc(geo->nlines*sizeof(int));
 	/* **TODO** size of changes is overkill (but safe): optimize */
@@ -187,7 +187,7 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	for(i=0; i < geo->nlines; ++i)
 		sol->states[i]= LINE_OFF;
 	for(i=0; i < geo->ntiles; ++i) {
-		sol->tile_handled[i]= FALSE;
+		sol->tile_done[i]= FALSE;
 	}
 	memset(sol->level_count, 0, SOLVE_NUM_LEVELS * sizeof(int));
 
@@ -204,7 +204,7 @@ solve_free_solution_data(struct solution *sol)
 	if (sol == NULL) return;
 	g_free(sol->states);
 	g_free(sol->lin_mask);
-	g_free(sol->tile_handled);
+	g_free(sol->tile_done);
 	g_free(sol->changes);
 	g_free(sol->tile_changes);
 	g_free(sol);
@@ -221,7 +221,7 @@ solve_copy_solution(struct solution *dest, struct solution *src)
 	dest->game= src->game;
 	memcpy(dest->states, src->states, src->geo->nlines*sizeof(int));
 	dest->numbers= src->numbers;
-	memcpy(dest->tile_handled, src->tile_handled, src->geo->ntiles*sizeof(gboolean));
+	memcpy(dest->tile_done, src->tile_done, src->geo->ntiles*sizeof(gboolean));
 	memcpy(dest->lin_mask, src->lin_mask, src->geo->nlines*sizeof(int));
 	dest->nchanges= src->nchanges;
 	memcpy(dest->changes, src->changes, src->geo->nlines*sizeof(int));
@@ -253,7 +253,7 @@ solve_duplicate_solution(struct solution *src)
 	sol->numbers= src->numbers;
 	sol->states= (int *)g_malloc(lines_size);
 	sol->lin_mask= (int *)g_malloc(lines_size);
-	sol->tile_handled= (gboolean *)g_malloc(tiles_size);
+	sol->tile_done= (gboolean *)g_malloc(tiles_size);
 	sol->changes= (int *)g_malloc(lines_size);
 	sol->nchanges= src->nchanges;
 	sol->tile_changes= (int *)g_malloc(tiles_size);
@@ -263,7 +263,7 @@ solve_duplicate_solution(struct solution *src)
 	sol->last_level= src->last_level;
 
 	memcpy(sol->states, src->states, lines_size);
-	memcpy(sol->tile_handled, src->tile_handled, tiles_size);
+	memcpy(sol->tile_done, src->tile_done, tiles_size);
 	memcpy(sol->lin_mask, src->lin_mask, lines_size);
 	memcpy(sol->changes, src->changes, lines_size);
 	memcpy(sol->tile_changes, src->tile_changes, tiles_size);
@@ -281,7 +281,7 @@ solve_reset_solution(struct solution *sol)
 {
 	memset(sol->states, 0, sol->geo->nlines * sizeof(int));
 	memset(sol->lin_mask, 0, sol->geo->nlines * sizeof(int));
-	memset(sol->tile_handled, 0, sol->geo->ntiles * sizeof(gboolean));
+	memset(sol->tile_done, 0, sol->geo->ntiles * sizeof(gboolean));
 	memset(sol->level_count, 0, SOLVE_NUM_LEVELS * sizeof(int));
 	sol->nchanges= 0;
 	sol->ntile_changes= 0;

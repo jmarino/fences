@@ -300,7 +300,7 @@ solve_try_combinations(struct solution *sol, int level)
 	/* iterate over all tiles */
 	for(i=0; i < geo->ntiles; ++i) {
 		/* ignore handled tiles or tiles with no number */
-		if (sol->tile_handled[i] || sol->numbers[i] == -1)
+		if (sol->tile_done[i] || sol->numbers[i] == -1)
 			continue;
 
 		/* Test all combinations for tile and see if all valid ones

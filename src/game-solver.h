@@ -49,7 +49,7 @@ struct solution {
 	struct game *game;	// game state (mostly useful for tile numbers)
 	int *states;		// line states (so we don't touch game->states)
 	int *numbers;		// points to game->numbers
-	gboolean *tile_handled;	// has tile been handled?
+	gboolean *tile_done;	// has tile been handled?
 	int *lin_mask;
 	int nchanges;			// number of line changes in last solution step
 	int *changes;			// ID of lines changed in last solution step

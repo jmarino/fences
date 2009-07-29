@@ -167,7 +167,7 @@ build_new_game(struct geometry *geo, double difficulty)
 	/* reset game states and previous solution states */
 	memset(sol->states, 0, geo->nlines * sizeof(int));
 	memset(sol->lin_mask, 0, geo->nlines * sizeof(int));
-	memset(sol->tile_handled, 0, geo->ntiles * sizeof(gboolean));
+	memset(sol->tile_done, 0, geo->ntiles * sizeof(gboolean));
 
 	/* main loop */
 	while(1) {
