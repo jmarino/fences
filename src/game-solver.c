@@ -668,6 +668,8 @@ solve_cross_lines(struct solution *sol)
 			if (STATE(tile->sides[j]) == LINE_OFF)
 				CROSS_LINE(tile->sides[j]);
 		}
+		/* mark tile as handled */
+		sol->tile_done[i]= TRUE;
 		/* any line changes? record tile */
 		if (sol->nchanges > cache) {
 			sol->tile_changes[sol->ntile_changes]= i;
