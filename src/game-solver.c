@@ -961,6 +961,13 @@ solution_loop(struct solution *sol, int max_iter, int max_level)
 			++iter;
 		}
 
+		/* quick check to see if we found a solution */
+		if (sol->num_tile_done == sol->geo->ntiles &&
+			sol->num_vertex_done == sol->geo->nvertex) {
+			printf("last level: %d  (%d)\n", level, sol->nchanges);
+			return;
+		}
+
 		/* reached maximum number of iterations -> stop */
 		if (max_iter > 0 && iter >= max_iter)
 			break;
