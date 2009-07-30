@@ -172,11 +172,6 @@ solve_trivial_tiles(struct solution *sol)
 			continue;
 
 		tile= geo->tiles + i;
-		/* tile has all lines either ON or CROSSED -> handled */
-		if (sol->tile_count[i].on + sol->tile_count[i].cross == tile->nsides) {
-			sol->tile_done[i]= TRUE;
-			continue;
-		}
 		/* enough lines crossed? -> set ON the OFF ones */
 		if ( tile->nsides - sol->tile_count[i].cross == NUMBER(tile) ) {
 			sol->tile_done[i]= TRUE;
@@ -623,6 +618,13 @@ solve_cross_lines(struct solution *sol)
 		if (sol->tile_done[i]) continue;
 
 		tile= geo->tiles + i;
+		/* all sides either ON or CROSS -> tile handled */
+		if (sol->tile_count[i].on + sol->tile_count[i].cross == tile->nsides) {
+			sol->tile_done[i]= TRUE;
+			++sol->num_tile_done;
+			continue;
+		}
+
 		/* not-numbered tiles -> we want nsides - 1 ON
 		   numbered tiles -> we want NUMBER lines ON */
 		if (sol->numbers[i] == -1) {
@@ -655,6 +657,12 @@ solve_cross_lines(struct solution *sol)
 
 			num_off= vertex->nlines - (sol->vertex_count[i].on +
 									   sol->vertex_count[i].cross);
+			/* no OFF lines -> vertex done */
+			if (num_off == 0) {
+				sol->vertex_done[i]= TRUE;
+				++sol->num_vertex_done;
+				continue;
+			}
 
 			/* check: vertex has 2 lines ON -> vertex is done
 			   vertex has 0 lines ON and just 1 OFF -> no exit */
