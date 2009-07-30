@@ -143,6 +143,7 @@ solve_zero_tiles(struct solution *sol)
 		if (sol->numbers[i] != 0 || sol->tile_done[i]) continue;
 		/* cross sides of tile */
 		sol->tile_done[i]= TRUE;	// mark tile as handled
+		++sol->num_tile_done;
 		sol->tile_changes[sol->ntile_changes]= i;
 		++sol->ntile_changes;
 		tile= geo->tiles + i;
@@ -179,6 +180,7 @@ solve_trivial_tiles(struct solution *sol)
 		/* enough lines crossed? -> set ON the OFF ones */
 		if ( tile->nsides - sol->tile_count[i].cross == NUMBER(tile) ) {
 			sol->tile_done[i]= TRUE;
+			++sol->num_tile_done;
 			sol->tile_changes[sol->ntile_changes]= i;
 			++sol->ntile_changes;
 			for(j=0; j < tile->nsides; ++j) {
@@ -220,6 +222,7 @@ solve_trivial_vertex(struct solution *sol)
 			if (STATE(vertex->lines[j]) == LINE_OFF) {
 				solve_set_line_on(sol, vertex->lines[j]);
 				sol->vertex_done[i]= TRUE;
+				++sol->num_vertex_done;
 				break;
 			}
 		}
@@ -635,6 +638,7 @@ solve_cross_lines(struct solution *sol)
 		}
 		/* mark tile as handled */
 		sol->tile_done[i]= TRUE;
+		++sol->num_tile_done;
 		/* any line changes? record tile */
 		if (sol->nchanges > cache) {
 			sol->tile_changes[sol->ntile_changes]= i;
@@ -660,6 +664,7 @@ solve_cross_lines(struct solution *sol)
 				for(j=0; j < vertex->nlines; ++j)
 					solve_set_line_cross(sol, vertex->lines[j]);
 				sol->vertex_done[i]= TRUE;
+				++sol->num_vertex_done;
 			}
 		}
 	}
