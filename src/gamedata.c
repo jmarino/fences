@@ -293,6 +293,9 @@ build_board_geometry(struct gameinfo *gameinfo)
 	case TILE_TYPE_CAIRO:
 		geo= build_cairo_tile_geometry(gameinfo);
 		break;
+	case TILE_TYPE_CARTWHEEL:
+		geo= build_cartwheel_tile_geometry(gameinfo);
+		break;
 	default:
 		g_message("(build_board_geometry) unknown tile type: %d", gameinfo->type);
 	};

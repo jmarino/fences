@@ -43,7 +43,8 @@ fences_SOURCES = \
 	qbert-tile.c \
 	hex-tile.c \
 	snub-tile.c \
-	cairo-tile.c
+	cairo-tile.c \
+	cartwheel-tile.c
 
 fences_LDFLAGS = 
 
