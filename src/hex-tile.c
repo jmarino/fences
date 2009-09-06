@@ -127,7 +127,7 @@ build_hex_tile_geometry(const struct gameinfo *info)
 			pts[5].x= pos.x + side/2.0;
 			pts[5].y= pos.y + height / 2.0;
 
-			geometry_add_tile(geo, pts, 6);
+			geometry_add_tile(geo, pts, 6, NULL);
 		}
 	}
 

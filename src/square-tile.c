@@ -94,7 +94,7 @@ build_square_tile_geometry(const struct gameinfo *info)
 			pts[3].y= ypos + side;
 
 			/* add tile to skeleton geometry */
-			geometry_add_tile(geo, pts, 4);
+			geometry_add_tile(geo, pts, 4, NULL);
 		}
 	}
 

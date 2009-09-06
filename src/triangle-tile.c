@@ -113,7 +113,7 @@ build_triangular_tile_geometry(const struct gameinfo *info)
 				pts[2].y= ypos + height;
 			}
 			/* add tile to skeleton geometry */
-			geometry_add_tile(geo, pts, 3);
+			geometry_add_tile(geo, pts, 3, NULL);
 		}
 	}
 

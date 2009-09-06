@@ -292,31 +292,6 @@ geometry_connect_tiles(struct geometry *geo)
 
 
 /*
- * Calculate the center point of each tile
- */
-static void
-geometry_calculate_tile_centers(struct geometry *geo)
-{
-	int i, j;
-	struct tile *tile;
-
-	tile= geo->tiles;
-	for(i=0; i < geo->ntiles; ++i) {
-		/* calculate position of center of tile */
-		tile->center.x= tile->vertex[0]->pos.x;
-		tile->center.y= tile->vertex[0]->pos.y;
-		for(j=1; j < tile->nvertex; ++j) {
-			tile->center.x+= tile->vertex[j]->pos.x;
-			tile->center.y+= tile->vertex[j]->pos.y;
-		}
-		tile->center.x= tile->center.x/(double)tile->nvertex;
-		tile->center.y= tile->center.y/(double)tile->nvertex;
-		++tile;
-	}
-}
-
-
-/*
  * Define area of influence for each line (4 points)
  */
 static void
@@ -567,9 +542,11 @@ geometry_add_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
  * Only lines are connected in this manner because in a skeleton geometry
  * it's only the lines that have room to store this data (they always
  * touch 2 tiles and vertices).
+ * center: center point of tile, if NULL is auto-calculated as centre of gravity
  */
 void
-geometry_add_tile(struct geometry *geo, struct point *pts, int npts)
+geometry_add_tile(struct geometry *geo, struct point *pts, int npts,
+				  struct point *center)
 {
 	struct tile *tile;
 	struct vertex *vertex=NULL;
@@ -587,6 +564,21 @@ geometry_add_tile(struct geometry *geo, struct point *pts, int npts)
 	tile->fx_status= 0;
 	tile->fx_frame= 0;
 	++geo->ntiles;
+
+	/* calculate center of tile if needed */
+	if (center == NULL) {
+		tile->center.x= pts[0].x;
+		tile->center.y= pts[0].y;
+		for(i=1; i < npts; ++i) {
+			tile->center.x+= pts[i].x;
+			tile->center.y+= pts[i].y;
+		}
+		tile->center.x/= (double)npts;
+		tile->center.y/= (double)npts;
+	} else {
+		tile->center.x= center->x;
+		tile->center.y= center->y;
+	}
 
 	/* add first vertex */
 	vertex_first= geometry_add_vertex(geo, pts);
@@ -661,9 +653,6 @@ geometry_connect_skeleton(struct geometry *geo)
 
 	/* connect tiles to lines and vertices */
 	geometry_connect_tiles(geo);
-
-	/* find tile centers */
-	geometry_calculate_tile_centers(geo);
 
 	/* define area of influence of each line */
 	geometry_define_line_infarea(geo);

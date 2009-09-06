@@ -68,7 +68,7 @@ qbert_fill_unit_with_rhombs(struct geometry *geo, struct point *pos, double side
 	pts[3].y= pos->y + side / 2.0;
 	if (qbert_is_rhomb_inside(pts)) {
 		//g_message("  rhomb 1");
-		geometry_add_tile(geo, pts, 4);
+		geometry_add_tile(geo, pts, 4, NULL);
 	}
 
 	/* bottom (vertex clockwise starting in the center) */
@@ -82,7 +82,7 @@ qbert_fill_unit_with_rhombs(struct geometry *geo, struct point *pos, double side
 	pts[3].y= pos->y + side / 2.0;
 	if (qbert_is_rhomb_inside(pts)) {
 		//g_message("  rhomb 2");
-		geometry_add_tile(geo, pts, 4);
+		geometry_add_tile(geo, pts, 4, NULL);
 	}
 
 	/* rhomb top left (vertex clockwise starting in the center) */
@@ -96,7 +96,7 @@ qbert_fill_unit_with_rhombs(struct geometry *geo, struct point *pos, double side
 	pts[3].y= pos->y - side;
 	if (qbert_is_rhomb_inside(pts)) {
 		//g_message("  rhomb 3");
-		geometry_add_tile(geo, pts, 4);
+		geometry_add_tile(geo, pts, 4, NULL);
 	}
 }
 

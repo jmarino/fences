@@ -429,7 +429,7 @@ penrose_tile_to_geometry(GSList *penrose, double side)
 	for(i=0; i < ntiles; ++i) {
 		/* get vertices of tile (rhomb) and add it to skeleton geometry */
 		get_romb_vertices((struct romb*)list->data, pts);
-		geometry_add_tile(geo, pts, 4);
+		geometry_add_tile(geo, pts, 4, NULL);
 
 		list= g_slist_next(list);
 	}

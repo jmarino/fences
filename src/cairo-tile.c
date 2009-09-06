@@ -86,7 +86,7 @@ cairotile_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double s
 	pts[4].x= pos->x + shoulder_h;
 	pts[4].y= pos->y + lside/2.0;
 	if (cairotile_is_tile_inside(pts, 5))
-		geometry_add_tile(geo, pts, 5);
+		geometry_add_tile(geo, pts, 5, NULL);
 
 	/* top pentagon */
 	pts[0].x= pos->x + height;
@@ -100,7 +100,7 @@ cairotile_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double s
 	pts[4].x= pos->x + (height + side);
 	pts[4].y= pos->y - half_side;
 	if (cairotile_is_tile_inside(pts, 5))
-		geometry_add_tile(geo, pts, 5);
+		geometry_add_tile(geo, pts, 5, NULL);
 
 	/* right pentagon */
 	pts[0].x= pos->x + (height + side);
@@ -114,7 +114,7 @@ cairotile_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double s
 	pts[4].x= pos->x + (shoulder_w + shoulder_h);
 	pts[4].y= pos->y + lside/2.0;
 	if (cairotile_is_tile_inside(pts, 5))
-		geometry_add_tile(geo, pts, 5);
+		geometry_add_tile(geo, pts, 5, NULL);
 
 	/* bottom pentagon */
 	pts[0].x= pos->x + height;
@@ -128,7 +128,7 @@ cairotile_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double s
 	pts[4].x= pos->x + shoulder_h;
 	pts[4].y= pos->y + lside/2.0;
 	if (cairotile_is_tile_inside(pts, 5))
-		geometry_add_tile(geo, pts, 5);
+		geometry_add_tile(geo, pts, 5, NULL);
 }
 
 

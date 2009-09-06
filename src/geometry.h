@@ -105,10 +105,12 @@ struct geometry {
 
 
 /* geometry.c */
-void geometry_add_tile(struct geometry *geo, struct point *pts, int npts);
+void geometry_add_tile(struct geometry *geo, struct point *pts, int npts,
+					   struct point *center);
 void geometry_set_distance_resolution(double distance);
 void geometry_connect_skeleton(struct geometry *geo);
-struct geometry* geometry_create_new(int ntiles, int nvertex, int nlines, int max_numlines);
+struct geometry* geometry_create_new(int ntiles, int nvertex, int nlines,
+									 int max_numlines);
 void geometry_destroy(struct geometry *geo);
 
 

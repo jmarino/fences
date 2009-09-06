@@ -79,7 +79,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 	pts[2].x= pos->x + side;
 	pts[2].y= pos->y;
 	if (snub_is_tile_inside(pts, 3))
-		geometry_add_tile(geo, pts, 3);
+		geometry_add_tile(geo, pts, 3, NULL);
 
 	/* triangle bottom middle (looking up) */
 	for(i=0; i < 3; ++i) {
@@ -87,7 +87,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 		pts[i].y+= sq_wide;
 	}
 	if (snub_is_tile_inside(pts, 3))
-		geometry_add_tile(geo, pts, 3);
+		geometry_add_tile(geo, pts, 3, NULL);
 
 	/* triangle left (looking down) */
 	pts[0].x= pos->x;
@@ -97,7 +97,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 	pts[2].x= pos->x + half_side;
 	pts[2].y= pos->y + height;
 	if (snub_is_tile_inside(pts, 3))
-		geometry_add_tile(geo, pts, 3);
+		geometry_add_tile(geo, pts, 3, NULL);
 
 	/* triangle top center (looking down) */
 	for(i=0; i < 3; ++i) {
@@ -105,7 +105,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 		pts[i].y-= sq_wide;
 	}
 	if (snub_is_tile_inside(pts, 3))
-		geometry_add_tile(geo, pts, 3);
+		geometry_add_tile(geo, pts, 3, NULL);
 
 	/* triangle center (looking left) */
 	pts[0].x= pos->x + side;
@@ -116,7 +116,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 	pts[2].y= pos->y + half_side;
 	/* point 2 in the same as before */
 	if (snub_is_tile_inside(pts, 3))
-		geometry_add_tile(geo, pts, 3);
+		geometry_add_tile(geo, pts, 3, NULL);
 
 	/* triangle bottom right (looking left) */
 	for(i=0; i < 3; ++i) {
@@ -124,7 +124,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 		pts[i].y+= sq_wide;
 	}
 	if (snub_is_tile_inside(pts, 3))
-		geometry_add_tile(geo, pts, 3);
+		geometry_add_tile(geo, pts, 3, NULL);
 
 	/* triangle bottom left (looking right) */
 	pts[0].x= pos->x + half_side;
@@ -134,7 +134,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 	pts[2].x= pos->x + half_side;
 	pts[2].y= pos->y + (height + side);
 	if (snub_is_tile_inside(pts, 3))
-		geometry_add_tile(geo, pts, 3);
+		geometry_add_tile(geo, pts, 3, NULL);
 
 	/* triangle center (looking right) */
 	for(i=0; i < 3; ++i) {
@@ -142,7 +142,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 		pts[i].y-= sq_wide;
 	}
 	if (snub_is_tile_inside(pts, 3))
-		geometry_add_tile(geo, pts, 3);
+		geometry_add_tile(geo, pts, 3, NULL);
 
 	/* square top left */
 	pts[0].x= pos->x + half_side;
@@ -154,7 +154,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 	pts[3].x= pos->x + side;
 	pts[3].y= pos->y;
 	if (snub_is_tile_inside(pts, 4)) {
-		geometry_add_tile(geo, pts, 4);
+		geometry_add_tile(geo, pts, 4, NULL);
 	}
 
 	/* square bot right */
@@ -163,7 +163,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 		pts[i].y+= sq_wide;
 	}
 	if (snub_is_tile_inside(pts, 4))
-		geometry_add_tile(geo, pts, 4);
+		geometry_add_tile(geo, pts, 4, NULL);
 
 	/* square bottom left */
 	pts[0].x= pos->x + side;
@@ -175,7 +175,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 	pts[3].x= pos->x + half_side;
 	pts[3].y= pos->y + height;
 	if (snub_is_tile_inside(pts, 4))
-		geometry_add_tile(geo, pts, 4);
+		geometry_add_tile(geo, pts, 4, NULL);
 
 	/* square top right */
 	for(i=0; i < 4; ++i) {
@@ -183,7 +183,7 @@ snub_fill_unit_with_tiles(struct geometry *geo, struct point *pos, double side)
 		pts[i].y-= sq_wide;
 	}
 	if (snub_is_tile_inside(pts, 4))
-		geometry_add_tile(geo, pts, 4);
+		geometry_add_tile(geo, pts, 4, NULL);
 }
 
 
