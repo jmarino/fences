@@ -38,7 +38,8 @@ static int index2tiletype[NUMBER_TILE_TYPE]={
 	TILE_TYPE_QBERT,
 	TILE_TYPE_HEX,
 	TILE_TYPE_SNUB,
-	TILE_TYPE_CAIRO
+	TILE_TYPE_CAIRO,
+	TILE_TYPE_CARTWHEEL
 };
 
 const gchar *tiletype_name[]={N_("Square"),
@@ -47,7 +48,8 @@ const gchar *tiletype_name[]={N_("Square"),
 							  N_("Qbert"),
 							  N_("Hexagon"),
 							  N_("Snub"),
-							  N_("Cairo")
+							  N_("Cairo"),
+							  N_("Cartwheel")
 };
 
 /*
@@ -64,7 +66,8 @@ static int size_widget_type[]={
 	SIZE_WIDGET_SPIN,	// qbert
 	SIZE_WIDGET_SPIN,	// hexagonal
 	SIZE_WIDGET_COMBO,	// snub
-	SIZE_WIDGET_COMBO	// cairo
+	SIZE_WIDGET_COMBO,	// cairo
+	SIZE_WIDGET_COMBO	// cartwheel
 };
 
 /* Default widget sizes */
@@ -75,7 +78,8 @@ static int default_sizes[]={
 	7,		// qbert
 	7,		// hexagonal
 	2,		// snub
-	2		// cairo
+	2,		// cairo
+	2		// cartwheel
 };
 
 /* Sizes of board to show in the preview */
@@ -86,7 +90,8 @@ static const int preview_sizes[]={
 	8,		// qbert
 	5,		// hexagonal
 	1,		// snub
-	1		// cairo
+	1,		// cairo
+	1		// cartwheel
 };
 
 
