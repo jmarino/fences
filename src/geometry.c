@@ -28,6 +28,30 @@ static double DISTANCE_RESOLUTION_SQUARED=0.0;
 
 
 /*
+ * Print tree recursively (used for debug)
+ * Initial example call: avltree_print(line_root, 0);
+ */
+static void
+avltree_print(struct avl_node *root, int level)
+{
+	if (root == NULL) return;
+	printf(" * %d(%d) [lev %d]\t", root->value.i, ((struct line*)root->data)->id, level);
+	if (root->left)
+		printf("( %d(%d) )", root->left->value.i, ((struct line *)root->left->data)->id);
+	else
+		printf("( nil  )");
+	printf(" - ");
+	if (root->right)
+		printf("( %d(%d) )\n", root->right->value.i, ((struct line *)root->right->data)->id);
+	else
+		printf("( nil  )\n");
+
+	if (root->left) avltree_print(root->left, level + 1);
+	if (root->right) avltree_print(root->right, level + 1);
+}
+
+
+/*
  * Connect each vertex to the lines it touches.
  * Before this point only lines had references to which vertices they touch.
  * This function builds the opposite references: tracks which lines each
