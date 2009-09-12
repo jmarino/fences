@@ -443,7 +443,12 @@ value_cmp_int(avl_value *test, avl_value *value)
 
 
 /*
- * Test if a given point has the same position as a given vertex
+ * Test if a given point has the same position as a given vertex.
+ * The avltree node has a pointer to the already defined vertex.
+ * The find function gets given a pointer to the coords of the
+ * vertex we're trying to find.
+ * This function checks if the coords are the same for both
+ * vertices.
  * Returns: 0 -> equal (same position) ; !0 -> different
  */
 static int
@@ -498,7 +503,12 @@ geometry_add_vertex(struct geometry *geo, struct point *point)
 
 
 /*
- * Test if a given line is equal
+ * Test if a given line is equal.
+ * The avltree element has a pointer to the line, and the search
+ * function gets the value (1st vertex's id) and a pointer
+ * to the 2nd vertex. By getting this far, we know the 1st point
+ * is one of the line, so if the 2nd is any of the line's points,
+ * then we have found the line.
  * Returns: 0 -> equal (same position) ; !0 -> different
  */
 static int
