@@ -120,6 +120,7 @@ avltree_insert_node_at(struct avl_node *parent, avl_value *value, void *data,
 			pivot= node->right;
 			/* avoid putting an equal value on the left branch */
 			if (value_cmp(&node->value, &pivot->value) == 0) {
+				pivot= node;		// need to set pivot if current node is root
 				node= node->parent;
 				continue;
 			}
