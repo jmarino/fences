@@ -296,6 +296,9 @@ build_board_geometry(struct gameinfo *gameinfo)
 	case TILE_TYPE_CARTWHEEL:
 		geo= build_cartwheel_tile_geometry(gameinfo);
 		break;
+	case TILE_TYPE_TRIHEX:
+		geo= build_trihex_tile_geometry(gameinfo);
+		break;
 	default:
 		g_message("(build_board_geometry) unknown tile type: %d", gameinfo->type);
 	};
