@@ -42,6 +42,17 @@ static build_geometry_func_type build_geometry_func[NUMBER_TILE_TYPE]={
 	build_cartwheel_tile_geometry,
 	build_trihex_tile_geometry
 };
+static build_geometry_func_type build_skeleton_func[NUMBER_TILE_TYPE]={
+	build_square_tile_skeleton,
+	build_penrose_tile_skeleton,
+	build_triangular_tile_skeleton,
+	build_qbert_tile_skeleton,
+	build_hex_tile_skeleton,
+	build_snub_tile_skeleton,
+	build_cairo_tile_skeleton,
+	build_cartwheel_tile_skeleton,
+	build_trihex_tile_skeleton
+};
 
 
 
@@ -283,6 +294,17 @@ gamedata_clear_game(struct board *board)
  */
 struct geometry *
 build_geometry_tile(struct gameinfo *gameinfo)
+{
+	g_assert(gameinfo->type >= 0 &&  gameinfo->type < NUMBER_TILE_TYPE);
+	return build_geometry_func[gameinfo->type](gameinfo);
+}
+
+
+/*
+ * Build tile skeleton of type determined by gameinfo
+ */
+struct geometry *
+build_tile_skeleton(struct gameinfo *gameinfo)
 {
 	g_assert(gameinfo->type >= 0 &&  gameinfo->type < NUMBER_TILE_TYPE);
 	return build_geometry_func[gameinfo->type](gameinfo);
