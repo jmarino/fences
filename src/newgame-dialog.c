@@ -86,19 +86,6 @@ static int default_sizes[]={
 	2		// trihex
 };
 
-/* Sizes of board to show in the preview */
-static const int preview_sizes[]={
-	5,		// square
-	1,		// penrose
-	5,		// triangular
-	8,		// qbert
-	5,		// hexagonal
-	1,		// snub
-	1,		// cairo
-	1,		// cartwheel
-	1		// trihex
-};
-
 
 /*
  * Data associated with dialog
@@ -108,13 +95,16 @@ struct dialog_data {
 	GtkWidget *diff_button[NUM_DIFFICULTY];
 	int tile_index;
 	int diff_index;
+	int size;
 	GtkWidget *image;
 	GdkPixmap *preview;
-	GtkWidget *size;
+	GtkWidget *size_widget;
 	GtkWidget *size_container;
 	int size_cache[NUMBER_TILE_TYPE];
 };
 
+
+static int size_widget_get_value(const struct dialog_data *dialog_data);
 
 
 /*
@@ -172,95 +162,29 @@ static void
 draw_preview_image(struct dialog_data *dialog_data)
 {
 	cairo_t *cr;
-	struct geometry *geo;
+	struct geometry *geo_skel;
 	struct gameinfo gameinfo;
 
 	/* create geometry for current tile type */
 	gameinfo.type= index2tiletype[dialog_data->tile_index];
-	gameinfo.size= preview_sizes[dialog_data->tile_index];
+	gameinfo.size= dialog_data->size;
 
 	/* build preview geometry */
 	fences_benchmark_start();
-	geo= build_geometry_tile(&gameinfo);
-	g_message("time: %lf", fences_benchmark_stop());
+	geo_skel= build_tile_skeleton(&gameinfo);
+	g_message("tile creation time (preview): %lf", fences_benchmark_stop());
 
 	cr= gdk_cairo_create(dialog_data->preview);
     /* set scale so we draw in board_size space */
 	cairo_scale (cr,
-				 PREVIEW_IMAGE_SIZE/(double)geo->board_size,
-				 PREVIEW_IMAGE_SIZE/(double)geo->board_size);
+				 PREVIEW_IMAGE_SIZE/(double)geo_skel->board_size,
+				 PREVIEW_IMAGE_SIZE/(double)geo_skel->board_size);
 	/* draw board preview */
-	draw_board_skeleton(cr, geo);
+	draw_board_skeleton(cr, geo_skel);
 	cairo_destroy (cr);
 
 	/* destroy geometry */
-	geometry_destroy(geo);
-}
-
-
-/*
- * Build game size widget using a spin
- */
-static GtkWidget*
-build_game_size_spin(const struct dialog_data *dialog_data)
-{
-	GtkWidget *spin;
-	GtkObject *adj;
-
-	adj= gtk_adjustment_new(dialog_data->size_cache[dialog_data->tile_index],
-							5, 25, 1, 5, 0);
-	spin= gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 0);
-
-	return spin;
-}
-
-
-/*
- * Build game size widget using a combo box
- */
-static GtkWidget*
-build_game_size_combo(const struct dialog_data *dialog_data)
-{
-	GtkWidget *combo;
-	int i;
-	const gchar *sizes[]={N_("Tiny"),
-						  N_("Small"),
-						  N_("Medium"),
-						  N_("Large"),
-						  N_("Huge")};
-
-	combo= gtk_combo_box_new_text();
-	for(i=0; i < 5; ++i) {
-		gtk_combo_box_append_text(GTK_COMBO_BOX(combo), sizes[i]);
-	}
-	gtk_combo_box_set_active(GTK_COMBO_BOX(combo),
-							 dialog_data->size_cache[dialog_data->tile_index]);
-
-	return combo;
-}
-
-
-/*
- * Build gamesize widget for all different tile types
- */
-static GtkWidget*
-build_gamesize_widget(struct dialog_data *dialog_data)
-{
-	GtkWidget *widget=NULL;
-
-	switch(size_widget_type[dialog_data->tile_index]) {
-	case SIZE_WIDGET_SPIN:
-		widget= build_game_size_spin(dialog_data);
-		break;
-	case SIZE_WIDGET_COMBO:
-		widget= build_game_size_combo(dialog_data);
-		break;
-	default:
-		g_message("(build_gamesize_widget) unknown size widget type: %d",
-				  size_widget_type[dialog_data->tile_index]);
-	}
-
-	return widget;
+	geometry_destroy(geo_skel);
 }
 
 
@@ -274,10 +198,10 @@ size_widget_get_value(const struct dialog_data *dialog_data)
 
 	switch(size_widget_type[dialog_data->tile_index]) {
 	case SIZE_WIDGET_SPIN:
-		value= (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size));
+		value= (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(dialog_data->size_widget));
 		break;
 	case SIZE_WIDGET_COMBO:
-		value= gtk_combo_box_get_active(GTK_COMBO_BOX(dialog_data->size));
+		value= gtk_combo_box_get_active(GTK_COMBO_BOX(dialog_data->size_widget));
 		if (value < 0) value= 2;
 		break;
 	default:
@@ -285,6 +209,91 @@ size_widget_get_value(const struct dialog_data *dialog_data)
 				  size_widget_type[dialog_data->tile_index]);
 	};
 	return value;
+}
+
+
+/*
+ * Callback when the tile size has been changed
+ * makes sure the preview image is redrawn
+ */
+static void
+tile_size_changed_cb(GtkWidget *widget, gpointer user_data)
+{
+	struct dialog_data *dialog_data=(struct dialog_data*)user_data;
+
+	dialog_data->size= size_widget_get_value(dialog_data);
+	draw_preview_image(dialog_data);
+	gtk_widget_queue_draw(dialog_data->image);
+}
+
+
+/*
+ * Build game size widget using a spin
+ */
+static GtkWidget*
+build_game_size_spin(struct dialog_data *dialog_data)
+{
+	GtkWidget *spin;
+	GtkObject *adj;
+
+	adj= gtk_adjustment_new(dialog_data->size, 5, 25, 1, 5, 0);
+	spin= gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 0);
+	g_signal_connect(G_OBJECT(spin), "value-changed",
+					 G_CALLBACK(tile_size_changed_cb), dialog_data);
+
+	return spin;
+}
+
+
+/*
+ * Build game size widget using a combo box
+ */
+static GtkWidget*
+build_game_size_combo(struct dialog_data *dialog_data)
+{
+	GtkWidget *combo;
+	int i;
+	const gchar *sizes[]={N_("Tiny"),
+						  N_("Small"),
+						  N_("Medium"),
+						  N_("Large"),
+						  N_("Huge")};
+
+	combo= gtk_combo_box_new_text();
+	for(i=0; i < 5; ++i) {
+		gtk_combo_box_append_text(GTK_COMBO_BOX(combo), sizes[i]);
+	}
+	gtk_combo_box_set_active(GTK_COMBO_BOX(combo), dialog_data->size);
+	g_signal_connect(G_OBJECT(combo), "changed",
+					 G_CALLBACK(tile_size_changed_cb), dialog_data);
+
+	return combo;
+}
+
+
+/*
+ * Build gamesize widget for all different tile types
+ */
+static GtkWidget*
+build_gamesize_widget(struct dialog_data *dialog_data)
+{
+	GtkWidget *widget=NULL;
+
+	/* set new size from cache */
+	dialog_data->size= dialog_data->size_cache[dialog_data->tile_index];
+	switch(size_widget_type[dialog_data->tile_index]) {
+	case SIZE_WIDGET_SPIN:
+		widget= build_game_size_spin(dialog_data);
+		break;
+	case SIZE_WIDGET_COMBO:
+		widget= build_game_size_combo(dialog_data);
+		break;
+	default:
+		g_message("(build_gamesize_widget) unknown size widget type: %d",
+				  size_widget_type[dialog_data->tile_index]);
+	}
+
+	return widget;
 }
 
 
@@ -304,8 +313,7 @@ tiletype_radio_cb(GtkToggleButton *button, gpointer user_data)
 		return;
 
 	/* get current setting from size widget */
-	dialog_data->size_cache[dialog_data->tile_index]=
-		size_widget_get_value(dialog_data);
+	dialog_data->size_cache[dialog_data->tile_index]= dialog_data->size;
 
 	/* find which button was selected */
 	for(i=0; i < NUMBER_TILE_TYPE; ++i) {
@@ -313,16 +321,16 @@ tiletype_radio_cb(GtkToggleButton *button, gpointer user_data)
 	}
 	dialog_data->tile_index= i;
 
+	/* change tile size widget */
+	gtk_widget_destroy(dialog_data->size_widget);
+	dialog_data->size_widget= build_gamesize_widget(dialog_data);
+	gtk_box_pack_start(GTK_BOX(dialog_data->size_container), dialog_data->size_widget,
+					   FALSE, FALSE, 0);
+	gtk_widget_show(dialog_data->size_widget);
+
 	/* redraw tile to new type */
 	draw_preview_image(dialog_data);
 	gtk_widget_queue_draw(dialog_data->image);
-
-	/* change tile size widget */
-	gtk_widget_destroy(dialog_data->size);
-	dialog_data->size= build_gamesize_widget(dialog_data);
-	gtk_box_pack_start(GTK_BOX(dialog_data->size_container), dialog_data->size,
-					   FALSE, FALSE, 0);
-	gtk_widget_show(dialog_data->size);
 }
 
 
@@ -389,8 +397,8 @@ build_tile_type_properties(struct dialog_data *dialog_data)
 	gtk_box_pack_start(GTK_BOX(mainvbox), hbox, FALSE, FALSE, 0);
 	label= gtk_label_new(_("Game Size:"));
 	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-	dialog_data->size= build_gamesize_widget(dialog_data);
-	gtk_box_pack_start(GTK_BOX(hbox), dialog_data->size, FALSE, FALSE, 0);
+	dialog_data->size_widget= build_gamesize_widget(dialog_data);
+	gtk_box_pack_start(GTK_BOX(hbox), dialog_data->size_widget, FALSE, FALSE, 0);
 
 	/* store container that hold size widget, i.e. hbox */
 	dialog_data->size_container= hbox;
@@ -477,7 +485,7 @@ static void
 extract_game_info(const struct dialog_data *dialog_data, struct gameinfo *info)
 {
 	info->type= index2tiletype[dialog_data->tile_index];
-	info->size= size_widget_get_value(dialog_data);
+	info->size= dialog_data->size;
 	info->diff_index= dialog_data->diff_index;
 }
 
@@ -504,8 +512,9 @@ setup_dialog_data(const struct gameinfo *info, struct dialog_data *dialog_data)
 	g_assert(i < NUMBER_TILE_TYPE);
 
 	dialog_data->size_cache[i]= info->size;
+	dialog_data->size= info->size;
 	dialog_data->diff_index= info->diff_index;
-	dialog_data->size= NULL;
+	dialog_data->size_widget= NULL;
 }
 
 
