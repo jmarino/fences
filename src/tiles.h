@@ -66,5 +66,11 @@ struct geometry* build_snub_tile_geometry(const struct gameinfo *info);
 /* cairo-tile.c */
 struct geometry* build_cairo_tile_geometry(const struct gameinfo *info);
 
+/* cartwheel-tile.c */
+struct geometry* build_cartwheel_tile_geometry(const struct gameinfo *info);
+
+/* trihex-tile.c */
+struct geometry* build_trihex_tile_geometry(const struct gameinfo *info);
+
 
 #endif
