@@ -46,30 +46,39 @@ struct gameinfo {
 
 
 /* square-tile.c */
+struct geometry* build_square_tile_skeleton(const struct gameinfo *info);
 struct geometry* build_square_tile_geometry(const struct gameinfo *info);
 
 /* penrose-tile.c */
+struct geometry* build_penrose_tile_skeleton(const struct gameinfo *info);
 struct geometry* build_penrose_tile_geometry(const struct gameinfo *info);
 
 /* triangular-tile.c */
+struct geometry* build_triangular_tile_skeleton(const struct gameinfo *info);
 struct geometry* build_triangular_tile_geometry(const struct gameinfo *info);
 
 /* qbert-tile.c */
+struct geometry* build_qbert_tile_skeleton(const struct gameinfo *info);
 struct geometry* build_qbert_tile_geometry(const struct gameinfo *info);
 
 /* hex-tile.c */
+struct geometry* build_hex_tile_skeleton(const struct gameinfo *info);
 struct geometry* build_hex_tile_geometry(const struct gameinfo *info);
 
 /* snub-tile.c */
+struct geometry* build_snub_tile_skeleton(const struct gameinfo *info);
 struct geometry* build_snub_tile_geometry(const struct gameinfo *info);
 
 /* cairo-tile.c */
+struct geometry* build_cairo_tile_skeleton(const struct gameinfo *info);
 struct geometry* build_cairo_tile_geometry(const struct gameinfo *info);
 
 /* cartwheel-tile.c */
+struct geometry* build_cartwheel_tile_skeleton(const struct gameinfo *info);
 struct geometry* build_cartwheel_tile_geometry(const struct gameinfo *info);
 
 /* trihex-tile.c */
+struct geometry* build_trihex_tile_skeleton(const struct gameinfo *info);
 struct geometry* build_trihex_tile_geometry(const struct gameinfo *info);
 
 

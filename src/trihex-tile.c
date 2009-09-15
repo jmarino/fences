@@ -129,10 +129,10 @@ trihex_calculate_sizes(struct geometry *geo, int dim)
 
 
 /*
- * Build Qbert (quasiregular rhombic) tile geometry data
+ * Build tri-hexagonal tile skeleton (no connections)
  */
 struct geometry*
-build_trihex_tile_geometry(const struct gameinfo *info)
+build_trihex_tile_skeleton(const struct gameinfo *info)
 {
 	struct geometry *geo;
 	int i, j;
@@ -216,6 +216,21 @@ build_trihex_tile_geometry(const struct gameinfo *info)
 	g_assert(geo->ntiles == ntiles);
 	g_assert(geo->nvertex == nvertex);
 	g_assert(geo->nlines == nlines);
+
+	return geo;
+}
+
+
+/*
+ * Build tri-hexagonal tile geometry data
+ */
+struct geometry*
+build_trihex_tile_geometry(const struct gameinfo *info)
+{
+	struct geometry *geo;
+
+	/* build geometry skeleton (no connections) */
+	geo= build_trihex_tile_skeleton(info);
 
 	/* build inter-connections */
 	geometry_connect_skeleton(geo);

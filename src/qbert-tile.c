@@ -118,10 +118,10 @@ qbert_calculate_sizes(struct geometry *geo, int dim)
 
 
 /*
- * Build Qbert (quasiregular rhombic) tile geometry data
+ * Build Qbert (quasiregular rhombic) tile geometry skeleton (no connections)
  */
 struct geometry*
-build_qbert_tile_geometry(const struct gameinfo *info)
+build_qbert_tile_skeleton(const struct gameinfo *info)
 {
 	struct geometry *geo;
 	int i, j;
@@ -197,11 +197,26 @@ build_qbert_tile_geometry(const struct gameinfo *info)
 	geo->vertex= g_realloc(geo->vertex, geo->nvertex*sizeof(struct vertex));
 	geo->lines= g_realloc(geo->lines, geo->nlines*sizeof(struct line));
 
+	return geo;
+}
+
+
+/*
+ * Build Qbert (quasiregular rhombic) tile geometry data
+ */
+struct geometry*
+build_qbert_tile_geometry(const struct gameinfo *info)
+{
+	struct geometry *geo;
+
+	/* build geometry skeleton (no connections) */
+	geo= build_qbert_tile_skeleton(info);
+
 	/* build inter-connections */
 	geometry_connect_skeleton(geo);
 
 	/* define sizes of drawing bits */
-	qbert_calculate_sizes(geo, dimy);
+	qbert_calculate_sizes(geo, info->size);
 
 	return geo;
 }

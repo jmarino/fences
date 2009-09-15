@@ -44,11 +44,11 @@ square_calculate_sizes(struct geometry *geo, int dim)
 
 
 /*
- * Build square tile geometry data
+ * Build square tile geometry skeleton: no connections between elements
  * Square grid of dim x dim dimensions
  */
 struct geometry*
-build_square_tile_geometry(const struct gameinfo *info)
+build_square_tile_skeleton(const struct gameinfo *info)
 {
 	struct geometry *geo;
 	int i, j;
@@ -103,11 +103,27 @@ build_square_tile_geometry(const struct gameinfo *info)
 	g_assert(geo->nvertex == nvertex);
 	g_assert(geo->nlines == nlines);
 
+	return geo;
+}
+
+
+/*
+ * Build square tile geometry data
+ * Square grid of dim x dim dimensions
+ */
+struct geometry*
+build_square_tile_geometry(const struct gameinfo *info)
+	{
+	struct geometry *geo;
+
+	/* build geometry skeleton (no connections) */
+	geo= build_square_tile_skeleton(info);
+
 	/* finalize geometry data: tie everything together */
 	geometry_connect_skeleton(geo);
 
 	/* define sizes of drawing bits */
-	square_calculate_sizes(geo, dim);
+	square_calculate_sizes(geo, info->size);
 
 	return geo;
 }

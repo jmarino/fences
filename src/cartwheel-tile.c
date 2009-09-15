@@ -399,7 +399,7 @@ cartwheel_calculate_sizes(struct geometry *geo)
  * Transform list of darts to geometry data
  */
 static struct geometry*
-cartwheel_tile_to_geometry(GSList *cartwheel, double side)
+cartwheel_tile_to_skeleton(GSList *cartwheel, double side)
 {
 	struct geometry *geo;
 	GSList *list;
@@ -450,12 +450,6 @@ cartwheel_tile_to_geometry(GSList *cartwheel, double side)
 	/*printf("ntiles: %d (%d) %d\n", geo->ntiles, ntiles);
 	printf("nvertex: %d (%d) %d\n", geo->nvertex, nvertex);
 	printf("nlines: %d (%d) %d\n", geo->nlines, nlines);*/
-
-	/* finalize geometry data: tie everything together */
-	geometry_connect_skeleton(geo);
-
-	/* define sizes of drawing bits */
-	cartwheel_calculate_sizes(geo);
 
 	return geo;
 }
@@ -602,10 +596,10 @@ cartwheel_calculate_params(int size_index, struct puzzle_params *params)
 
 
 /*
- * Build a cartwheel tiling by unfolding kites and darts
+ * Build a cartwheel tile skeleton by unfolding kites and darts
  */
 struct geometry*
-build_cartwheel_tile_geometry(const struct gameinfo *info)
+build_cartwheel_tile_skeleton(const struct gameinfo *info)
 {
 	GSList *cartwheel=NULL;
 	struct geometry *geo;
@@ -632,13 +626,34 @@ build_cartwheel_tile_geometry(const struct gameinfo *info)
 	//draw_cartwheel_tile(cartwheel);
 
 	/* transform tile into geometry data (points, lines & tiles) */
-	geo= cartwheel_tile_to_geometry(cartwheel, params.side);
+	geo= cartwheel_tile_to_skeleton(cartwheel, params.side);
 
-	/* free data */
+	/* free dart and kites data */
 	while (cartwheel != NULL) {
 		g_free(cartwheel->data);
 		cartwheel= g_slist_delete_link(cartwheel, cartwheel);
 	}
+
+	return geo;
+}
+
+
+/*
+ * Build a cartwheel tiling by unfolding kites and darts
+ */
+struct geometry*
+build_cartwheel_tile_geometry(const struct gameinfo *info)
+{
+	struct geometry *geo;
+
+	/* build geometry skeleton (no connections) */
+	geo= build_cartwheel_tile_skeleton(info);
+
+	/* finalize geometry data: tie everything together */
+	geometry_connect_skeleton(geo);
+
+	/* define sizes of drawing bits */
+	cartwheel_calculate_sizes(geo);
 
 	return geo;
 }

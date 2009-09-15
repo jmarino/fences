@@ -46,11 +46,11 @@ triangular_calculate_sizes(struct geometry *geo, int dim)
 
 
 /*
- * Build triangular tile geometry data
+ * Build triangular tile geometry skeleton: no connections between elements
  * Triangular grid of dim x dim tiles
  */
 struct geometry*
-build_triangular_tile_geometry(const struct gameinfo *info)
+build_triangular_tile_skeleton(const struct gameinfo *info)
 {
 	struct geometry *geo;
 	int i, j;
@@ -122,11 +122,27 @@ build_triangular_tile_geometry(const struct gameinfo *info)
 	g_assert(geo->nvertex == nvertex);
 	g_assert(geo->nlines == nlines);
 
+	return geo;
+}
+
+
+/*
+ * Build triangular tile geometry data
+ * Triangular grid of dim x dim tiles
+ */
+struct geometry*
+build_triangular_tile_geometry(const struct gameinfo *info)
+{
+	struct geometry *geo;
+
+	/* build geometry skeleton (no connections) */
+	geo= build_triangular_tile_skeleton(info);
+
 	/* finalize geometry data: tie everything together */
 	geometry_connect_skeleton(geo);
 
 	/* define sizes of drawing bits */
-	triangular_calculate_sizes(geo, dimy);
+	triangular_calculate_sizes(geo, info->size);
 
 	return geo;
 }

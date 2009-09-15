@@ -394,10 +394,10 @@ penrose_calculate_sizes(struct geometry *geo)
 
 
 /*
- * Transform list of rombs to geometry data
+ * Transform list of rombs to tile skeleton (no connections)
  */
 static struct geometry*
-penrose_tile_to_geometry(GSList *penrose, double side)
+penrose_tile_to_skeleton(GSList *penrose, double side)
 {
 	struct geometry *geo;
 	GSList *list;
@@ -446,12 +446,6 @@ penrose_tile_to_geometry(GSList *penrose, double side)
 	/*printf("ntiles: %d (%d) %d\n", geo->ntiles, ntiles);
 	printf("nvertex: %d (%d) %d\n", geo->nvertex, nvertex);
 	printf("nlines: %d (%d) %d\n", geo->nlines, nlines);*/
-
-	/* finalize geometry data: tie everything together */
-	geometry_connect_skeleton(geo);
-
-	/* define sizes of drawing bits */
-	penrose_calculate_sizes(geo);
 
 	return geo;
 }
@@ -536,10 +530,10 @@ penrose_calculate_params(int size_index, double *side)
 
 
 /*
- * Build a penrose tiling by unfolding two sets of rombs
+ * Build a penrose tiling skeleton by unfolding two sets of rombs
  */
 struct geometry*
-build_penrose_tile_geometry(const struct gameinfo *info)
+build_penrose_tile_skeleton(const struct gameinfo *info)
 {
 	GSList *penrose=NULL;
 	struct geometry *geo;
@@ -566,22 +560,38 @@ build_penrose_tile_geometry(const struct gameinfo *info)
 	/* draw to file */
 	//draw_penrose_tile(penrose);
 
-	/* clip rombs to make tile round */
-	/***TODO***/
-
 	/* transform tile into geometry data (points, lines & tiles) */
-	geo= penrose_tile_to_geometry(penrose, side);
+	geo= penrose_tile_to_skeleton(penrose, side);
 
 	/* debug: draw to file */
 	//draw_penrose_tile(penrose);
 
-	/* free data */
+	/* free penrose rhombs data */
 	while (penrose != NULL) {
 		g_free(penrose->data);
 		penrose= g_slist_delete_link(penrose, penrose);
 	}
 
-	//exit(1);
+	return geo;
+}
+
+
+/*
+ * Build a penrose tiling by unfolding two sets of rombs
+ */
+struct geometry*
+build_penrose_tile_geometry(const struct gameinfo *info)
+{
+	struct geometry *geo;
+
+	/* build geometry skeleton (no connections) */
+	geo= build_penrose_tile_skeleton(info);
+
+	/* finalize geometry data: tie everything together */
+	geometry_connect_skeleton(geo);
+
+	/* define sizes of drawing bits */
+	penrose_calculate_sizes(geo);
 
 	return geo;
 }
