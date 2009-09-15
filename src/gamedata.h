@@ -86,6 +86,7 @@ void gamedata_clear_game(struct board *board);
 struct geometry *build_board_geometry(struct gameinfo *gameinfo);
 void gamedata_destroy_current_game(struct board *board);
 void gamedata_create_new_game(struct board *board, struct gameinfo *info);
+struct geometry *build_geometry_tile(struct gameinfo *gameinfo);
 
 /* click-mesh.c */
 void click_mesh_destroy(struct click_mesh *click_mesh);

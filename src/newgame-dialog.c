@@ -181,7 +181,7 @@ draw_preview_image(struct dialog_data *dialog_data)
 
 	/* build preview geometry */
 	fences_benchmark_start();
-	geo= build_board_geometry(&gameinfo);
+	geo= build_geometry_tile(&gameinfo);
 	g_message("time: %lf", fences_benchmark_stop());
 
 	cr= gdk_cairo_create(dialog_data->preview);

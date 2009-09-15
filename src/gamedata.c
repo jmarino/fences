@@ -27,6 +27,21 @@
 struct board board;
 
 
+/*
+ * Pointers to functions that create all different geometry tiles
+ */
+typedef struct geometry* (*build_geometry_func_type)(const struct gameinfo *info);
+static build_geometry_func_type build_geometry_func[NUMBER_TILE_TYPE]={
+	build_square_tile_geometry,
+	build_penrose_tile_geometry,
+	build_triangular_tile_geometry,
+	build_qbert_tile_geometry,
+	build_hex_tile_geometry,
+	build_snub_tile_geometry,
+	build_cairo_tile_geometry,
+	build_cartwheel_tile_geometry,
+	build_trihex_tile_geometry
+};
 
 
 
@@ -234,7 +249,7 @@ initialize_board(void)
 	board.sol= NULL;
 
 	/* build geometry data from gameinfo */
-	board.geo= build_board_geometry(&board.gameinfo);
+	board.geo= build_geometry_tile(&board.gameinfo);
 
 	/* generate click mesh for lines */
 	board.click_mesh= click_mesh_setup(board.geo);
@@ -264,45 +279,13 @@ gamedata_clear_game(struct board *board)
 
 
 /*
- * Build board geometry of given game type
+ * Build new geometry of type determined by gameinfo
  */
 struct geometry *
-build_board_geometry(struct gameinfo *gameinfo)
+build_geometry_tile(struct gameinfo *gameinfo)
 {
-	struct geometry *geo=NULL;
-
-	switch(gameinfo->type){
-	case TILE_TYPE_SQUARE:
-		geo= build_square_tile_geometry(gameinfo);
-		break;
-	case TILE_TYPE_PENROSE:
-		geo= build_penrose_tile_geometry(gameinfo);
-		break;
-	case TILE_TYPE_TRIANGULAR:
-		geo= build_triangular_tile_geometry(gameinfo);
-		break;
-	case TILE_TYPE_QBERT:
-		geo= build_qbert_tile_geometry(gameinfo);
-		break;
-	case TILE_TYPE_HEX:
-		geo= build_hex_tile_geometry(gameinfo);
-		break;
-	case TILE_TYPE_SNUB:
-		geo= build_snub_tile_geometry(gameinfo);
-		break;
-	case TILE_TYPE_CAIRO:
-		geo= build_cairo_tile_geometry(gameinfo);
-		break;
-	case TILE_TYPE_CARTWHEEL:
-		geo= build_cartwheel_tile_geometry(gameinfo);
-		break;
-	case TILE_TYPE_TRIHEX:
-		geo= build_trihex_tile_geometry(gameinfo);
-		break;
-	default:
-		g_message("(build_board_geometry) unknown tile type: %d", gameinfo->type);
-	};
-	return geo;
+	g_assert(gameinfo->type >= 0 &&  gameinfo->type < NUMBER_TILE_TYPE);
+	return build_geometry_func[gameinfo->type](gameinfo);
 }
 
 
@@ -335,7 +318,7 @@ gamedata_create_new_game(struct board *board, struct gameinfo *info)
 	memcpy(&board->gameinfo, info, sizeof(struct gameinfo));
 
 	/* build geometry data from gameinfo */
-	board->geo= build_board_geometry(info);
+	board->geo= build_geometry_tile(info);
 
 	/* generate click mesh for lines */
 	board->click_mesh= click_mesh_setup(board->geo);
