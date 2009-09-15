@@ -656,7 +656,6 @@ draw_cartwheel_tile(GSList *cartwheel)
 	cairo_surface_t *surf;
 	cairo_t *cr;
 	struct kite *kite;
-	double x, y;
 	struct point pts[4];
 	int i;
 
