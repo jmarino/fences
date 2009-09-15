@@ -117,22 +117,6 @@ build_triangular_tile_geometry(const struct gameinfo *info)
 		}
 	}
 
-	/* DEBUG: print out details about a few triangles */
-	//g_message("nvertex:%d, ntiles:%d, nlines:%d", geo->nvertex,
-	//		  geo->ntiles, geo->nlines);
-	/*
-	for(i=0; i < 8; ++i) {
-		tile= geo->tiles + i;
-		printf("Triangle: %d (nvertex:%d, nsides:%d)\n", tile->id, tile->nvertex,
-			tile->nsides);
-		printf("**Vertices:\n");
-		for(j=0; j< tile->nvertex; ++j)
-			printf("**** %d\n", tile->vertex[j]->id);
-		printf("**Sides:\n");
-		for(j=0; j< tile->nsides; ++j)
-			printf("**** %d\n", tile->sides[j]->id);
-			}*/
-
 	/* sanity check: see if we got the numbers we expected */
 	g_assert(geo->ntiles == ntiles);
 	g_assert(geo->nvertex == nvertex);
