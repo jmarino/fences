@@ -147,11 +147,11 @@ build_trihex_tile_geometry(const struct gameinfo *info)
 	double y0;
 	struct point pos;
 	const int geo_params[5][3]= {	/* num of tiles, vertex, lines for all sizes */
-		{ 24,  52,  75},
-		{ 60, 116, 175},
-		{112, 204, 315},
-		{180, 316, 495},
-		{264, 452, 715}
+		{ 46,  42,  87},
+		{ 96,  79, 174},
+		{183, 143, 325},
+		{277, 208, 484},
+		{465, 338, 802}
 	};
 	int neighbor=0;
 
@@ -168,7 +168,7 @@ build_trihex_tile_geometry(const struct gameinfo *info)
 	yshift= TRIHEX_GAME_SIZE/(dimy*(sqrt(3.0) + 3.0)/2.0 + (sqrt(3.0) + 1.0)/2.0);
 	/* choose xfit or yfit (see which produces smaller side -> more limiting) */
 	if (yshift < side) side= yshift;
-	
+
 	xshift= side*sqrt(3.0) + side;
 	yshift= side*(sqrt(3.0) + 1.0)/2.0 + side;
 
@@ -179,9 +179,9 @@ build_trihex_tile_geometry(const struct gameinfo *info)
 	y0= (TRIHEX_BOARD_SIZE - y0)/2.0 + (sqrt(3.0)/2.0 + 1.0)*side;
 
 	/* create geometry with plenty of space for lines and vertex */
-	ntiles= geo_params[info->size][0]*10;
-	nvertex= geo_params[info->size][1]*10;
-	nlines= geo_params[info->size][2]*10;
+	ntiles= geo_params[info->size][0];
+	nvertex= geo_params[info->size][1];
+	nlines= geo_params[info->size][2];
 	geo= geometry_create_new(ntiles, nvertex, nlines, 5);
 	geo->board_size= TRIHEX_BOARD_SIZE;
 	geo->board_margin= TRIHEX_BOARD_MARGIN;
@@ -212,24 +212,10 @@ build_trihex_tile_geometry(const struct gameinfo *info)
 		}
 	}
 
-	/*side= 10;
-	pos.x= 20;
-	pos.y= 20;
-	trihex_fill_unit_with_tiles(geo, &pos, side);
-	pos.x+= side*sqrt(3.0) + side;
-	trihex_fill_unit_with_tiles(geo, &pos, side);
-
-	pos.x= 20 + side*sqrt(3.0)/2.0 + side/2.0;
-	pos.y+= side + side*sqrt(3.0)/2.0 + side/2.0;
-	trihex_fill_unit_with_tiles(geo, &pos, side);
-
-	pos.x-= side*sqrt(3.0) + side;
-	trihex_fill_unit_with_tiles(geo, &pos, side);*/
-
 	/* make sure we didn't underestimate max numbers */
-	//g_assert(geo->ntiles == ntiles);
-	//g_assert(geo->nvertex == nvertex);
-	//g_assert(geo->nlines == nlines);
+	g_assert(geo->ntiles == ntiles);
+	g_assert(geo->nvertex == nvertex);
+	g_assert(geo->nlines == nlines);
 
 	/* build inter-connections */
 	geometry_connect_skeleton(geo);
