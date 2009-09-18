@@ -388,7 +388,7 @@ build_tile_size_frame(struct dialog_data *dialog_data)
 	int i;
 
 	/* frame: game type and properties */
-	frame= gtk_frame_new(_("Game Size"));
+	frame= gtk_frame_new(_("Size"));
 
 	/* main vbox */
 	vbox= gtk_vbox_new(FALSE, 5);
