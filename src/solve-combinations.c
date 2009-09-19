@@ -193,11 +193,12 @@ combination_solve2(struct solution *sol)
 /*
  * Test all possible combinations in one tile
  * Level: how far ahead to look after trying a combination
- * Returns number of lines succesfully modified after trying all combinations
+ * At exit, sol->nchanges contains number of lines succesfully modified after
+ * trying all combinations
  * NOTE: line masks are sizeof(int) bits which limits max number of lines
  *	but no safety checks exist to ensure num of lines < sizeof(int)
  */
-static int
+static void
 test_tile_combinations(struct solution *sol, struct solution *sol_bak,
 			 int tile_num, int level)
 {
@@ -209,7 +210,6 @@ test_tile_combinations(struct solution *sol, struct solution *sol_bak,
 	int all_lines=0;	// lines attempted
 	int tmp_mask;
 	int ncomb;
-	int count=0;
 	int i;
 	gboolean valid=TRUE;
 
@@ -258,6 +258,7 @@ test_tile_combinations(struct solution *sol, struct solution *sol_bak,
 
 	/* after trying all combinations see if a line was always on */
 	i= 0;
+	sol->nchanges= 0;
 	while(lines_mask != 0 || bad_lines != 0) {
 		/* set lines in mask */
 		if (lines_mask&1) {
@@ -268,9 +269,6 @@ test_tile_combinations(struct solution *sol, struct solution *sol_bak,
 		bad_lines>>= 1;
 		++i;
 	}
-
-	/* a line has been set */
-	return count;
 }
 
 
@@ -300,10 +298,10 @@ solve_try_combinations(struct solution *sol, int level)
 
 		/* Test all combinations for tile and see if all valid ones
 		 have a line always ON or OFF. */
-		count= test_tile_combinations(sol, sol_bak, i, level);
+		test_tile_combinations(sol, sol_bak, i, level);
 
-		/* TRUE -> a line has been set, we're done */
-		if (count > 0)
+		/* sol->nchanges contains number of changes made */
+		if (sol->nchanges > 0)
 			break;
 	}
 
