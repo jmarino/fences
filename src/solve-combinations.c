@@ -90,7 +90,7 @@ set_combination(struct solution *sol, struct tile *tile, int n, int k, int comb)
 		/* find next available line and set it */
 		while(STATE(tile->sides[nline]) != LINE_OFF)
 			nline= (nline + 1) % tile->nsides;
-		sol->states[tile->sides[nline]->id]= LINE_ON;
+		solve_set_line_on(sol, tile->sides[nline]);
 		lines_mask|= 1 << nline;
 		nline= (nline + 1) % tile->nsides;
 		while(STATE(tile->sides[nline]) != LINE_OFF)
