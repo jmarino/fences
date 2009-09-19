@@ -279,12 +279,11 @@ test_tile_combinations(struct solution *sol, struct solution *sol_bak,
  * Any line that is ON for all valid permutations, is set to ON
  * Level: how far ahead to look after trying a combination
  */
-int
+void
 solve_try_combinations(struct solution *sol, int level)
 {
 	int i;
 	struct solution *sol_bak;	// backup solution
-	int count=0;
 	struct geometry *geo=sol->geo;
 
 	/* make a backup of current solution state */
@@ -307,6 +306,4 @@ solve_try_combinations(struct solution *sol, int level)
 
 	/* free solution backup */
 	solve_free_solution_data(sol_bak);
-
-	return count;
 }

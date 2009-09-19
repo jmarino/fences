@@ -80,7 +80,7 @@ inline void solve_set_line_on(struct solution *sol, struct line *lin);
 inline void solve_set_line_cross(struct solution *sol, struct line *lin);
 
 /* solve-combinations.c */
-int solve_try_combinations(struct solution *sol, int level);
+void solve_try_combinations(struct solution *sol, int level);
 
 /* game-solver.c */
 void solve_zero_tiles(struct solution *sol);
