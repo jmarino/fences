@@ -188,6 +188,8 @@ solve_create_solution_data(struct geometry *geo, struct game *game)
 	sol->last_level= -1;
 	sol->tile_count= (struct num_lines*)g_malloc(geo->ntiles*sizeof(struct num_lines));
 	sol->vertex_count= (struct num_lines*)g_malloc(geo->nvertex*sizeof(struct num_lines));
+	sol->steps= (guint8*)g_malloc(geo->nlines*sizeof(guint8));
+	sol->iter= 0;
 
 	for(i=0; i < geo->nlines; ++i)
 		sol->states[i]= LINE_OFF;
@@ -218,6 +220,7 @@ solve_free_solution_data(struct solution *sol)
 	g_free(sol->tile_changes);
 	g_free(sol->tile_count);
 	g_free(sol->vertex_count);
+	g_free(sol->steps);
 	g_free(sol);
 }
 
@@ -247,6 +250,8 @@ solve_copy_solution(struct solution *dest, struct solution *src)
 	dest->solved= src->solved;
 	dest->difficulty= src->difficulty;
 	dest->last_level= src->last_level;
+	memcpy(dest->steps, src->steps, src->geo->nlines*sizeof(guint8));
+	dest->iter= src->iter;
 }
 
 
@@ -286,6 +291,8 @@ solve_duplicate_solution(struct solution *src)
 		(struct num_lines*)g_malloc(src->geo->nvertex*sizeof(struct num_lines));
 	sol->num_tile_done= src->num_tile_done;
 	sol->num_vertex_done= src->num_vertex_done;
+	sol->steps= (guint8*)g_malloc(src->geo->nlines*sizeof(guint8));
+	sol->iter= src->iter;
 
 	memcpy(sol->states, src->states, lines_size);
 	memcpy(sol->tile_done, src->tile_done, tiles_size);
@@ -296,6 +303,7 @@ solve_duplicate_solution(struct solution *src)
 	memcpy(sol->level_count, src->level_count, SOLVE_NUM_LEVELS * sizeof(int));
 	memcpy(sol->tile_count, src->tile_count, src->geo->ntiles*sizeof(struct num_lines));
 	memcpy(sol->vertex_count, src->vertex_count, src->geo->nvertex*sizeof(struct num_lines));
+	memcpy(sol->steps, src->steps, src->geo->nlines*sizeof(guint8));
 
 	return sol;
 }
@@ -314,6 +322,8 @@ solve_reset_solution(struct solution *sol)
 	memset(sol->level_count, 0, SOLVE_NUM_LEVELS * sizeof(int));
 	memset(sol->tile_count, 0, sol->geo->ntiles*sizeof(struct num_lines));
 	memset(sol->vertex_count, 0, sol->geo->nvertex*sizeof(struct num_lines));
+	memset(sol->steps, 0, sol->geo->nlines*sizeof(guint8));
+	sol->iter= 0;
 	sol->nchanges= 0;
 	sol->ntile_changes= 0;
 	sol->solved= FALSE;

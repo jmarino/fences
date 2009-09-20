@@ -61,6 +61,8 @@ struct solution {
 	int last_level;			// level used in last step of solution
 	struct num_lines *tile_count;		// keep track of lines ON & CROSS around tile
 	struct num_lines *vertex_count;	// keep track of lines ON & CROSS around vertex
+	guint8 *steps;			// keep track of solution steps (levels used)
+	int iter;				// number of iterations (solution steps) taken
 };
 
 
