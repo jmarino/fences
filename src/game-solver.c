@@ -878,35 +878,41 @@ static void
 calculate_difficulty(struct solution *sol)
 {
 	int i;
-	double max_diff[SOLVE_NUM_LEVELS]={1.0, 1.0, 3.0, 4.0, 5.0, 7.0, 8.0, 9.0, 10.0};
-	double weights[SOLVE_NUM_LEVELS]={0.5, 0.75, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
-	double score=0;
+	double weights[]= {0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+	double min_diff[]={0.0, 0.0, 1.0, 1.0, 3.0, 4.0, 7.0, 8.0, 9.0};
+	double max_diff[]={1.0, 2.0, 3.0, 4.0, 6.0, 8.0, 9.0, 9.0, 10.0};
+	double accum=0.0;
+	double groups=0.0;
+	int num_groups=0;
 	int top_level=0;
-	double step;
 
-	/* find top level used and calculate levels' score*/
-	for(i=0; i < SOLVE_NUM_LEVELS; ++i) {
-		if (sol->level_count[i] > 0)
-			top_level= i;
-		score+= weights[i] * sol->level_count[i];
-		printf("(%1d) %3d (@ %4.2lf) -> %4.2lf\n", i, sol->level_count[i], weights[i],
-		       weights[i] * sol->level_count[i]);
+	/* Add together groups and use them to compute a global mean.
+	   Keep track of top level used. */
+	for(i=0; i < sol->iter; ++i) {
+		if (sol->steps[i] == 0) {
+			if (accum != 0) {		// just finished a group
+				groups+= accum;
+				accum= 0;
+				++num_groups;
+			}
+		} else {
+			if (sol->steps[i] > top_level) top_level= sol->steps[i];
+			accum+= sol->steps[i] * weights[ sol->steps[i] ];
+		}
 	}
-
-	printf("total: 0.5 * %4.2lf/%3d ", score, sol->level_count[0]);
-	if (sol->level_count[0] > 0) {
-		score= score/sol->level_count[0];
+	/* finish last group if needed (end in non-zero) */
+	if (accum != 0) {
+		groups+= accum;
+		++num_groups;
 	}
-	if (score > 2.0) score= 2.0;
-	score= score/2.0;
-	printf("= %4.2lf\n", score);
+	/* calculate mean of groups and normalize by top level */
+	groups= (groups / (double)num_groups) / (double)top_level;//lev_diff[top_level];
 
-	if (top_level == 0) {
-		/* consider unlikely case of top_level == 0 */
-		sol->difficulty= score * max_diff[0];
+	if (groups > 1.0) {
+		sol->difficulty= max_diff[top_level];
 	} else {
-		step= max_diff[top_level] - max_diff[top_level - 1];
-		sol->difficulty= max_diff[top_level - 1] + score * step;
+		sol->difficulty= min_diff[top_level] +
+			(max_diff[top_level] - min_diff[top_level])*groups;
 	}
 }
 
@@ -957,6 +963,8 @@ solution_loop(struct solution *sol, int max_iter, int max_level)
 				//printf("level %d: %d\n", level, count);
 			}
 			sol->last_level= level;
+			sol->steps[sol->iter]= level;
+			++sol->iter;
 			level= 0;
 			++iter;
 		}
@@ -965,7 +973,7 @@ solution_loop(struct solution *sol, int max_iter, int max_level)
 		if (sol->num_tile_done == sol->geo->ntiles &&
 			sol->num_vertex_done == sol->geo->nvertex) {
 			printf("last level: %d  (%d)\n", level, sol->nchanges);
-			return;
+			break;
 		}
 
 		/* reached maximum number of iterations -> stop */
