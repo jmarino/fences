@@ -11,9 +11,10 @@ INCLUDES = \
 	-DPACKAGE_DATA_DIR=\""$(datadir)"\" \
 	$(FENCES_CFLAGS)
 
+# NOTE: flags "-ggdb -O0" help debugging. Remove in final version.
 AM_CFLAGS =\
 	 -Wall\
-	 -g
+	 -ggdb -O0
 
 bin_PROGRAMS = fences
 
