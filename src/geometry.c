@@ -533,15 +533,9 @@ geometry_add_line(struct geometry *geo, struct vertex *v1, struct vertex *v2)
 	struct avl_node *parent;
 
 	/* find existing vertex that represents 'point' */
-	if (v1->id < v2->id) {
-		value.i= v1->id;
-		lin= avltree_find(geo->line_root, &value, v2, value_cmp_int,
-						  AVLTREE_DATACMP(line_cmp), &parent);
-	} else {
-		value.i= v2->id;
-		lin= avltree_find(geo->line_root, &value, v1, value_cmp_int,
-						  AVLTREE_DATACMP(line_cmp), &parent);
-	}
+	value.i= v1->id + v2->id;
+	lin= avltree_find(geo->line_root, &value, v1, value_cmp_int,
+					  AVLTREE_DATACMP(line_cmp), &parent);
 
 	if (lin == NULL) {		/* not found, create new */
 		lin= geo->lines + geo->nlines;
