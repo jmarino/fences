@@ -88,6 +88,10 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_da
 		}
 		if (old_state == *state) return TRUE;
 
+		/* temporary HACK to keep track of number of lines on */
+		if (old_state == LINE_ON) --board->game->nlines_on;
+		else if (*state == LINE_ON) ++board->game->nlines_on;
+
 		/* record change in history */
 		history_record_event_single(board, lin->id, old_state, *state);
 

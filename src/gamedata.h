@@ -49,6 +49,9 @@ enum {
 struct game {
 	int *states;		// Line states
 	int *numbers;		// Number in tiles
+	int nlines_on;		// Number of lines currently on
+	int *solution;		// Solved game
+	int solution_nlines_on;	// Number of lines on in solution
 };
 
 
@@ -64,7 +67,6 @@ struct click_mesh {
 
 struct board {
 	struct gameinfo gameinfo;		// info about game (tile type, size, ...)
-	struct solution *sol;
 	struct geometry *geo;	// geometry info of lines, tiles & vertices
 	struct game *game;	// game data (line states and tile numbers)
 	double width_pxscale;	// Width board-to-pixel scale

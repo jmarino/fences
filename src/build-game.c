@@ -249,15 +249,14 @@ build_new_game(struct geometry *geo, double difficulty)
 
 	/* put new game in game structure */
 	game= newgame->game;
-	memcpy(game->states, sol->states, geo->nlines * sizeof(int));
-	memcpy(game->states, newgame->loop, geo->nlines * sizeof(int));
-	/*memset(game->states, 0, geo->nlines * sizeof(int));
-	for(i=0; i < geo->ntiles; ++i)
-		if (newgame->tile_mask[i] != TILE_HIDDEN)
-			game->numbers[i]= newgame->all_numbers[i];
-		else
-			game->numbers[i]= -1;
-	*/
+	memcpy(game->solution, newgame->loop, geo->nlines * sizeof(int));
+	game->nlines_on= 0;
+	game->solution_nlines_on= 0;
+	for(i=0; i < geo->nlines; ++i) {
+		game->states[i]= LINE_OFF;
+		if (game->solution[i] == LINE_ON)
+			++game->solution_nlines_on;
+	}
 	/* free solution */
 	solve_free_solution_data(sol);
 

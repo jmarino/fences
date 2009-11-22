@@ -69,10 +69,13 @@ create_empty_gamedata(struct geometry *geo)
 	game= (struct game*)g_malloc(sizeof(struct game));
 	game->states= (int*)g_malloc(geo->nlines*sizeof(int));
 	game->numbers= (int*)g_malloc(geo->ntiles*sizeof(int));
+	game->solution= (int*)g_malloc(geo->nlines*sizeof(int));
 	for(i=0; i < geo->nlines; ++i)
 		game->states[i]= LINE_OFF;
 	for(i=0; i < geo->ntiles; ++i)
 		game->numbers[i]= -1;
+	game->nlines_on= 0;
+	game->solution_nlines_on= 0;
 
 	return game;
 }
@@ -86,6 +89,7 @@ free_gamedata(struct game *game)
 {
 	g_free(game->states);
 	g_free(game->numbers);
+	g_free(game->solution);
 	g_free(game);
 }
 
@@ -257,7 +261,6 @@ initialize_board(void)
 	board.drawarea= NULL;
 	board.window= NULL;
 	board.game_state= GAMESTATE_NOGAME;
-	board.sol= NULL;
 
 	/* build geometry data from gameinfo */
 	board.geo= build_geometry_tile(&board.gameinfo);
@@ -321,8 +324,6 @@ gamedata_destroy_current_game(struct board *board)
 	board->geo= NULL;
 	free_gamedata(board->game);
 	board->game= NULL;
-	solve_free_solution_data(board->sol);
-	board->sol= NULL;
 	click_mesh_destroy(board->click_mesh);
 	board->click_mesh= NULL;
 	history_destroy(board->history);
