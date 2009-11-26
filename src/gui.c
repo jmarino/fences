@@ -19,6 +19,7 @@
 #include "i18n.h"
 #include "gamedata.h"
 #include "callbacks.h"
+#include "history.h"
 
 
 #define MENU_TOOLBAR_UI_FILE	"menu_toolbar.ui"
@@ -255,17 +256,17 @@ fencesgui_set_undoredo_state(struct board *board)
 
 	/* set undo button & menu */
 	action= g_object_get_data(G_OBJECT(board->window), "undo-action");
-	if (g_list_next(board->history) == NULL)
-		gtk_action_set_sensitive(GTK_ACTION(action), FALSE);
-	else
+	if (history_can_undo(board->history))
 		gtk_action_set_sensitive(GTK_ACTION(action), TRUE);
+	else
+		gtk_action_set_sensitive(GTK_ACTION(action), FALSE);
 
 	/* set redo button & menu */
 	action= g_object_get_data(G_OBJECT(board->window), "redo-action");
-	if (g_list_previous(board->history) == NULL)
-		gtk_action_set_sensitive(GTK_ACTION(action), FALSE);
-	else
+	if (history_can_redo(board->history))
 		gtk_action_set_sensitive(GTK_ACTION(action), TRUE);
+	else
+		gtk_action_set_sensitive(GTK_ACTION(action), FALSE);
 }
 
 

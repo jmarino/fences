@@ -56,6 +56,20 @@ struct game {
 
 
 /*
+ * contains info about a line change
+ */
+struct line_change {
+	int id;			// id of line that changes
+	int old_state;		// old state of line
+	int new_state;		// new state of line
+};
+
+
+/* stores history data (private declaration, see history.c) */
+struct history;
+
+
+/*
  * Click mesh: listing lines found inside each mesh tile
  */
 struct click_mesh {
@@ -72,7 +86,7 @@ struct board {
 	double width_pxscale;	// Width board-to-pixel scale
 	double height_pxscale;	// Height board-to-pixel scale
 	struct click_mesh *click_mesh; // click mesh
-	GList *history;
+	struct history *history;		// history data
 	gpointer drawarea;	// widget where board is drawn
 	gpointer window;	// main gtk window
 	int game_state;		// hold current state of game

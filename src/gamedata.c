@@ -257,7 +257,7 @@ initialize_board(void)
 	board.gameinfo.diff_index= 3;
 
 	board.click_mesh= NULL;
-	board.history= NULL;
+	board.history= history_create();
 	board.drawarea= NULL;
 	board.window= NULL;
 	board.game_state= GAMESTATE_NOGAME;
@@ -286,8 +286,7 @@ gamedata_clear_game(struct board *board)
 	/* clear line states */
 	memset(board->game->states, 0, board->geo->nlines*sizeof(int));
 	/* clear history */
-	history_destroy(board->history);
-	board->history= NULL;
+	history_clear(board->history);
 	board->game_state= GAMESTATE_NEW;
 }
 
@@ -326,8 +325,7 @@ gamedata_destroy_current_game(struct board *board)
 	board->game= NULL;
 	click_mesh_destroy(board->click_mesh);
 	board->click_mesh= NULL;
-	history_destroy(board->history);
-	board->history= NULL;
+	history_clear(board->history);
 	board->game_state= GAMESTATE_NOGAME;
 }
 

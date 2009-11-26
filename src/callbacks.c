@@ -40,9 +40,8 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_da
 	GSList *list;
 	struct line *lin;
 	gboolean inside;
-	int *state;
-	int old_state;
 	struct board *board=(struct board*)user_data;
+	struct line_change change;
 
 	/* check game state to decide what to do */
 	if (board->game_state == GAMESTATE_FINISHED ||
@@ -72,28 +71,32 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_da
 	/* check if a line was found */
 	if (list != NULL) {
 		//printf("mouse: - Line %d\n", lin->id);
-		state= board->game->states + lin->id;
-		old_state= *state;
+		change.id= lin->id;
+		change.old_state= board->game->states[lin->id];
 		switch(event->button) {
 			/* left button */
 			case 1:
-				*state= (*state == LINE_ON) ?
+				change.new_state= (change.old_state == LINE_ON) ?
 					LINE_OFF : LINE_ON;
 				break;
 			/* right button */
 			case 3:
-				*state= (*state == LINE_CROSSED) ?
+				change.new_state= (change.old_state == LINE_CROSSED) ?
 					LINE_OFF : LINE_CROSSED;
 				break;
+		    default:
+				return TRUE;
 		}
-		if (old_state == *state) return TRUE;
 
 		/* temporary HACK to keep track of number of lines on */
-		if (old_state == LINE_ON) --board->game->nlines_on;
-		else if (*state == LINE_ON) ++board->game->nlines_on;
+		if (change.old_state == LINE_ON) --board->game->nlines_on;
+		else if (change.new_state == LINE_ON) ++board->game->nlines_on;
 
 		/* record change in history */
-		history_record_event_single(board, lin->id, old_state, *state);
+		history_record_change(board, &change);
+
+		/* make change to line */
+		game_set_line(change.id, change.new_state);
 
 		/* schedule redraw of box containing line */
 		gtk_widget_queue_draw_area

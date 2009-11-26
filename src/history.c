@@ -24,46 +24,100 @@
 
 
 /*
- * History is a double-linked list containing a series of events.
- * Event is a single-linked list containing a series of line changes.
+ * History is a double-linked list containing changes.
+ * Event is an instance of line_change describing a line change
  */
 
 void history_free_event(GSList *event);
 
 
-/* contains info about a line change */
-struct line_change {
-	int id;			// id of line that changes
-	int old_state;		// old state of line
-	int new_state;		// new state of line
+
+/*
+ * History is made up of chunks chained together
+ * Each chunk is HISTORY_SEGMENT_SIZE consecutive struct line_change
+ * num_segments: total number of allocated segments
+ * current_segment: index of current segment
+ * index: current position in history
+ * last: head of history
+ * Variables index and last point to last change, initially (no changes yet)
+ * they point to -1.
+ * Segments are prepended into list. Example: (segment size 5)
+ *      | 5 | 6 | x | x | x |   -   | 0 | 1 | 2 | 3 | 4 |
+ *             segment 1                    segment 0
+ *       index and last point to 6
+ */
+#define HISTORY_SEGMENT_SIZE	100
+/*
+ * Stores history data
+ */
+struct history {
+	GList *segments;			// start of list of segments
+	GList *segment;				// current segment (where index points)
+	int num_segments;			// total number of segments allocated
+	int current_segment;		// current segment
+	int index;					// index of current history position
+	int last;					// last history change
 };
 
+
+/*
+ * Initialize history as empty
+ */
+static void
+history_reset(struct history *history)
+{
+	history->segments= NULL;
+	history->segment= NULL;
+	history->num_segments= 0;
+	history->current_segment= -1;
+	history->index= -1;
+	history->last= -1;
+}
+
+
+/*
+ * Create new variable to store history
+ */
+struct history *
+history_create(void)
+{
+	struct history *history;
+
+	history= g_malloc(sizeof(struct history));
+	history_reset(history);
+	return history;
+}
 
 
 /*
  * Record an event
  */
 void
-history_record_event(struct board *board, GSList *event)
+history_record_change(struct board *board, struct line_change *change)
 {
-	GList *head;
+	struct line_change *change_ptr;
+	struct history *history=board->history;
+	int pos;
 
-	/* history empty? -> create empty stub to make undo behave */
-	if (board->history == NULL) {
-		board->history= g_list_prepend(NULL, NULL);
+	/* allocate a new segment if needed:
+	   if first change or current segment is full */
+	pos= (history->num_segments) * HISTORY_SEGMENT_SIZE - 1;
+	if (history->index == pos) {
+		change_ptr= g_malloc(sizeof(struct line_change)*HISTORY_SEGMENT_SIZE);
+		history->segments= g_list_prepend(history->segments, change_ptr);
+		history->segment= history->segments;
+		++history->num_segments;
+		++history->current_segment;
 	}
 
-	/* if we're not at start of history list -> delete useless history */
-	head= g_list_first(board->history);
-	while(head != board->history) {
-		history_free_event(head->data);
-		head= g_list_delete_link(head, head);
-	}
-
-	/* DEBUG: history should now be head of list */
-	g_assert(board->history == g_list_first(board->history));
-
-	board->history= g_list_prepend(board->history, event);
+	/* store change */
+	++history->index;
+	history->last= history->index;
+	pos= history->index % HISTORY_SEGMENT_SIZE;
+	change_ptr= ((struct line_change *)history->segment->data) + pos;
+	change_ptr->id= change->id;
+	change_ptr->old_state= change->old_state;
+	change_ptr->new_state= change->new_state;
 
 	/* set undo/redo sensitivity */
 	fencesgui_set_undoredo_state(board);
@@ -71,122 +125,88 @@ history_record_event(struct board *board, GSList *event)
 
 
 /*
- * Record a "single" event in history. Single event means an event with only
- * one change.
- */
-void
-history_record_event_single(struct board *board, int id, int old_state, int new_state)
-{
-	GSList *event;
-	struct line_change *change;
-
-	change= (struct line_change*)g_malloc(sizeof(struct line_change));
-	change->id= id;
-	change->old_state= old_state;
-	change->new_state= new_state;
-	event= g_slist_prepend(NULL, change);
-
-	history_record_event(board, event);
-}
-
-
-/*
- * Free event (slist of line changes)
- */
-void
-history_free_event(GSList *event)
-{
-	while(event != NULL) {
-		g_free(event->data);
-		event= g_slist_delete_link(event, event);
-	}
-}
-
-
-/*
- * Undo given event (slist of line changes)
- */
-void
-history_undo_event(GSList *event)
-{
-	struct line_change *change;
-
-	/* travel slist setting lines to old_state */
-	while(event != NULL) {
-		change= (struct line_change*)event->data;
-		game_set_line(change->id, change->old_state);
-		event= g_slist_next(event);
-	}
-}
-
-
-/*
- * Redo given event (slist of line changes)
- */
-void
-history_redo_event(GSList *event)
-{
-	struct line_change *change;
-
-	/* travel slist setting lines to new_state */
-	while(event != NULL) {
-		change= (struct line_change*)event->data;
-		game_set_line(change->id, change->new_state);
-		event= g_slist_next(event);
-	}
-}
-
-
-/*
  * Revisit history
- * offset indicates which direction and how many steps to go
+ * offset indicates which direction (only goes one step)
  */
 void
 history_travel_history(struct board *board, int offset)
 {
-	GList *list;
-	GList *history=board->history;
+	struct history *history=board->history;
+	int pos;
+	struct line_change *change;
 
-	if (history == NULL || offset == 0) return;
+	if (offset == 0) return;
 	if (offset < 0) {	// backward (undo)
-		while(offset != 0) {
-			list= g_list_next(history);
-			if (list == NULL) break;
-			history_undo_event(history->data);
-			history= list;
-			++offset;
+		if (history->index == -1) return;
+		// get change
+		pos= history->index % HISTORY_SEGMENT_SIZE;
+		g_assert(pos == history->index - (history->current_segment*HISTORY_SEGMENT_SIZE));
+		change= ((struct line_change *)history->segment->data) + pos;
+		// decrement index
+		--history->index;
+		if (pos == 0 && history->index != -1) {			// change segment
+			--history->current_segment;
+			history->segment= g_list_next(history->segment);
 		}
+		g_assert(history->segment != NULL);
+		game_set_line(change->id, change->old_state);
 	} else {		// forward (redo)
-		while(offset != 0) {
-			list= g_list_previous(history);
-			if (list == NULL) break;
-			history= list;
-			history_redo_event(history->data);
-			--offset;
+		if (history->index == history->last) return;
+		// increment index
+		++history->index;
+		pos= history->index % HISTORY_SEGMENT_SIZE;
+		if (pos == 0 && history->index != 0) {
+			++history->current_segment;
+			history->segment= g_list_previous(history->segment);
 		}
-	}
-	/* redraw board if necessary */
-	if (board->history != history) {
-		board->history= history;
-		/* set undo/redo sensitivity */
-		fencesgui_set_undoredo_state(board);
-		gtk_widget_queue_draw(board->drawarea);
+		g_assert(history->segment != NULL);
+		// get change
+		g_assert(pos == history->index - (history->current_segment*HISTORY_SEGMENT_SIZE));
+		change= ((struct line_change *)history->segment->data) + pos;
+		game_set_line(change->id, change->new_state);
 	}
 
-	board->history= history;
+	/* set undo/redo sensitivity */
+	fencesgui_set_undoredo_state(board);
+	/* redraw board */
+	gtk_widget_queue_draw(board->drawarea);
 }
 
 
 /*
- * Free history memory
+ * Clear history: Free memory used by history and reset to empty.
+ * Variable history is not freed and can be reused.
  */
 void
-history_destroy(GList *history)
+history_clear(struct history *history)
 {
-	history= g_list_first(history);
+	GList *list;
 
-	while(history != NULL) {
-		history_free_event(history->data);
-		history= g_list_delete_link(history, history);
+	g_assert(history != NULL);
+	list= history->segments;
+	while(list != NULL) {
+		g_free(list->data);
+		list= g_list_delete_link(list, list);
 	}
+	history_reset(history);
+}
+
+
+/*
+ * Can we undo?
+ */
+inline gboolean
+history_can_undo(struct history *history)
+{
+	return (history->index > -1);
+}
+
+
+/*
+ * Can we redo?
+ */
+inline gboolean
+history_can_redo(struct history *history)
+{
+	return (history->index < history->last);
 }

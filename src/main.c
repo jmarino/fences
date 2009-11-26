@@ -42,6 +42,7 @@ static void
 fences_exit_cleanup(struct board *board)
 {
 	gamedata_destroy_current_game(board);
+	g_free(board->history);
 }
 
 

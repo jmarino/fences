@@ -21,14 +21,12 @@
 /*
  * Functions
  */
-
-void history_record_event(struct board *board, GSList *event);
-void history_record_event_single(struct board *board, int id, int old_state,
-				 int new_state);
-void history_undo_event(GSList *event);
-void history_redo_event(GSList *event);
+struct history *history_create(void);
+void history_record_change(struct board *board, struct line_change *change);
 void history_travel_history(struct board *board, int offset);
-void history_destroy(GList *history);
+void history_clear(struct history *history);
+inline gboolean history_can_undo(struct history *history);
+inline gboolean history_can_redo(struct history *history);
 
 
 #endif
