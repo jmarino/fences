@@ -96,7 +96,6 @@ struct board {
 /* gamedata.c */
 struct game* create_empty_gamedata(struct geometry *geo);
 void free_gamedata(struct game *game);
-void game_set_line(int id, int state);
 struct board* initialize_board(void);
 void gamedata_clear_game(struct board *board);
 struct geometry *build_board_geometry(struct gameinfo *gameinfo);
@@ -119,5 +118,7 @@ struct game* build_new_game(struct geometry *geo, double difficulty);
 /* build-loop.c */
 void build_new_loop(struct geometry *geo, struct game *game, gboolean trace);
 
+/* line-change.c */
+inline void make_line_change(struct board *board, struct line_change *change);
 
 #endif

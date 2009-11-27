@@ -134,6 +134,7 @@ history_travel_history(struct board *board, int offset)
 	struct history *history=board->history;
 	int pos;
 	struct line_change *change;
+	struct line_change undo_change;
 
 	if (offset == 0) return;
 	if (offset < 0) {	// backward (undo)
@@ -149,7 +150,11 @@ history_travel_history(struct board *board, int offset)
 			history->segment= g_list_next(history->segment);
 		}
 		g_assert(history->segment != NULL);
-		game_set_line(change->id, change->old_state);
+		/* set up undo -> reverse change */
+		undo_change.id= change->id;
+		undo_change.old_state= change->new_state;
+		undo_change.new_state= change->old_state;
+		make_line_change(board, &undo_change);
 	} else {		// forward (redo)
 		if (history->index == history->last) return;
 		// increment index
@@ -163,7 +168,7 @@ history_travel_history(struct board *board, int offset)
 		// get change
 		g_assert(pos == history->index - (history->current_segment*HISTORY_SEGMENT_SIZE));
 		change= ((struct line_change *)history->segment->data) + pos;
-		game_set_line(change->id, change->new_state);
+		make_line_change(board, change);
 	}
 
 	/* set undo/redo sensitivity */

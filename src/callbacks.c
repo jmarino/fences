@@ -88,15 +88,11 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_da
 				return TRUE;
 		}
 
-		/* temporary HACK to keep track of number of lines on */
-		if (change.old_state == LINE_ON) --board->game->nlines_on;
-		else if (change.new_state == LINE_ON) ++board->game->nlines_on;
-
 		/* record change in history */
 		history_record_change(board, &change);
 
 		/* make change to line */
-		game_set_line(change.id, change.new_state);
+		make_line_change(board, &change);
 
 		/* schedule redraw of box containing line */
 		gtk_widget_queue_draw_area

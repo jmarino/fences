@@ -95,16 +95,6 @@ free_gamedata(struct game *game)
 
 
 /*
- * Set line (id) to given state
- */
-inline void
-game_set_line(int id, int state)
-{
-	board.game->states[id]= state;
-}
-
-
-/*
  * generate a 7x7 example game by hand
  */
 static struct game*
