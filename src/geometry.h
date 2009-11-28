@@ -19,6 +19,13 @@
 
 #include "avl-tree.h"
 
+
+/* Display states */
+#define DISPLAY_NORMAL		0x00
+#define	DISPLAY_ERROR		0x01
+
+
+
 /*
  * Holds coordinates of a point
  */
@@ -37,6 +44,7 @@ struct vertex {
 	struct line **lines;	// lines touching dot
 	int ntiles;		// number of tiles vertex touches
 	struct tile **tiles;		// tiles vertex touches
+	int display_state;			// display state
 };
 
 
@@ -52,6 +60,7 @@ struct tile {
 	struct point center;	// coords of center of tile
 	int fx_status;		// is it being animated? which animation?
 	int fx_frame;		// frame in FX animation
+	int display_state;			// display state
 };
 
 

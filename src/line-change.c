@@ -68,9 +68,11 @@ linechange_check_vertices(struct board *board, struct line *line_changed)
 			if (game->states[lin->id] == LINE_ON) ++num_on;
 		}
 		if (num_on > 2) {
-			/* TODO: implement proper error reporting */
-			printf("*-* WARNING *-* vertex %d has too many lines (%d)\n",
-				   vertex->id, num_on);
+			if (vertex->display_state != DISPLAY_ERROR) {
+				vertex->display_state= DISPLAY_ERROR;
+			}
+		} else {
+			vertex->display_state= DISPLAY_NORMAL;
 		}
 	}
 }
@@ -100,9 +102,11 @@ linechange_check_tiles(struct board *board, struct line *line_changed)
 			if (game->states[lin->id] == LINE_ON) ++num_on;
 		}
 		if (num_on > tile_number) {
-			/* TODO: implement proper error reporting */
-			printf("*-* WARNING *-* tile %d has %d lines ON (>%d)\n",
-				   tile->id, num_on, tile_number);
+			if (tile->display_state != DISPLAY_ERROR) {
+				tile->display_state= DISPLAY_ERROR;
+			}
+		} else {
+			tile->display_state= DISPLAY_NORMAL;
 		}
 	}
 }

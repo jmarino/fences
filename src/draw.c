@@ -308,16 +308,31 @@ draw_board(cairo_t *cr, struct geometry *geo, struct game *game)
 	/* Text in tiles */
 	tile= geo->tiles;
 	cairo_set_font_size(cr, geo->font_size);
-	cairo_set_source_rgb(cr, 0, 0, 0);
-
 	for(i=0; i<geo->ntiles; ++i) {
 		number= game->numbers[tile->id];
 		if (number != -1) {	// tile has a number
+			if (tile->display_state == DISPLAY_NORMAL) {
+				cairo_set_source_rgb(cr, 0, 0, 0);
+			} else {
+				cairo_set_source_rgb(cr, 1, 0, 0);
+			}
 			cairo_move_to(cr, tile->center.x - geo->numpos[number].x,
 				      tile->center.y + geo->numpos[number].y);
 			cairo_show_text (cr, geo->numbers + 2*number);
 		}
 		++tile;
+	}
+
+	/* Vertex display state */
+	vertex1= geo->vertex;
+	for(i=0; i < geo->nvertex; ++i) {
+		if (vertex1->display_state == DISPLAY_ERROR) {
+			cairo_set_source_rgb(cr, 1, 0, 0);
+			cairo_arc (cr, vertex1->pos.x, vertex1->pos.y,
+					   geo->tile_width / 5.0, 0, 2 * M_PI);
+			cairo_fill(cr);
+		}
+		++vertex1;
 	}
 }
 

@@ -491,6 +491,7 @@ geometry_add_vertex(struct geometry *geo, struct point *point)
 		vertex->lines= NULL;
 		vertex->ntiles= 0;
 		vertex->tiles= NULL;
+		vertex->display_state= DISPLAY_NORMAL;
 		++geo->nvertex;
 
 		/* insert new vertex in AVL tree */
@@ -591,6 +592,7 @@ geometry_add_tile(struct geometry *geo, struct point *pts, int npts,
 	tile->sides= NULL;
 	tile->fx_status= 0;
 	tile->fx_frame= 0;
+	tile->display_state= DISPLAY_NORMAL;
 	++geo->ntiles;
 
 	/* calculate center of tile if needed */
