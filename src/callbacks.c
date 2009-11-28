@@ -97,10 +97,10 @@ drawarea_mouseclicked(GtkWidget *widget, GdkEventButton *event, gpointer user_da
 		/* schedule redraw of box containing line */
 		gtk_widget_queue_draw_area
 			(GTK_WIDGET(board->drawarea),
-			 (gint)(lin->inf_box[0].x*board->width_pxscale),
-			 (gint)(lin->inf_box[0].y*board->height_pxscale),
-			 (gint)(lin->inf_box[1].x*board->width_pxscale),
-			 (gint)(lin->inf_box[1].y*board->height_pxscale));
+			 (gint)(board->geo->clip.x*board->width_pxscale),
+			 (gint)(board->geo->clip.y*board->height_pxscale),
+			 (gint)(board->geo->clip.w*board->width_pxscale),
+			 (gint)(board->geo->clip.h*board->height_pxscale));
 	}
 
 	return TRUE;

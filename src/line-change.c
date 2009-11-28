@@ -90,6 +90,8 @@ linechange_check_tiles(struct board *board, struct line *line_changed)
 	int i, j;
 	int tile_number;
 	int num_on;
+	int old_state;
+	struct clipbox clip;
 
 	for(i=0; i < line_changed->ntiles; ++i) {
 		tile= line_changed->tiles[i];
@@ -101,12 +103,20 @@ linechange_check_tiles(struct board *board, struct line *line_changed)
 			lin= tile->sides[j];
 			if (game->states[lin->id] == LINE_ON) ++num_on;
 		}
+		old_state= tile->display_state;
 		if (num_on > tile_number) {
 			if (tile->display_state != DISPLAY_ERROR) {
 				tile->display_state= DISPLAY_ERROR;
 			}
 		} else {
 			tile->display_state= DISPLAY_NORMAL;
+		}
+		if (old_state != tile->display_state) {
+			clip.x= tile->center.x - board->geo->tile_width/2.;
+			clip.y= tile->center.y - board->geo->tile_height/2.;
+			clip.w= board->geo->tile_width;
+			clip.h= board->geo->tile_height;
+			geometry_update_clip(board->geo, &clip);
 		}
 	}
 }
@@ -119,10 +129,19 @@ inline void
 make_line_change(struct board *board, struct line_change *change)
 {
 	struct line *line_changed;
+	struct clipbox clip;
 
 	board->game->states[change->id]= change->new_state;
 	if (change->old_state == LINE_ON) --board->game->nlines_on;
 	else if (change->new_state == LINE_ON) ++board->game->nlines_on;
+
+	/* set clip box */
+	line_changed= board->geo->lines + change->id;
+	clip.x= line_changed->inf_box[0].x;
+	clip.y= line_changed->inf_box[0].y;
+	clip.w= line_changed->inf_box[1].x;
+	clip.h= line_changed->inf_box[1].y;
+	geometry_set_clip(board->geo, &clip);
 
 	/* did we just solve the game? */
 	if (is_game_finished(board)) {
@@ -131,7 +150,6 @@ make_line_change(struct board *board, struct line_change *change)
 	}
 
 	/* check for errors */
-	line_changed= board->geo->lines + change->id;
 	linechange_check_vertices(board, line_changed);
 	linechange_check_tiles(board, line_changed);
 }

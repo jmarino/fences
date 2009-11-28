@@ -35,6 +35,15 @@ struct point {
 
 
 /*
+ * Coords defining a clip rectangle
+ */
+struct clipbox {
+	double x, y;	// coords of top left corner
+	double w, h;	// width, height of box
+};
+
+
+/*
  * Holds info about a vertex
  */
 struct vertex {
@@ -109,6 +118,7 @@ struct geometry {
 	double game_size;		// size of game area (board_size-2*board_margin)
 	struct avl_node *vertex_root;	// AVL tree to track vertices
 	struct avl_node *line_root;		// AVL tree to track lines
+	struct clipbox clip;		// current clip area
 };
 
 
@@ -121,6 +131,8 @@ void geometry_connect_skeleton(struct geometry *geo);
 struct geometry* geometry_create_new(int ntiles, int nvertex, int nlines,
 									 int max_numlines);
 void geometry_destroy(struct geometry *geo);
+void geometry_set_clip(struct geometry *geo, struct clipbox *clip);
+void geometry_update_clip(struct geometry *geo, struct clipbox *clip);
 
 
 /* geometry-legacy.c */

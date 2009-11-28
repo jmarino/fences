@@ -752,3 +752,30 @@ geometry_destroy(struct geometry *geo)
 	if (geo->line_root) avltree_destroy(geo->line_root);
 	g_free(geo);
 }
+
+
+/*
+ * Set the clip region to be used in next redraw
+ */
+void geometry_set_clip(struct geometry *geo, struct clipbox *clip)
+{
+	memcpy(&geo->clip, clip, sizeof(struct clipbox));
+}
+
+
+/*
+ * Update the clip region to a box that includes previous + new clip box
+ */
+void geometry_update_clip(struct geometry *geo, struct clipbox *clip)
+{
+	struct point bt;
+
+	if (clip->x + clip->w > geo->clip.x + geo->clip.w) bt.x= clip->x + clip->w;
+	else bt.x= geo->clip.x + geo->clip.w;
+	if (clip->y + clip->h > geo->clip.y + geo->clip.h) bt.y= clip->y + clip->h;
+	else bt.y= geo->clip.y + geo->clip.h;
+	if (clip->x < geo->clip.x) geo->clip.x= clip->x;
+	if (clip->y < geo->clip.y) geo->clip.y= clip->y;
+	geo->clip.w= bt.x - geo->clip.x;
+	geo->clip.h= bt.y - geo->clip.y;
+}
