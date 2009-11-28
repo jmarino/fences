@@ -112,10 +112,10 @@ linechange_check_tiles(struct board *board, struct line *line_changed)
 			tile->display_state= DISPLAY_NORMAL;
 		}
 		if (old_state != tile->display_state) {
-			clip.x= tile->center.x - board->geo->tile_width/2.;
-			clip.y= tile->center.y - board->geo->tile_height/2.;
-			clip.w= board->geo->tile_width;
-			clip.h= board->geo->tile_height;
+			clip.x= tile->center.x - board->geo->tile_width;
+			clip.y= tile->center.y - board->geo->tile_height;
+			clip.w= board->geo->tile_width*2;
+			clip.h= board->geo->tile_height*2;
 			geometry_update_clip(board->geo, &clip);
 		}
 	}
