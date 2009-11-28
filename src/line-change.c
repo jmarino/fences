@@ -58,6 +58,8 @@ linechange_check_vertices(struct board *board, struct line *line_changed)
 	struct line *lin;
 	int i, j;
 	int num_on;
+	int old_state;
+	struct clipbox clip;
 
 	for(i=0; i < 2; ++i) {
 		vertex= line_changed->ends[i];
@@ -67,12 +69,20 @@ linechange_check_vertices(struct board *board, struct line *line_changed)
 			lin= vertex->lines[j];
 			if (game->states[lin->id] == LINE_ON) ++num_on;
 		}
+		old_state= vertex->display_state;
 		if (num_on > 2) {
 			if (vertex->display_state != DISPLAY_ERROR) {
 				vertex->display_state= DISPLAY_ERROR;
 			}
 		} else {
 			vertex->display_state= DISPLAY_NORMAL;
+		}
+		if (old_state != vertex->display_state) {
+			clip.x= vertex->pos.x - board->geo->tile_width/4;
+			clip.y= vertex->pos.y - board->geo->tile_height/4;
+			clip.w= board->geo->tile_width/2;
+			clip.h= board->geo->tile_height/2;
+			geometry_update_clip(board->geo, &clip);
 		}
 	}
 }
