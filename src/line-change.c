@@ -115,9 +115,9 @@ linechange_check_tiles(struct board *board, struct line *line_changed)
 		}
 		old_state= tile->display_state;
 		if (num_on > tile_number) {
-			if (tile->display_state != DISPLAY_ERROR) {
-				tile->display_state= DISPLAY_ERROR;
-			}
+			tile->display_state= DISPLAY_ERROR;
+		} else if (num_on == tile_number) {
+			tile->display_state= DISPLAY_HANDLED;
 		} else {
 			tile->display_state= DISPLAY_NORMAL;
 		}

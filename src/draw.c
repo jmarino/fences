@@ -309,6 +309,8 @@ draw_board(cairo_t *cr, struct geometry *geo, struct game *game)
 		if (number != -1) {	// tile has a number
 			if (tile->display_state == DISPLAY_NORMAL) {
 				cairo_set_source_rgb(cr, 0, 0, 0);
+			} else if (tile->display_state == DISPLAY_HANDLED) {
+				cairo_set_source_rgb(cr, 0, 1, 0);
 			} else {
 				cairo_set_source_rgb(cr, 1, 0, 0);
 			}
