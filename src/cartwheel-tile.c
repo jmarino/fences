@@ -385,10 +385,12 @@ get_kite_vertices(struct kite *kite, struct point *vertex)
  * Calculate sizes of drawing details
  */
 static void
-cartwheel_calculate_sizes(struct geometry *geo)
+cartwheel_calculate_sizes(struct geometry *geo, int size_index)
 {
-	geo->on_line_width= geo->board_size/250.;
+	geo->on_line_width= geo->board_size/(5.0 + size_index*3.0)/15.0;
 	geo->off_line_width= geo->board_size/1000.;
+	if (geo->on_line_width < 2*geo->off_line_width)
+		geo->on_line_width= 2*geo->off_line_width;
 	geo->cross_line_width= geo->off_line_width*1.5;
 	geo->cross_radius= MIN(geo->tile_width, geo->tile_height)/10.;
 	geo->font_scale= 0.8;
@@ -653,7 +655,7 @@ build_cartwheel_tile_geometry(const struct gameinfo *info)
 	geometry_connect_skeleton(geo);
 
 	/* define sizes of drawing bits */
-	cartwheel_calculate_sizes(geo);
+	cartwheel_calculate_sizes(geo, info->size);
 
 	return geo;
 }
