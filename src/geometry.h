@@ -21,8 +21,12 @@
 
 
 /* Display states */
-#define DISPLAY_NORMAL		0x00
-#define	DISPLAY_ERROR		0x01
+enum {
+	DISPLAY_NORMAL,
+	DISPLAY_ERROR,
+	DISPLAY_HANDLED,
+	NUM_DISPLAY_STATES
+};
 
 
 
