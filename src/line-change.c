@@ -147,10 +147,10 @@ make_line_change(struct board *board, struct line_change *change)
 
 	/* set clip box */
 	line_changed= board->geo->lines + change->id;
-	clip.x= line_changed->inf_box[0].x;
-	clip.y= line_changed->inf_box[0].y;
-	clip.w= line_changed->inf_box[1].x;
-	clip.h= line_changed->inf_box[1].y;
+	clip.x= line_changed->clip.x;
+	clip.y= line_changed->clip.y;
+	clip.w= line_changed->clip.w;
+	clip.h= line_changed->clip.h;
 	geometry_set_clip(board->geo, &clip);
 
 	/* did we just solve the game? */

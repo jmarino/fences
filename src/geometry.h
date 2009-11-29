@@ -86,7 +86,7 @@ struct line {
 	struct line **in;	// lines in
 	struct line **out;	// lines out
 	struct point inf[4];	// coords of 4 points defining area of influence
-	struct point inf_box[2];// [x,y] & [w,h] of box that contains line
+	struct clipbox clip;	// clip box that contains line
 	int fx_status;		// is it being animated? which animation?
 	int fx_frame;		// frame in FX animation
 };

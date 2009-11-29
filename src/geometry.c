@@ -350,27 +350,27 @@ geometry_define_line_infarea(struct geometry *geo)
 		/* define box that contains line as [x,y];[w,h]
 		 inf[0].xy & inf[2].xy are both ends of the line */
 		if (lin->inf[0].x < lin->inf[2].x) {
-			lin->inf_box[0].x= lin->inf[0].x;
-			lin->inf_box[1].x= lin->inf[2].x;
+			lin->clip.x= lin->inf[0].x;
+			lin->clip.w= lin->inf[2].x;
 		} else {
-			lin->inf_box[0].x= lin->inf[2].x;
-			lin->inf_box[1].x= lin->inf[0].x;
+			lin->clip.x= lin->inf[2].x;
+			lin->clip.w= lin->inf[0].x;
 		}
 		if (lin->inf[0].y < lin->inf[2].y) {
-			lin->inf_box[0].y= lin->inf[0].y;
-			lin->inf_box[1].y= lin->inf[2].y;
+			lin->clip.y= lin->inf[0].y;
+			lin->clip.h= lin->inf[2].y;
 		} else {
-			lin->inf_box[0].y= lin->inf[2].y;
-			lin->inf_box[1].y= lin->inf[0].y;
+			lin->clip.y= lin->inf[2].y;
+			lin->clip.h= lin->inf[0].y;
 		}
-		lin->inf_box[1].x-= lin->inf_box[0].x;
-		lin->inf_box[1].y-= lin->inf_box[0].y;
+		lin->clip.w-= lin->clip.x;
+		lin->clip.h-= lin->clip.y;
 
-		/* pad inf_box a bit (board_size * 2%) just in case */
-		lin->inf_box[0].x-= geo->board_size*0.02;
-		lin->inf_box[0].y-= geo->board_size*0.02;
-		lin->inf_box[1].x+= geo->board_size*0.04;
-		lin->inf_box[1].y+= geo->board_size*0.04;
+		/* pad clip a bit (board_size * 2%) just in case */
+		lin->clip.x-= geo->board_size*0.02;
+		lin->clip.y-= geo->board_size*0.02;
+		lin->clip.w+= geo->board_size*0.04;
+		lin->clip.h+= geo->board_size*0.04;
 		++lin;
 	}
 }
