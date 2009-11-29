@@ -139,7 +139,6 @@ inline void
 make_line_change(struct board *board, struct line_change *change)
 {
 	struct line *line_changed;
-	struct clipbox clip;
 
 	board->game->states[change->id]= change->new_state;
 	if (change->old_state == LINE_ON) --board->game->nlines_on;
@@ -147,11 +146,7 @@ make_line_change(struct board *board, struct line_change *change)
 
 	/* set clip box */
 	line_changed= board->geo->lines + change->id;
-	clip.x= line_changed->clip.x;
-	clip.y= line_changed->clip.y;
-	clip.w= line_changed->clip.w;
-	clip.h= line_changed->clip.h;
-	geometry_set_clip(board->geo, &clip);
+	geometry_set_clip(board->geo, &line_changed->clip);
 
 	/* did we just solve the game? */
 	if (is_game_finished(board)) {
