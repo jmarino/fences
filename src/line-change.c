@@ -156,7 +156,6 @@ make_line_change(struct board *board, struct line_change *change)
 	/* did we just solve the game? */
 	if (is_game_finished(board)) {
 		printf("Game Finished!!\n");
-		return;
 	}
 
 	/* check for errors */
